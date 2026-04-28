@@ -1,0 +1,3096 @@
+import { useState, useCallback, useEffect } from "react";
+
+// ─────────────────────────────────────────────────────────────
+// SCRIPT DECKS (always available)
+// ─────────────────────────────────────────────────────────────
+const HIRAGANA = [
+  {f:"あ",b:"a"},{f:"い",b:"i"},{f:"う",b:"u"},{f:"え",b:"e"},{f:"お",b:"o"},
+  {f:"か",b:"ka"},{f:"き",b:"ki"},{f:"く",b:"ku"},{f:"け",b:"ke"},{f:"こ",b:"ko"},
+  {f:"さ",b:"sa"},{f:"し",b:"shi"},{f:"す",b:"su"},{f:"せ",b:"se"},{f:"そ",b:"so"},
+  {f:"た",b:"ta"},{f:"ち",b:"chi"},{f:"つ",b:"tsu"},{f:"て",b:"te"},{f:"と",b:"to"},
+  {f:"な",b:"na"},{f:"に",b:"ni"},{f:"ぬ",b:"nu"},{f:"ね",b:"ne"},{f:"の",b:"no"},
+  {f:"は",b:"ha"},{f:"ひ",b:"hi"},{f:"ふ",b:"fu"},{f:"へ",b:"he"},{f:"ほ",b:"ho"},
+  {f:"ま",b:"ma"},{f:"み",b:"mi"},{f:"む",b:"mu"},{f:"め",b:"me"},{f:"も",b:"mo"},
+  {f:"や",b:"ya"},{f:"ゆ",b:"yu"},{f:"よ",b:"yo"},
+  {f:"ら",b:"ra"},{f:"り",b:"ri"},{f:"る",b:"ru"},{f:"れ",b:"re"},{f:"ろ",b:"ro"},
+  {f:"わ",b:"wa"},{f:"を",b:"wo"},{f:"ん",b:"n"},
+];
+const KATAKANA = [
+  {f:"ア",b:"a"},{f:"イ",b:"i"},{f:"ウ",b:"u"},{f:"エ",b:"e"},{f:"オ",b:"o"},
+  {f:"カ",b:"ka"},{f:"キ",b:"ki"},{f:"ク",b:"ku"},{f:"ケ",b:"ke"},{f:"コ",b:"ko"},
+  {f:"サ",b:"sa"},{f:"シ",b:"shi"},{f:"ス",b:"su"},{f:"セ",b:"se"},{f:"ソ",b:"so"},
+  {f:"タ",b:"ta"},{f:"チ",b:"chi"},{f:"ツ",b:"tsu"},{f:"テ",b:"te"},{f:"ト",b:"to"},
+  {f:"ナ",b:"na"},{f:"ニ",b:"ni"},{f:"ヌ",b:"nu"},{f:"ネ",b:"ne"},{f:"ノ",b:"no"},
+  {f:"ハ",b:"ha"},{f:"ヒ",b:"hi"},{f:"フ",b:"fu"},{f:"ヘ",b:"he"},{f:"ホ",b:"ho"},
+  {f:"マ",b:"ma"},{f:"ミ",b:"mi"},{f:"ム",b:"mu"},{f:"メ",b:"me"},{f:"モ",b:"mo"},
+  {f:"ヤ",b:"ya"},{f:"ユ",b:"yu"},{f:"ヨ",b:"yo"},
+  {f:"ラ",b:"ra"},{f:"リ",b:"ri"},{f:"ル",b:"ru"},{f:"レ",b:"re"},{f:"ロ",b:"ro"},
+  {f:"ワ",b:"wa"},{f:"ヲ",b:"wo"},{f:"ン",b:"n"},
+];
+
+// ─────────────────────────────────────────────────────────────
+// JLPT CARDS  front / back / hint / formal? / informal? / example?
+// ─────────────────────────────────────────────────────────────
+const JLPT = {
+  // ── N5 ──────────────────────────────────────────────────────
+  N5: {
+    vocab: [
+      // Numbers
+      {f:"いち",b:"One (一)",hint:"N5 Number",informal:"ひとつ — one (native counting)"},
+      {f:"に",b:"Two (二)",hint:"N5 Number",informal:"ふたつ — two (native counting)"},
+      {f:"さん",b:"Three (三)",hint:"N5 Number",informal:"みっつ — three"},
+      {f:"し / よん",b:"Four (四)",hint:"N5 Number",informal:"よっつ — four"},
+      {f:"ご",b:"Five (五)",hint:"N5 Number",informal:"いつつ — five"},
+      {f:"ろく",b:"Six (六)",hint:"N5 Number",informal:"むっつ — six"},
+      {f:"しち / なな",b:"Seven (七)",hint:"N5 Number",informal:"ななつ — seven"},
+      {f:"はち",b:"Eight (八)",hint:"N5 Number",informal:"やっつ — eight"},
+      {f:"く / きゅう",b:"Nine (九)",hint:"N5 Number",informal:"ここのつ — nine"},
+      {f:"じゅう",b:"Ten (十)",hint:"N5 Number",informal:"とお — ten (native)"},
+      {f:"ひゃく",b:"Hundred (百)",hint:"N5 Number"},
+      {f:"せん",b:"Thousand (千)",hint:"N5 Number"},
+      {f:"まん",b:"Ten thousand (万)",hint:"N5 Number"},
+      // Time
+      {f:"いま",b:"Now (今)",hint:"N5 Time"},
+      {f:"きょう",b:"Today (今日)",hint:"N5 Time",formal:"ほんじつ — today (formal)"},
+      {f:"あした / あす",b:"Tomorrow (明日)",hint:"N5 Time",formal:"みょうにち — tomorrow (formal)"},
+      {f:"きのう",b:"Yesterday (昨日)",hint:"N5 Time",formal:"さくじつ — yesterday (formal)"},
+      {f:"おととい",b:"Day before yesterday (一昨日)",hint:"N5 Time"},
+      {f:"あさって",b:"Day after tomorrow (明後日)",hint:"N5 Time"},
+      {f:"まいにち",b:"Every day (毎日)",hint:"N5 Time"},
+      {f:"まいあさ",b:"Every morning (毎朝)",hint:"N5 Time"},
+      {f:"まいばん",b:"Every evening (毎晩)",hint:"N5 Time"},
+      {f:"まいしゅう",b:"Every week (毎週)",hint:"N5 Time"},
+      {f:"ごぜん",b:"AM / Morning (午前)",hint:"N5 Time"},
+      {f:"ごご",b:"PM / Afternoon (午後)",hint:"N5 Time"},
+      {f:"あさ",b:"Morning (朝)",hint:"N5 Time"},
+      {f:"ひる",b:"Noon / Daytime (昼)",hint:"N5 Time"},
+      {f:"よる / ばん",b:"Night / Evening (夜・晩)",hint:"N5 Time"},
+      {f:"こんしゅう",b:"This week (今週)",hint:"N5 Time"},
+      {f:"らいしゅう",b:"Next week (来週)",hint:"N5 Time"},
+      {f:"せんしゅう",b:"Last week (先週)",hint:"N5 Time"},
+      {f:"こんげつ",b:"This month (今月)",hint:"N5 Time"},
+      {f:"らいげつ",b:"Next month (来月)",hint:"N5 Time"},
+      {f:"せんげつ",b:"Last month (先月)",hint:"N5 Time"},
+      {f:"ことし",b:"This year (今年)",hint:"N5 Time"},
+      {f:"らいねん",b:"Next year (来年)",hint:"N5 Time"},
+      {f:"きょねん",b:"Last year (去年)",hint:"N5 Time"},
+      {f:"なんじ",b:"What time? (何時)",hint:"N5 Question"},
+      {f:"なんぷん",b:"How many minutes? (何分)",hint:"N5 Question"},
+      {f:"なんようび",b:"What day of the week? (何曜日)",hint:"N5 Question"},
+      {f:"げつようび",b:"Monday (月曜日)",hint:"N5 Days"},
+      {f:"かようび",b:"Tuesday (火曜日)",hint:"N5 Days"},
+      {f:"すいようび",b:"Wednesday (水曜日)",hint:"N5 Days"},
+      {f:"もくようび",b:"Thursday (木曜日)",hint:"N5 Days"},
+      {f:"きんようび",b:"Friday (金曜日)",hint:"N5 Days"},
+      {f:"どようび",b:"Saturday (土曜日)",hint:"N5 Days"},
+      {f:"にちようび",b:"Sunday (日曜日)",hint:"N5 Days"},
+      // People
+      {f:"ひと",b:"Person (人)",hint:"N5 People",formal:"じんぶつ — person/figure (formal)"},
+      {f:"こども",b:"Child (子供)",hint:"N5 People",formal:"おこさん — someone's child (respectful)"},
+      {f:"おとこのひと",b:"Man (男の人)",hint:"N5 People"},
+      {f:"おんなのひと",b:"Woman (女の人)",hint:"N5 People"},
+      {f:"おとこのこ",b:"Boy (男の子)",hint:"N5 People"},
+      {f:"おんなのこ",b:"Girl (女の子)",hint:"N5 People"},
+      {f:"ともだち",b:"Friend (友達)",hint:"N5 People",informal:"とも — friend (casual short)"},
+      {f:"かぞく",b:"Family (家族)",hint:"N5 People"},
+      {f:"りょうしん",b:"Parents (両親)",hint:"N5 People"},
+      {f:"ちち / おとうさん",b:"Father (父・お父さん)",hint:"N5 People"},
+      {f:"はは / おかあさん",b:"Mother (母・お母さん)",hint:"N5 People"},
+      {f:"あに / おにいさん",b:"Older brother (兄・お兄さん)",hint:"N5 People"},
+      {f:"あね / おねえさん",b:"Older sister (姉・お姉さん)",hint:"N5 People"},
+      {f:"おとうと",b:"Younger brother (弟)",hint:"N5 People"},
+      {f:"いもうと",b:"Younger sister (妹)",hint:"N5 People"},
+      {f:"せんせい",b:"Teacher (先生)",hint:"N5 People"},
+      {f:"がくせい",b:"Student (学生)",hint:"N5 People"},
+      {f:"せんぱい",b:"Senior / Upperclassman (先輩)",hint:"N5 People"},
+      {f:"こうはい",b:"Junior / Underclassman (後輩)",hint:"N5 People"},
+      // Places
+      {f:"うち / いえ",b:"Home / House (家)",hint:"N5 Place",formal:"おたく — your home (respectful)"},
+      {f:"へや",b:"Room (部屋)",hint:"N5 Place"},
+      {f:"がっこう",b:"School (学校)",hint:"N5 Place"},
+      {f:"だいがく",b:"University (大学)",hint:"N5 Place"},
+      {f:"びょういん",b:"Hospital (病院)",hint:"N5 Place"},
+      {f:"ゆうびんきょく",b:"Post office (郵便局)",hint:"N5 Place"},
+      {f:"ぎんこう",b:"Bank (銀行)",hint:"N5 Place"},
+      {f:"みせ / おみせ",b:"Shop / Store (店)",hint:"N5 Place"},
+      {f:"レストラン",b:"Restaurant",hint:"N5 Place"},
+      {f:"えき",b:"Station (駅)",hint:"N5 Place"},
+      {f:"くうこう",b:"Airport (空港)",hint:"N5 Place"},
+      {f:"としょかん",b:"Library (図書館)",hint:"N5 Place"},
+      {f:"こうえん",b:"Park (公園)",hint:"N5 Place"},
+      {f:"スーパー",b:"Supermarket",hint:"N5 Place"},
+      {f:"デパート",b:"Department store",hint:"N5 Place"},
+      {f:"ホテル",b:"Hotel",hint:"N5 Place"},
+      // Transport
+      {f:"くるま",b:"Car (車)",hint:"N5 Transport"},
+      {f:"でんしゃ",b:"Train (電車)",hint:"N5 Transport"},
+      {f:"バス",b:"Bus",hint:"N5 Transport"},
+      {f:"タクシー",b:"Taxi",hint:"N5 Transport"},
+      {f:"じてんしゃ",b:"Bicycle (自転車)",hint:"N5 Transport"},
+      {f:"ひこうき",b:"Airplane (飛行機)",hint:"N5 Transport"},
+      {f:"ふね",b:"Boat / Ship (船)",hint:"N5 Transport"},
+      {f:"ちかてつ",b:"Subway (地下鉄)",hint:"N5 Transport"},
+      // Food & drink
+      {f:"みず",b:"Water (水)",hint:"N5 Food",formal:"おみず — water (polite)"},
+      {f:"おちゃ",b:"Green tea (お茶)",hint:"N5 Food"},
+      {f:"コーヒー",b:"Coffee",hint:"N5 Food"},
+      {f:"ジュース",b:"Juice",hint:"N5 Food"},
+      {f:"ビール",b:"Beer",hint:"N5 Food"},
+      {f:"ごはん",b:"Rice / Meal (ご飯)",hint:"N5 Food"},
+      {f:"パン",b:"Bread",hint:"N5 Food"},
+      {f:"たまご",b:"Egg (卵)",hint:"N5 Food"},
+      {f:"にく",b:"Meat (肉)",hint:"N5 Food"},
+      {f:"さかな",b:"Fish (魚)",hint:"N5 Food"},
+      {f:"やさい",b:"Vegetable (野菜)",hint:"N5 Food"},
+      {f:"くだもの",b:"Fruit (果物)",hint:"N5 Food"},
+      {f:"りんご",b:"Apple (林檎)",hint:"N5 Food"},
+      {f:"みかん",b:"Mandarin orange (蜜柑)",hint:"N5 Food"},
+      {f:"バナナ",b:"Banana",hint:"N5 Food"},
+      {f:"すし",b:"Sushi (寿司)",hint:"N5 Food"},
+      {f:"てんぷら",b:"Tempura (天ぷら)",hint:"N5 Food"},
+      {f:"ラーメン",b:"Ramen",hint:"N5 Food"},
+      {f:"そば",b:"Soba noodles (蕎麦)",hint:"N5 Food"},
+      {f:"うどん",b:"Udon noodles",hint:"N5 Food"},
+      {f:"おかし",b:"Sweets / Snacks (お菓子)",hint:"N5 Food"},
+      {f:"のみもの",b:"Drink (飲み物)",hint:"N5 Food"},
+      {f:"たべもの",b:"Food (食べ物)",hint:"N5 Food"},
+      // Objects
+      {f:"ほん",b:"Book (本)",hint:"N5 Object"},
+      {f:"かみ",b:"Paper (紙)",hint:"N5 Object"},
+      {f:"えんぴつ",b:"Pencil (鉛筆)",hint:"N5 Object"},
+      {f:"ペン",b:"Pen",hint:"N5 Object"},
+      {f:"かばん",b:"Bag (鞄)",hint:"N5 Object"},
+      {f:"さいふ",b:"Wallet (財布)",hint:"N5 Object"},
+      {f:"かぎ",b:"Key (鍵)",hint:"N5 Object"},
+      {f:"とけい",b:"Watch / Clock (時計)",hint:"N5 Object"},
+      {f:"めがね",b:"Glasses (眼鏡)",hint:"N5 Object"},
+      {f:"でんわ",b:"Telephone (電話)",hint:"N5 Object"},
+      {f:"スマホ",b:"Smartphone",hint:"N5 Object"},
+      {f:"テレビ",b:"Television",hint:"N5 Object"},
+      {f:"パソコン",b:"Computer",hint:"N5 Object"},
+      {f:"カメラ",b:"Camera",hint:"N5 Object"},
+      {f:"つくえ",b:"Desk (机)",hint:"N5 Object"},
+      {f:"いす",b:"Chair (椅子)",hint:"N5 Object"},
+      {f:"ドア",b:"Door",hint:"N5 Object"},
+      {f:"まど",b:"Window (窓)",hint:"N5 Object"},
+      {f:"でんき",b:"Electricity / Light (電気)",hint:"N5 Object"},
+      // Clothes
+      {f:"ふく",b:"Clothes (服)",hint:"N5 Clothes"},
+      {f:"シャツ",b:"Shirt",hint:"N5 Clothes"},
+      {f:"ズボン",b:"Trousers (ズボン)",hint:"N5 Clothes"},
+      {f:"スカート",b:"Skirt",hint:"N5 Clothes"},
+      {f:"くつ",b:"Shoes (靴)",hint:"N5 Clothes"},
+      {f:"くつした",b:"Socks (靴下)",hint:"N5 Clothes"},
+      {f:"ぼうし",b:"Hat / Cap (帽子)",hint:"N5 Clothes"},
+      {f:"コート",b:"Coat",hint:"N5 Clothes"},
+      // Body
+      {f:"あたま",b:"Head (頭)",hint:"N5 Body"},
+      {f:"かお",b:"Face (顔)",hint:"N5 Body"},
+      {f:"め",b:"Eye (目)",hint:"N5 Body"},
+      {f:"みみ",b:"Ear (耳)",hint:"N5 Body"},
+      {f:"はな",b:"Nose (鼻)",hint:"N5 Body"},
+      {f:"くち",b:"Mouth (口)",hint:"N5 Body"},
+      {f:"て",b:"Hand (手)",hint:"N5 Body"},
+      {f:"あし",b:"Foot / Leg (足)",hint:"N5 Body"},
+      {f:"せなか",b:"Back (背中)",hint:"N5 Body"},
+      {f:"おなか",b:"Stomach / Belly (お腹)",hint:"N5 Body"},
+      // Nature
+      {f:"そら",b:"Sky (空)",hint:"N5 Nature"},
+      {f:"うみ",b:"Sea / Ocean (海)",hint:"N5 Nature"},
+      {f:"やま",b:"Mountain (山)",hint:"N5 Nature"},
+      {f:"かわ",b:"River (川)",hint:"N5 Nature"},
+      {f:"き",b:"Tree (木)",hint:"N5 Nature"},
+      {f:"はな",b:"Flower (花)",hint:"N5 Nature"},
+      {f:"くさ",b:"Grass (草)",hint:"N5 Nature"},
+      {f:"てんき",b:"Weather (天気)",hint:"N5 Nature"},
+      {f:"あめ",b:"Rain (雨)",hint:"N5 Nature"},
+      {f:"ゆき",b:"Snow (雪)",hint:"N5 Nature"},
+      {f:"かぜ",b:"Wind (風)",hint:"N5 Nature"},
+      {f:"くも",b:"Cloud (雲)",hint:"N5 Nature"},
+      {f:"たいよう",b:"Sun (太陽)",hint:"N5 Nature"},
+      {f:"つき",b:"Moon (月)",hint:"N5 Nature"},
+      {f:"ほし",b:"Star (星)",hint:"N5 Nature"},
+      // Verbs
+      {f:"たべる",b:"To eat (食べる)",hint:"N5 Verb",informal:"食べない？— wanna eat? (casual)"},
+      {f:"のむ",b:"To drink (飲む)",hint:"N5 Verb"},
+      {f:"みる",b:"To see / watch (見る)",hint:"N5 Verb"},
+      {f:"きく",b:"To listen / ask (聞く)",hint:"N5 Verb"},
+      {f:"はなす",b:"To speak (話す)",hint:"N5 Verb"},
+      {f:"よむ",b:"To read (読む)",hint:"N5 Verb"},
+      {f:"かく",b:"To write (書く)",hint:"N5 Verb"},
+      {f:"かう",b:"To buy (買う)",hint:"N5 Verb"},
+      {f:"いく",b:"To go (行く)",hint:"N5 Verb",informal:"いく？— you going? (casual)"},
+      {f:"くる",b:"To come (来る)",hint:"N5 Verb",formal:"まいる — to come/go (humble)"},
+      {f:"かえる",b:"To return home (帰る)",hint:"N5 Verb"},
+      {f:"おきる",b:"To wake up (起きる)",hint:"N5 Verb"},
+      {f:"ねる",b:"To sleep (寝る)",hint:"N5 Verb"},
+      {f:"する",b:"To do (する)",hint:"N5 Verb"},
+      {f:"ある",b:"To exist — things (ある)",hint:"N5 Verb"},
+      {f:"いる",b:"To exist — living beings (いる)",hint:"N5 Verb"},
+      {f:"わかる",b:"To understand (分かる)",hint:"N5 Verb",informal:"わかんない — I dunno (casual)"},
+      {f:"しる",b:"To know (知る)",hint:"N5 Verb"},
+      {f:"おしえる",b:"To teach / tell (教える)",hint:"N5 Verb"},
+      {f:"もらう",b:"To receive (もらう)",hint:"N5 Verb"},
+      {f:"あげる",b:"To give (あげる)",hint:"N5 Verb"},
+      {f:"くれる",b:"To give (to me) (くれる)",hint:"N5 Verb"},
+      {f:"みせる",b:"To show (見せる)",hint:"N5 Verb"},
+      {f:"かりる",b:"To borrow (借りる)",hint:"N5 Verb"},
+      {f:"かす",b:"To lend (貸す)",hint:"N5 Verb"},
+      {f:"まつ",b:"To wait (待つ)",hint:"N5 Verb"},
+      {f:"あう",b:"To meet (会う)",hint:"N5 Verb"},
+      {f:"あるく",b:"To walk (歩く)",hint:"N5 Verb"},
+      {f:"はしる",b:"To run (走る)",hint:"N5 Verb"},
+      {f:"およぐ",b:"To swim (泳ぐ)",hint:"N5 Verb"},
+      {f:"とぶ",b:"To fly / jump (飛ぶ)",hint:"N5 Verb"},
+      {f:"のる",b:"To ride / get on (乗る)",hint:"N5 Verb"},
+      {f:"おりる",b:"To get off (降りる)",hint:"N5 Verb"},
+      {f:"つかう",b:"To use (使う)",hint:"N5 Verb"},
+      {f:"あける",b:"To open (開ける)",hint:"N5 Verb"},
+      {f:"しめる",b:"To close (閉める)",hint:"N5 Verb"},
+      {f:"つける",b:"To turn on (付ける)",hint:"N5 Verb"},
+      {f:"けす",b:"To turn off / erase (消す)",hint:"N5 Verb"},
+      {f:"いれる",b:"To put in (入れる)",hint:"N5 Verb"},
+      {f:"だす",b:"To take out / submit (出す)",hint:"N5 Verb"},
+      {f:"もつ",b:"To hold / have (持つ)",hint:"N5 Verb"},
+      {f:"おく",b:"To put / place (置く)",hint:"N5 Verb"},
+      {f:"とる",b:"To take (取る)",hint:"N5 Verb"},
+      {f:"きる",b:"To cut / wear (切る・着る)",hint:"N5 Verb"},
+      {f:"ぬぐ",b:"To take off clothes (脱ぐ)",hint:"N5 Verb"},
+      {f:"あらう",b:"To wash (洗う)",hint:"N5 Verb"},
+      {f:"そうじする",b:"To clean (掃除する)",hint:"N5 Verb"},
+      {f:"りょうりする",b:"To cook (料理する)",hint:"N5 Verb"},
+      {f:"べんきょうする",b:"To study (勉強する)",hint:"N5 Verb"},
+      {f:"しごとする",b:"To work (仕事する)",hint:"N5 Verb"},
+      {f:"でんわする",b:"To phone (電話する)",hint:"N5 Verb"},
+      {f:"けっこんする",b:"To marry (結婚する)",hint:"N5 Verb"},
+      // Adjectives
+      {f:"おおきい",b:"Big (大きい)",hint:"N5 Adj",informal:"でかい — huge (casual)"},
+      {f:"ちいさい",b:"Small (小さい)",hint:"N5 Adj"},
+      {f:"ながい",b:"Long (長い)",hint:"N5 Adj"},
+      {f:"みじかい",b:"Short (短い)",hint:"N5 Adj"},
+      {f:"おもい",b:"Heavy (重い)",hint:"N5 Adj"},
+      {f:"かるい",b:"Light (軽い)",hint:"N5 Adj"},
+      {f:"あつい",b:"Hot (暑い・厚い)",hint:"N5 Adj"},
+      {f:"さむい",b:"Cold (寒い)",hint:"N5 Adj"},
+      {f:"つめたい",b:"Cold to touch (冷たい)",hint:"N5 Adj"},
+      {f:"あたらしい",b:"New (新しい)",hint:"N5 Adj"},
+      {f:"ふるい",b:"Old (古い)",hint:"N5 Adj"},
+      {f:"いい / よい",b:"Good (いい・良い)",hint:"N5 Adj"},
+      {f:"わるい",b:"Bad (悪い)",hint:"N5 Adj"},
+      {f:"たかい",b:"Expensive / Tall (高い)",hint:"N5 Adj"},
+      {f:"やすい",b:"Cheap (安い)",hint:"N5 Adj"},
+      {f:"おおい",b:"Many / Much (多い)",hint:"N5 Adj"},
+      {f:"すくない",b:"Few / Little (少ない)",hint:"N5 Adj"},
+      {f:"むずかしい",b:"Difficult (難しい)",hint:"N5 Adj"},
+      {f:"やさしい",b:"Easy / Kind (易しい・優しい)",hint:"N5 Adj"},
+      {f:"たのしい",b:"Fun (楽しい)",hint:"N5 Adj"},
+      {f:"おもしろい",b:"Interesting (面白い)",hint:"N5 Adj"},
+      {f:"おいしい",b:"Delicious (美味しい)",hint:"N5 Adj"},
+      {f:"まずい",b:"Bad tasting (まずい)",hint:"N5 Adj"},
+      {f:"かわいい",b:"Cute (可愛い)",hint:"N5 Adj"},
+      {f:"うつくしい",b:"Beautiful (美しい)",hint:"N5 Adj"},
+      {f:"きたない",b:"Dirty (汚い)",hint:"N5 Adj"},
+      {f:"きれい",b:"Clean / Pretty (きれい)",hint:"N5 Na-adj"},
+      {f:"はやい",b:"Fast / Early (速い・早い)",hint:"N5 Adj"},
+      {f:"おそい",b:"Slow / Late (遅い)",hint:"N5 Adj"},
+      {f:"あかるい",b:"Bright (明るい)",hint:"N5 Adj"},
+      {f:"くらい",b:"Dark (暗い)",hint:"N5 Adj"},
+      {f:"かたい",b:"Hard (硬い)",hint:"N5 Adj"},
+      {f:"やわらかい",b:"Soft (柔らかい)",hint:"N5 Adj"},
+      {f:"うれしい",b:"Happy / Glad (嬉しい)",hint:"N5 Adj"},
+      {f:"かなしい",b:"Sad (悲しい)",hint:"N5 Adj"},
+      {f:"こわい",b:"Scary (怖い)",hint:"N5 Adj"},
+      {f:"いそがしい",b:"Busy (忙しい)",hint:"N5 Adj"},
+      {f:"ひまだ",b:"Free / Not busy (暇だ)",hint:"N5 Na-adj"},
+      {f:"すき",b:"Like (好き)",hint:"N5 Na-adj",informal:"大好き — love it (casual)"},
+      {f:"きらい",b:"Dislike (嫌い)",hint:"N5 Na-adj"},
+      {f:"げんき",b:"Healthy / Energetic (元気)",hint:"N5 Na-adj",formal:"お元気ですか — how are you? (polite)"},
+      {f:"しずか",b:"Quiet (静か)",hint:"N5 Na-adj"},
+      {f:"にぎやか",b:"Lively (賑やか)",hint:"N5 Na-adj"},
+      {f:"べんり",b:"Convenient (便利)",hint:"N5 Na-adj"},
+      {f:"ふべん",b:"Inconvenient (不便)",hint:"N5 Na-adj"},
+      {f:"たいせつ",b:"Important / Precious (大切)",hint:"N5 Na-adj"},
+      {f:"じょうず",b:"Skilled at (上手)",hint:"N5 Na-adj",formal:"おじょうずですね — you're very skilled (polite)"},
+      {f:"へた",b:"Bad at (下手)",hint:"N5 Na-adj"},
+      {f:"ゆうめい",b:"Famous (有名)",hint:"N5 Na-adj"},
+      {f:"たいへん",b:"Tough / Terrible (大変)",hint:"N5 Na-adj"},
+      {f:"だいじょうぶ",b:"OK / All right (大丈夫)",hint:"N5 Na-adj"},
+      // Question words
+      {f:"なに / なん",b:"What (何)",hint:"N5 Question word"},
+      {f:"どこ",b:"Where (どこ)",hint:"N5 Question word"},
+      {f:"だれ",b:"Who (誰)",hint:"N5 Question word"},
+      {f:"いつ",b:"When (いつ)",hint:"N5 Question word"},
+      {f:"どうして / なぜ",b:"Why (どうして・なぜ)",hint:"N5 Question word"},
+      {f:"どう / どのように",b:"How (どう・どのように)",hint:"N5 Question word"},
+      {f:"いくつ",b:"How many (いくつ)",hint:"N5 Question word"},
+      {f:"いくら",b:"How much (いくら)",hint:"N5 Question word"},
+      {f:"どれ",b:"Which one (どれ)",hint:"N5 Question word"},
+      {f:"どちら",b:"Which direction / Which (どちら)",hint:"N5 Question word"},
+      // Common phrases
+      {f:"ありがとう",b:"Thank you",hint:"N5 Phrase",formal:"ありがとうございます — Thank you very much",informal:"どうも — Thanks"},
+      {f:"すみません",b:"Excuse me / Sorry",hint:"N5 Phrase",formal:"申し訳ありません — I'm very sorry (formal)",informal:"ごめん — Sorry (casual)"},
+      {f:"はい",b:"Yes",hint:"N5 Phrase",informal:"うん / そう — Yeah (casual)"},
+      {f:"いいえ",b:"No",hint:"N5 Phrase",informal:"ううん / ちがう — Nope (casual)"},
+      {f:"おはよう",b:"Good morning",hint:"N5 Phrase",formal:"おはようございます — Good morning (polite)",informal:"おはよ — Morning!"},
+      {f:"こんにちは",b:"Hello / Good afternoon",hint:"N5 Phrase",informal:"やあ / ねえ — Hey!"},
+      {f:"こんばんは",b:"Good evening",hint:"N5 Phrase"},
+      {f:"おやすみ",b:"Good night",hint:"N5 Phrase",formal:"おやすみなさい — Good night (polite)"},
+      {f:"さようなら / じゃあね",b:"Goodbye",hint:"N5 Phrase",formal:"失礼します — Farewell (keigo)",informal:"またね — See ya"},
+      {f:"いただきます",b:"Let's eat (before meals)",hint:"N5 Phrase"},
+      {f:"ごちそうさま",b:"Thank you for the meal (after meals)",hint:"N5 Phrase"},
+      {f:"いってきます",b:"I'm leaving (said when leaving home)",hint:"N5 Phrase"},
+      {f:"いってらっしゃい",b:"Take care (response to いってきます)",hint:"N5 Phrase"},
+      {f:"ただいま",b:"I'm home",hint:"N5 Phrase"},
+      {f:"おかえり",b:"Welcome home",hint:"N5 Phrase",formal:"おかえりなさい — Welcome home (polite)"},
+      {f:"よろしくおねがいします",b:"Please treat me well / Nice to meet you",hint:"N5 Phrase"},
+      {f:"はじめまして",b:"Nice to meet you (first meeting)",hint:"N5 Phrase"},
+      // Directions & location
+      {f:"みぎ",b:"Right (右)",hint:"N5 Direction"},
+      {f:"ひだり",b:"Left (左)",hint:"N5 Direction"},
+      {f:"まえ",b:"Front / Before (前)",hint:"N5 Direction"},
+      {f:"うしろ",b:"Behind / Back (後ろ)",hint:"N5 Direction"},
+      {f:"となり",b:"Next to / Beside (隣)",hint:"N5 Direction"},
+      {f:"よこ",b:"Side / Next to (横)",hint:"N5 Direction"},
+      {f:"なか",b:"Inside / Middle (中)",hint:"N5 Direction"},
+      {f:"そと",b:"Outside (外)",hint:"N5 Direction"},
+      {f:"うえ",b:"Above / On top (上)",hint:"N5 Direction"},
+      {f:"した",b:"Below / Under (下)",hint:"N5 Direction"},
+      {f:"ちかく",b:"Near / Nearby (近く)",hint:"N5 Direction"},
+      {f:"とおく",b:"Far away (遠く)",hint:"N5 Direction"},
+      {f:"まっすぐ",b:"Straight ahead (まっすぐ)",hint:"N5 Direction"},
+    ],
+    kanji: [
+      {f:"日",b:"Day / Sun",hint:"N5 Kanji",formal:"にち/じつ (on) — 日曜日, 本日",informal:"ひ/か (kun) — 今日, 日（ひ）"},
+      {f:"月",b:"Month / Moon",hint:"N5 Kanji",formal:"げつ/がつ (on) — 月曜日, 一月",informal:"つき (kun) — 月（つき）"},
+      {f:"火",b:"Fire",hint:"N5 Kanji",formal:"か (on) — 火曜日, 火災",informal:"ひ (kun) — 火（ひ）"},
+      {f:"水",b:"Water",hint:"N5 Kanji",formal:"すい (on) — 水曜日, 水泳",informal:"みず (kun) — 水（みず）"},
+      {f:"木",b:"Tree / Thursday",hint:"N5 Kanji",formal:"もく (on) — 木曜日, 木材",informal:"き (kun) — 木（き）"},
+      {f:"金",b:"Gold / Money",hint:"N5 Kanji",formal:"きん (on) — 金曜日, 金額",informal:"かね (kun) — お金（おかね）"},
+      {f:"土",b:"Earth / Soil",hint:"N5 Kanji",formal:"ど (on) — 土曜日, 土地",informal:"つち (kun) — 土（つち）"},
+      {f:"山",b:"Mountain",hint:"N5 Kanji",formal:"さん (on) — 富士山, 山岳",informal:"やま (kun) — 山（やま）"},
+      {f:"川",b:"River",hint:"N5 Kanji",formal:"せん (on) — 河川",informal:"かわ (kun) — 川（かわ）"},
+      {f:"人",b:"Person",hint:"N5 Kanji",formal:"じん/にん (on) — 人口, 外国人",informal:"ひと (kun) — 人（ひと）"},
+      {f:"口",b:"Mouth",hint:"N5 Kanji",formal:"こう (on) — 人口, 入口",informal:"くち (kun) — 口（くち）"},
+      {f:"目",b:"Eye",hint:"N5 Kanji",formal:"もく (on) — 目標, 注目",informal:"め (kun) — 目（め）"},
+      {f:"耳",b:"Ear",hint:"N5 Kanji",formal:"じ (on) — 耳鼻科",informal:"みみ (kun) — 耳（みみ）"},
+      {f:"手",b:"Hand",hint:"N5 Kanji",formal:"しゅ (on) — 手術, 選手",informal:"て (kun) — 手（て）"},
+      {f:"足",b:"Foot / Leg",hint:"N5 Kanji",formal:"そく (on) — 足跡, 満足",informal:"あし (kun) — 足（あし）"},
+      {f:"上",b:"Above / Up",hint:"N5 Kanji",formal:"じょう (on) — 上司, 以上",informal:"うえ/かみ (kun) — 上（うえ）"},
+      {f:"下",b:"Below / Down",hint:"N5 Kanji",formal:"か/げ (on) — 地下, 下車",informal:"した/しも (kun) — 下（した）"},
+      {f:"中",b:"Middle / Inside",hint:"N5 Kanji",formal:"ちゅう (on) — 中心, 中学",informal:"なか (kun) — 中（なか）"},
+      {f:"大",b:"Big / Large",hint:"N5 Kanji",formal:"だい/たい (on) — 大学, 大切",informal:"おお (kun) — 大きい"},
+      {f:"小",b:"Small",hint:"N5 Kanji",formal:"しょう (on) — 小学校, 小説",informal:"ちい/こ (kun) — 小さい"},
+      {f:"本",b:"Book / Origin",hint:"N5 Kanji",formal:"ほん (on) — 日本, 本当",informal:"もと (kun) — 本（もと）"},
+      {f:"国",b:"Country",hint:"N5 Kanji",formal:"こく (on) — 外国, 国際",informal:"くに (kun) — 国（くに）"},
+      {f:"語",b:"Language / Word",hint:"N5 Kanji",formal:"ご (on) — 日本語, 英語"},
+      {f:"学",b:"Study / Learning",hint:"N5 Kanji",formal:"がく (on) — 学校, 大学, 学生"},
+      {f:"校",b:"School",hint:"N5 Kanji",formal:"こう (on) — 学校, 高校, 校長"},
+      {f:"年",b:"Year",hint:"N5 Kanji",formal:"ねん (on) — 今年, 来年",informal:"とし (kun) — 年（とし）"},
+      {f:"先",b:"Previous / Ahead (先)",hint:"N5 Kanji",formal:"せん (on) — 先生, 先週",informal:"さき (kun) — 先（さき）"},
+      {f:"生",b:"Life / Birth",hint:"N5 Kanji",formal:"せい/しょう (on) — 先生, 学生",informal:"い/う/は (kun) — 生きる, 生まれる"},
+      {f:"父",b:"Father",hint:"N5 Kanji",formal:"ふ (on) — 父親",informal:"ちち/とう (kun) — 父（ちち）"},
+      {f:"母",b:"Mother",hint:"N5 Kanji",formal:"ぼ (on) — 母親",informal:"はは/かあ (kun) — 母（はは）"},
+      {f:"子",b:"Child",hint:"N5 Kanji",formal:"し/す (on) — 子供, 親子",informal:"こ (kun) — 子（こ）"},
+      {f:"女",b:"Woman / Female",hint:"N5 Kanji",formal:"じょ/にょ (on) — 女性, 少女",informal:"おんな/め (kun) — 女（おんな）"},
+      {f:"男",b:"Man / Male",hint:"N5 Kanji",formal:"だん/なん (on) — 男性, 男子",informal:"おとこ (kun) — 男（おとこ）"},
+      {f:"友",b:"Friend",hint:"N5 Kanji",formal:"ゆう (on) — 友人, 友好",informal:"とも (kun) — 友（とも）, 友達"},
+      {f:"家",b:"House / Home",hint:"N5 Kanji",formal:"か/け (on) — 家族, 家庭",informal:"いえ/うち (kun) — 家（いえ）"},
+      {f:"車",b:"Car / Vehicle",hint:"N5 Kanji",formal:"しゃ (on) — 電車, 自動車",informal:"くるま (kun) — 車（くるま）"},
+      {f:"駅",b:"Station",hint:"N5 Kanji",formal:"えき (on) — 駅長, 駅前"},
+      {f:"電",b:"Electricity",hint:"N5 Kanji",formal:"でん (on) — 電車, 電話, 電気"},
+      {f:"道",b:"Road / Way",hint:"N5 Kanji",formal:"どう (on) — 道路, 鉄道",informal:"みち (kun) — 道（みち）"},
+      {f:"入",b:"Enter",hint:"N5 Kanji",formal:"にゅう (on) — 入学, 入口",informal:"い/はい (kun) — 入る"},
+      {f:"出",b:"Exit / Leave",hint:"N5 Kanji",formal:"しゅつ/すい (on) — 出口, 外出",informal:"で/だ (kun) — 出る, 出す"},
+      {f:"行",b:"Go",hint:"N5 Kanji",formal:"こう/ぎょう (on) — 銀行, 行動",informal:"い/ゆ/おこな (kun) — 行く"},
+      {f:"来",b:"Come",hint:"N5 Kanji",formal:"らい (on) — 来週, 来年",informal:"く/き/こ (kun) — 来る"},
+      {f:"見",b:"See / Look",hint:"N5 Kanji",formal:"けん (on) — 見学, 意見",informal:"み (kun) — 見る, 見せる"},
+      {f:"聞",b:"Listen / Ask",hint:"N5 Kanji",formal:"ぶん/もん (on) — 新聞, 質問",informal:"き/きこ (kun) — 聞く"},
+      {f:"書",b:"Write",hint:"N5 Kanji",formal:"しょ (on) — 書類, 読書",informal:"か (kun) — 書く"},
+      {f:"読",b:"Read",hint:"N5 Kanji",formal:"どく/とく/とう (on) — 読書, 読者",informal:"よ (kun) — 読む"},
+      {f:"話",b:"Talk / Story",hint:"N5 Kanji",formal:"わ (on) — 会話, 電話",informal:"はな/はなし (kun) — 話す, 話"},
+      {f:"食",b:"Food / Eat",hint:"N5 Kanji",formal:"しょく (on) — 食事, 食堂",informal:"た (kun) — 食べる"},
+      {f:"飲",b:"Drink",hint:"N5 Kanji",formal:"いん (on) — 飲料, 飲食",informal:"の (kun) — 飲む"},
+      {f:"買",b:"Buy",hint:"N5 Kanji",formal:"ばい (on) — 売買",informal:"か (kun) — 買う, 買い物"},
+      {f:"売",b:"Sell",hint:"N5 Kanji",formal:"ばい (on) — 販売, 売店",informal:"う (kun) — 売る"},
+      {f:"会",b:"Meet / Association",hint:"N5 Kanji",formal:"かい/え (on) — 会社, 会議",informal:"あ (kun) — 会う"},
+      {f:"社",b:"Company / Shrine",hint:"N5 Kanji",formal:"しゃ (on) — 会社, 社会"},
+      {f:"時",b:"Time / Hour",hint:"N5 Kanji",formal:"じ (on) — 時間, 時計",informal:"とき (kun) — 時（とき）"},
+      {f:"間",b:"Between / Time interval",hint:"N5 Kanji",formal:"かん/けん (on) — 時間, 人間",informal:"ま/あいだ (kun) — 間（あいだ）"},
+      {f:"分",b:"Minute / Understand",hint:"N5 Kanji",formal:"ぶん/ふん (on) — 分間, 十分",informal:"わ (kun) — 分かる"},
+      {f:"何",b:"What",hint:"N5 Kanji",formal:"か (on) — 何者",informal:"なに/なん (kun) — 何（なに）"},
+      {f:"今",b:"Now / Present",hint:"N5 Kanji",formal:"こん/きん (on) — 今日, 今週",informal:"いま (kun) — 今（いま）"},
+      {f:"私",b:"I / Me / Private",hint:"N5 Kanji",formal:"し (on) — 私立",informal:"わたし/わたくし (kun) — 私（わたし）"},
+      {f:"自",b:"Self",hint:"N5 Kanji",formal:"じ/し (on) — 自分, 自動車"},
+      {f:"分",b:"Part / Self",hint:"N5 Kanji",formal:"ぶん/ふん (on) — 自分, 十分",informal:"わ (kun) — 分かる"},
+      {f:"白",b:"White",hint:"N5 Kanji",formal:"はく/びゃく (on) — 白紙, 告白",informal:"しろ/しら (kun) — 白（しろ）"},
+      {f:"黒",b:"Black",hint:"N5 Kanji",formal:"こく (on) — 黒板",informal:"くろ (kun) — 黒（くろ）"},
+      {f:"赤",b:"Red",hint:"N5 Kanji",formal:"せき/しゃく (on) — 赤道",informal:"あか (kun) — 赤（あか）"},
+      {f:"青",b:"Blue / Green",hint:"N5 Kanji",formal:"せい/しょう (on) — 青年",informal:"あお (kun) — 青（あお）"},
+      {f:"花",b:"Flower",hint:"N5 Kanji",formal:"か (on) — 花火, 開花",informal:"はな (kun) — 花（はな）"},
+      {f:"雨",b:"Rain",hint:"N5 Kanji",formal:"う (on) — 梅雨",informal:"あめ/あま (kun) — 雨（あめ）"},
+      {f:"天",b:"Sky / Heaven",hint:"N5 Kanji",formal:"てん (on) — 天気, 天国"},
+      {f:"気",b:"Spirit / Energy / Feeling",hint:"N5 Kanji",formal:"き/け (on) — 天気, 元気, 気分"},
+      {f:"空",b:"Sky / Empty",hint:"N5 Kanji",formal:"くう (on) — 空港, 空気",informal:"そら/から (kun) — 空（そら）"},
+      {f:"海",b:"Sea / Ocean",hint:"N5 Kanji",formal:"かい (on) — 海外, 海岸",informal:"うみ (kun) — 海（うみ）"},
+      {f:"山",b:"Mountain",hint:"N5 Kanji",formal:"さん/ざん (on) — 富士山",informal:"やま (kun) — 山（やま）"},
+      {f:"魚",b:"Fish",hint:"N5 Kanji",formal:"ぎょ (on) — 金魚, 魚類",informal:"さかな/うお (kun) — 魚（さかな）"},
+      {f:"犬",b:"Dog",hint:"N5 Kanji",formal:"けん (on) — 愛犬",informal:"いぬ (kun) — 犬（いぬ）"},
+      {f:"猫",b:"Cat",hint:"N5 Kanji",formal:"びょう (on) — 猫舌",informal:"ねこ (kun) — 猫（ねこ）"},
+      {f:"一",b:"One",hint:"N5 Kanji",formal:"いち/いつ (on) — 一月, 一番",informal:"ひと (kun) — 一つ"},
+      {f:"二",b:"Two",hint:"N5 Kanji",formal:"に (on) — 二月, 二番",informal:"ふた (kun) — 二つ"},
+      {f:"三",b:"Three",hint:"N5 Kanji",formal:"さん (on) — 三月",informal:"み (kun) — 三つ"},
+      {f:"四",b:"Four",hint:"N5 Kanji",formal:"し (on) — 四月",informal:"よ/よん (kun) — 四つ"},
+      {f:"五",b:"Five",hint:"N5 Kanji",formal:"ご (on) — 五月",informal:"いつ (kun) — 五つ"},
+      {f:"六",b:"Six",hint:"N5 Kanji",formal:"ろく (on) — 六月",informal:"む (kun) — 六つ"},
+      {f:"七",b:"Seven",hint:"N5 Kanji",formal:"しち (on) — 七月",informal:"なな (kun) — 七つ"},
+      {f:"八",b:"Eight",hint:"N5 Kanji",formal:"はち (on) — 八月",informal:"や (kun) — 八つ"},
+      {f:"九",b:"Nine",hint:"N5 Kanji",formal:"く/きゅう (on) — 九月",informal:"ここの (kun) — 九つ"},
+      {f:"十",b:"Ten",hint:"N5 Kanji",formal:"じゅう/じっ (on) — 十月, 二十",informal:"とお (kun) — 十"},
+      {f:"百",b:"Hundred",hint:"N5 Kanji",formal:"ひゃく (on) — 百円, 三百"},
+      {f:"千",b:"Thousand",hint:"N5 Kanji",formal:"せん/ち (on) — 千円, 一千"},
+      {f:"万",b:"Ten thousand",hint:"N5 Kanji",formal:"まん/ばん (on) — 一万, 万国"},
+      {f:"円",b:"Yen / Circle",hint:"N5 Kanji",formal:"えん (on) — 円高, 百円"},
+      {f:"東",b:"East",hint:"N5 Kanji",formal:"とう (on) — 東京, 東洋",informal:"ひがし (kun) — 東（ひがし）"},
+      {f:"西",b:"West",hint:"N5 Kanji",formal:"せい/さい (on) — 西洋, 関西",informal:"にし (kun) — 西（にし）"},
+      {f:"南",b:"South",hint:"N5 Kanji",formal:"なん/な (on) — 南米, 南極",informal:"みなみ (kun) — 南（みなみ）"},
+      {f:"北",b:"North",hint:"N5 Kanji",formal:"ほく (on) — 北海道, 北極",informal:"きた (kun) — 北（きた）"},
+      {f:"右",b:"Right",hint:"N5 Kanji",formal:"う/ゆう (on) — 右折",informal:"みぎ (kun) — 右（みぎ）"},
+      {f:"左",b:"Left",hint:"N5 Kanji",formal:"さ (on) — 左折",informal:"ひだり (kun) — 左（ひだり）"},
+      {f:"前",b:"Front / Before",hint:"N5 Kanji",formal:"ぜん (on) — 以前, 前後",informal:"まえ (kun) — 前（まえ）"},
+      {f:"後",b:"After / Behind",hint:"N5 Kanji",formal:"ご/こう (on) — 以後, 後輩",informal:"あと/うし (kun) — 後（あと）"},
+      {f:"外",b:"Outside",hint:"N5 Kanji",formal:"がい/げ (on) — 外国, 海外",informal:"そと/はず (kun) — 外（そと）"},
+      {f:"内",b:"Inside",hint:"N5 Kanji",formal:"ない/だい (on) — 国内, 以内",informal:"うち (kun) — 内（うち）"},
+    ],
+    grammar: [
+      {f:"〜は〜です",b:"A is B (topic + copula)",hint:"N5 Grammar",example:"私は学生です — I am a student\n（〜 = topic marker + description）"},
+      {f:"〜じゃありません / ではありません",b:"A is not B (negative copula)",hint:"N5 Grammar",example:"これは本じゃありません — This is not a book\n（casual: じゃない）"},
+      {f:"〜ですか",b:"Is it ~? (question)",hint:"N5 Grammar",example:"これは本ですか — Is this a book?\n（rising intonation in speech）"},
+      {f:"〜が好きです / 嫌いです",b:"Like / Dislike ~",hint:"N5 Grammar",example:"音楽が好きです — I like music\n猫が嫌いです — I dislike cats"},
+      {f:"〜ください",b:"Please give me ~ / Please do ~",hint:"N5 Grammar",example:"水をください — Please give me water\n待ってください — Please wait"},
+      {f:"〜ています",b:"Currently doing ~ / State of being",hint:"N5 Grammar",example:"食べています — I am eating\n結婚しています — I am married\n（〜 = て-form verb）"},
+      {f:"〜たい / たいです",b:"Want to do ~",hint:"N5 Grammar",example:"日本に行きたい — I want to go to Japan\n（〜 = verb stem + たい）"},
+      {f:"〜ない / ません",b:"Don't / Doesn't (negative verb)",hint:"N5 Grammar",example:"食べない — don't eat (plain)\n食べません — don't eat (polite)\n（dictionary form → ない form）"},
+      {f:"〜た / ました",b:"Did ~ (past tense)",hint:"N5 Grammar",example:"食べた — ate (plain past)\n食べました — ate (polite past)"},
+      {f:"〜に行く / 来る",b:"Go / Come to ~ (purpose)",hint:"N5 Grammar",example:"買い物に行く — go shopping\n遊びに来る — come to play"},
+      {f:"〜から〜まで",b:"From ~ to ~",hint:"N5 Grammar",example:"月曜日から金曜日まで — Mon to Fri\n東京から大阪まで — Tokyo to Osaka"},
+      {f:"〜と〜",b:"~ and ~ (nouns)",hint:"N5 Grammar",example:"りんごとみかん — apple and orange\n（と connects nouns only, not clauses）"},
+      {f:"〜も",b:"~ also / too",hint:"N5 Grammar",example:"私も学生です — I'm also a student\n（も replaces は, が, or を）"},
+      {f:"〜の",b:"Possessive / Noun modifier",hint:"N5 Grammar",example:"私の本 — my book\n日本語の先生 — Japanese teacher\n（〜の = belonging to or describing）"},
+      {f:"〜ませんか",b:"Won't you ~? (invitation)",hint:"N5 Grammar",example:"一緒に食べませんか — Won't you eat with me?\n（polite invitation to do something together）"},
+      {f:"〜ましょう / ましょうか",b:"Let's ~ / Shall we ~?",hint:"N5 Grammar",example:"行きましょう — Let's go\n始めましょうか — Shall we start?"},
+      {f:"〜てください",b:"Please do ~ (request)",hint:"N5 Grammar",example:"ここに名前を書いてください — Please write your name here\n（て-form + ください）"},
+      {f:"〜てもいいですか",b:"May I ~? / Is it OK to ~?",hint:"N5 Grammar",example:"ここに座ってもいいですか — May I sit here?\n（asking for permission）"},
+      {f:"〜てはいけません",b:"Must not ~ / Not allowed to ~",hint:"N5 Grammar",example:"ここで写真を撮ってはいけません — You must not take photos here"},
+      {f:"〜ことができます",b:"Can / Be able to ~",hint:"N5 Grammar",example:"日本語を話すことができます — I can speak Japanese\n（formal version of dictionary form + られる）"},
+      {f:"〜がある / がいる",b:"There is ~ (existence)",hint:"N5 Grammar",example:"公園に犬がいる — There is a dog in the park\n机に本がある — There is a book on the desk"},
+      {f:"〜に〜があります",b:"There is ~ at/in ~",hint:"N5 Grammar",example:"部屋にテレビがあります — There is a TV in the room\n（place に thing が あります）"},
+      {f:"〜で",b:"At ~ / By means of ~ (particle)",hint:"N5 Grammar",example:"図書館で勉強する — study at the library\n電車で行く — go by train\n（location of action or means）"},
+      {f:"〜に",b:"To ~ / At ~ / In ~ (particle)",hint:"N5 Grammar",example:"学校に行く — go to school\n六時に起きる — wake up at 6\n（direction, time, or location of existence）"},
+      {f:"〜へ",b:"Toward ~ (direction particle)",hint:"N5 Grammar",example:"東京へ行く — go toward Tokyo\n（similar to に but emphasizes direction）"},
+      {f:"〜を",b:"Object marker (particle)",hint:"N5 Grammar",example:"りんごを食べる — eat an apple\n音楽を聴く — listen to music"},
+      {f:"〜が",b:"Subject marker (particle)",hint:"N5 Grammar",example:"猫がいる — there is a cat\n日本語が好き — I like Japanese\n（marks subject, especially with いる/ある/好き/できる）"},
+      {f:"〜は",b:"Topic marker (particle)",hint:"N5 Grammar",example:"私は学生です — As for me, I am a student\n（marks the topic, not necessarily the subject）"},
+      {f:"〜ね / よ / よね",b:"Sentence ending particles",hint:"N5 Grammar",example:"いい天気ですね — Nice weather, isn't it\nそれは違いますよ — That's wrong, I tell you\nそうですよね — That's right, isn't it"},
+      {f:"〜どんな〜ですか",b:"What kind of ~ is it?",hint:"N5 Grammar",example:"どんな映画が好きですか — What kind of movies do you like?\n（どんな = what kind of）"},
+      {f:"〜どのくらい",b:"How long / How much / To what extent",hint:"N5 Grammar",example:"どのくらいかかりますか — How long will it take?\n（used for time, distance, amount）"},
+      {f:"〜時間",b:"~ hours (duration)",hint:"N5 Grammar",example:"二時間勉強した — I studied for two hours\n（〜時間 = duration, 〜時 = time of day）"},
+      {f:"〜番",b:"Number ~ / Turn ~",hint:"N5 Grammar",example:"一番好きな食べ物 — My most favorite food\n（一番 = number one = most）"},
+      {f:"〜より〜のほうが",b:"~ is more ~ than ~",hint:"N5 Grammar",example:"猫より犬のほうが好き — I like dogs more than cats\n（AよりBのほうが = B more than A）"},
+      {f:"〜と〜どちらが",b:"Which is more ~ A or B?",hint:"N5 Grammar",example:"犬と猫どちらが好きですか — Which do you prefer, dogs or cats?"},
+      {f:"〜前に",b:"Before doing ~",hint:"N5 Grammar",example:"寝る前に歯を磨く — brush teeth before sleeping\n（dictionary form + 前に）"},
+      {f:"〜後で",b:"After doing ~",hint:"N5 Grammar",example:"食べた後でさんぽした — took a walk after eating\n（た-form + 後で）"},
+      {f:"〜から",b:"Because ~ / From ~",hint:"N5 Grammar",example:"疲れたから寝ます — I'm sleeping because I'm tired\n東京から来ました — I came from Tokyo"},
+      {f:"〜けど / が",b:"But ~ / Although ~",hint:"N5 Grammar",example:"行きたいけど時間がない — I want to go but I have no time\n（casual: けど, polite: が）"},
+      {f:"もう / まだ",b:"Already / Not yet",hint:"N5 Grammar",example:"もう食べた — already ate\nまだ食べていない — haven't eaten yet"},
+    ],
+    reading: [
+      {f:"私は学生です",b:"I am a student",hint:"N5 Reading",formal:"私は学生でございます (keigo)",informal:"学生だよ (casual)"},
+      {f:"今日は天気がいいですね",b:"The weather is nice today, isn't it?",hint:"N5 Reading",formal:"本日はお天気がよろしいですね (polite)",informal:"今日いい天気だね (casual)"},
+      {f:"水をください",b:"Please give me water",hint:"N5 Reading",formal:"お水をいただけますか (polite)",informal:"水ちょうだい (casual)"},
+      {f:"トイレはどこですか",b:"Where is the bathroom?",hint:"N5 Reading",formal:"お手洗いはどちらですか (polite)",informal:"トイレどこ？(casual)"},
+      {f:"これはいくらですか",b:"How much is this?",hint:"N5 Reading",formal:"おいくらでございますか (keigo)",informal:"これいくら？(casual)"},
+      {f:"駅はどこにありますか",b:"Where is the station?",hint:"N5 Reading",formal:"駅はどちらにございますか (keigo)",informal:"駅どこ？(casual)"},
+      {f:"日本語が少し話せます",b:"I can speak a little Japanese",hint:"N5 Reading",informal:"日本語ちょっと話せる (casual)"},
+      {f:"毎日六時に起きます",b:"I wake up at 6 every day",hint:"N5 Reading",informal:"毎日六時に起きてる (casual)"},
+      {f:"友達と映画を見ました",b:"I watched a movie with a friend",hint:"N5 Reading",informal:"友達と映画見た (casual)"},
+      {f:"このりんごはおいしい",b:"This apple is delicious",hint:"N5 Reading",informal:"このりんごやばい！(casual slang)"},
+      {f:"今日は学校に行きません",b:"I'm not going to school today",hint:"N5 Reading",informal:"今日学校行かない (casual)"},
+      {f:"電車で会社に行きます",b:"I go to work by train",hint:"N5 Reading",informal:"電車で会社行く (casual)"},
+      {f:"昨日は何をしましたか",b:"What did you do yesterday?",hint:"N5 Reading",informal:"昨日何した？(casual)"},
+      {f:"来週の土曜日に映画を見に行きます",b:"I'm going to see a movie next Saturday",hint:"N5 Reading",informal:"来週の土曜日映画見に行く (casual)"},
+      {f:"この本はとても面白いです",b:"This book is very interesting",hint:"N5 Reading",informal:"この本めっちゃおもしろい (casual)"},
+      {f:"ここから駅まで歩いて十分かかります",b:"It takes 10 minutes to walk from here to the station",hint:"N5 Reading"},
+      {f:"私は毎朝コーヒーを飲みます",b:"I drink coffee every morning",hint:"N5 Reading",informal:"毎朝コーヒー飲んでる (casual)"},
+      {f:"あの店はいつも混んでいます",b:"That shop is always crowded",hint:"N5 Reading",informal:"あの店いつも混んでる (casual)"},
+      {f:"田中さんは今どこにいますか",b:"Where is Tanaka-san right now?",hint:"N5 Reading",informal:"田中さん今どこにいる？(casual)"},
+      {f:"この映画は二時間ぐらいです",b:"This movie is about 2 hours",hint:"N5 Reading",informal:"この映画二時間ぐらい (casual)"},
+      {f:"母は料理が上手です",b:"My mother is good at cooking",hint:"N5 Reading",informal:"お母さん料理うまい (casual)"},
+      {f:"週末は友達と買い物に行きました",b:"I went shopping with friends on the weekend",hint:"N5 Reading",informal:"週末友達と買い物行った (casual)"},
+      {f:"日本に来て三ヶ月になります",b:"It has been three months since I came to Japan",hint:"N5 Reading"},
+      {f:"この近くにコンビニがありますか",b:"Is there a convenience store near here?",hint:"N5 Reading",informal:"この辺コンビニある？(casual)"},
+      {f:"もう少しゆっくり話してください",b:"Please speak a little more slowly",hint:"N5 Reading",informal:"もうちょっとゆっくり話して (casual)"},
+      {f:"今夜は何を食べたいですか",b:"What do you want to eat tonight?",hint:"N5 Reading",informal:"今夜何食べたい？(casual)"},
+      {f:"私の部屋は小さいですが、きれいです",b:"My room is small but clean",hint:"N5 Reading",informal:"私の部屋小さいけどきれい (casual)"},
+      {f:"田中さんはどこの出身ですか",b:"Where is Tanaka-san from?",hint:"N5 Reading",informal:"田中さんどこ出身？(casual)"},
+      {f:"明日の天気はどうですか",b:"What will the weather be like tomorrow?",hint:"N5 Reading",informal:"明日の天気どう？(casual)"},
+      {f:"このバスは空港に行きますか",b:"Does this bus go to the airport?",hint:"N5 Reading",informal:"このバス空港行く？(casual)"},
+    ],
+  },
+
+
+  // ── N4 ──────────────────────────────────────────────────────
+  N4: {
+    vocab: [
+      // Daily life & society
+      {f:"せいかつ",b:"Life / Living (生活)",hint:"N4 Noun"},
+      {f:"しゃかい",b:"Society (社会)",hint:"N4 Noun"},
+      {f:"けいざい",b:"Economy (経済)",hint:"N4 Noun"},
+      {f:"せいじ",b:"Politics (政治)",hint:"N4 Noun"},
+      {f:"ぶんか",b:"Culture (文化)",hint:"N4 Noun"},
+      {f:"れきし",b:"History (歴史)",hint:"N4 Noun"},
+      {f:"じかん",b:"Time / Duration (時間)",hint:"N4 Noun"},
+      {f:"ばあい",b:"Case / Situation (場合)",hint:"N4 Noun"},
+      {f:"もんだい",b:"Problem / Question (問題)",hint:"N4 Noun"},
+      {f:"けっか",b:"Result (結果)",hint:"N4 Noun"},
+      {f:"りゆう",b:"Reason (理由)",hint:"N4 Noun"},
+      {f:"もくてき",b:"Purpose / Goal (目的)",hint:"N4 Noun"},
+      {f:"きかい",b:"Opportunity / Machine (機会・機械)",hint:"N4 Noun"},
+      {f:"かんけい",b:"Relationship (関係)",hint:"N4 Noun"},
+      {f:"えいきょう",b:"Influence / Effect (影響)",hint:"N4 Noun"},
+      {f:"じっさい",b:"Reality / In practice (実際)",hint:"N4 Noun"},
+      {f:"せかい",b:"World (世界)",hint:"N4 Noun"},
+      {f:"しぜん",b:"Nature (自然)",hint:"N4 Noun"},
+      {f:"かがく",b:"Science (科学)",hint:"N4 Noun"},
+      {f:"ぎじゅつ",b:"Technology / Technique (技術)",hint:"N4 Noun"},
+      {f:"いりょう",b:"Medical care (医療)",hint:"N4 Noun"},
+      {f:"きょういく",b:"Education (教育)",hint:"N4 Noun"},
+      {f:"けんきゅう",b:"Research (研究)",hint:"N4 Noun"},
+      {f:"かいぎ",b:"Meeting / Conference (会議)",hint:"N4 Noun"},
+      {f:"しゅっちょう",b:"Business trip (出張)",hint:"N4 Noun"},
+      {f:"しゅっぱつ",b:"Departure (出発)",hint:"N4 Noun"},
+      {f:"とうちゃく",b:"Arrival (到着)",hint:"N4 Noun"},
+      {f:"よやく",b:"Reservation / Booking (予約)",hint:"N4 Noun",informal:"よやくした？— did you reserve? (casual)"},
+      {f:"りょこう",b:"Travel / Trip (旅行)",hint:"N4 Noun"},
+      {f:"おみやげ",b:"Souvenir (お土産)",hint:"N4 Noun"},
+      {f:"こうつう",b:"Traffic / Transport (交通)",hint:"N4 Noun"},
+      {f:"じこ",b:"Accident (事故)",hint:"N4 Noun"},
+      {f:"びょうき",b:"Illness / Disease (病気)",hint:"N4 Noun"},
+      {f:"くすり",b:"Medicine / Drug (薬)",hint:"N4 Noun"},
+      {f:"けが",b:"Injury (怪我)",hint:"N4 Noun"},
+      {f:"きぶん",b:"Feeling / Mood (気分)",hint:"N4 Noun"},
+      {f:"たいちょう",b:"Physical condition (体調)",hint:"N4 Noun"},
+      {f:"せいかく",b:"Personality / Character (性格)",hint:"N4 Noun"},
+      {f:"しゅうかん",b:"Habit / Custom (習慣)",hint:"N4 Noun"},
+      {f:"ようす",b:"Appearance / State (様子)",hint:"N4 Noun"},
+      {f:"おかげ",b:"Thanks to ~ / Due to ~ (おかげ)",hint:"N4 Noun"},
+      {f:"せいど",b:"System / Institution (制度)",hint:"N4 Noun"},
+      {f:"やくそく",b:"Promise (約束)",hint:"N4 Noun",informal:"やくそくだよ — it's a promise! (casual)"},
+      {f:"けいかく",b:"Plan (計画)",hint:"N4 Noun"},
+      {f:"じゅんび",b:"Preparation (準備)",hint:"N4 Noun"},
+      {f:"れんしゅう",b:"Practice (練習)",hint:"N4 Noun"},
+      {f:"しゅうり",b:"Repair (修理)",hint:"N4 Noun"},
+      {f:"こしょう",b:"Breakdown / Malfunction (故障)",hint:"N4 Noun"},
+      {f:"ほうほう",b:"Method / Way (方法)",hint:"N4 Noun"},
+      {f:"じょうほう",b:"Information (情報)",hint:"N4 Noun"},
+      // Na-adjectives
+      {f:"しんせつ",b:"Kindness / Kind (親切)",hint:"N4 Na-adj"},
+      {f:"ていねい",b:"Polite / Careful (丁寧)",hint:"N4 Na-adj"},
+      {f:"まじめ",b:"Serious / Diligent (真面目)",hint:"N4 Na-adj"},
+      {f:"じゆう",b:"Freedom / Free (自由)",hint:"N4 Na-adj"},
+      {f:"じゅうぶん",b:"Enough / Sufficient (十分)",hint:"N4 Na-adj"},
+      {f:"かんたん",b:"Simple / Easy (簡単)",hint:"N4 Na-adj"},
+      {f:"たいへん",b:"Tough / Serious (大変)",hint:"N4 Na-adj"},
+      {f:"ふしぎ",b:"Strange / Mysterious (不思議)",hint:"N4 Na-adj"},
+      {f:"あんしん",b:"Relief / Peace of mind (安心)",hint:"N4 Na-adj"},
+      {f:"しんぱい",b:"Worry / Concern (心配)",hint:"N4 Na-adj"},
+      {f:"とくべつ",b:"Special (特別)",hint:"N4 Na-adj"},
+      {f:"ふつう",b:"Normal / Ordinary (普通)",hint:"N4 Na-adj"},
+      {f:"たしか",b:"Certain / Sure (確か)",hint:"N4 Na-adj"},
+      {f:"だいじ",b:"Important / Precious (大事)",hint:"N4 Na-adj"},
+      {f:"むり",b:"Impossible / Unreasonable (無理)",hint:"N4 Na-adj"},
+      {f:"むだ",b:"Wasteful / Useless (無駄)",hint:"N4 Na-adj"},
+      {f:"ざんねん",b:"Regrettable / Too bad (残念)",hint:"N4 Na-adj"},
+      // I-adjectives
+      {f:"ふとい",b:"Thick / Fat (太い)",hint:"N4 Adj"},
+      {f:"ほそい",b:"Thin / Slender (細い)",hint:"N4 Adj"},
+      {f:"かたい",b:"Hard / Strict (硬い)",hint:"N4 Adj"},
+      {f:"やわらかい",b:"Soft (柔らかい)",hint:"N4 Adj"},
+      {f:"あぶない",b:"Dangerous (危ない)",hint:"N4 Adj"},
+      {f:"つよい",b:"Strong (強い)",hint:"N4 Adj"},
+      {f:"よわい",b:"Weak (弱い)",hint:"N4 Adj"},
+      {f:"かしこい",b:"Clever / Smart (賢い)",hint:"N4 Adj"},
+      {f:"おとなしい",b:"Quiet / Well-behaved (大人しい)",hint:"N4 Adj"},
+      {f:"はずかしい",b:"Embarrassing (恥ずかしい)",hint:"N4 Adj"},
+      {f:"さびしい",b:"Lonely (寂しい)",hint:"N4 Adj"},
+      {f:"なつかしい",b:"Nostalgic (懐かしい)",hint:"N4 Adj"},
+      {f:"すばらしい",b:"Wonderful (素晴らしい)",hint:"N4 Adj"},
+      {f:"にくい",b:"Difficult to do / Hateful (にくい)",hint:"N4 Adj"},
+      {f:"やすい",b:"Easy to do (〜やすい suffix)",hint:"N4 Adj"},
+      // Verbs
+      {f:"わかる",b:"To understand (分かる)",hint:"N4 Verb",informal:"わかんない — I dunno (casual)"},
+      {f:"おぼえる",b:"To remember / memorize (覚える)",hint:"N4 Verb"},
+      {f:"わすれる",b:"To forget (忘れる)",hint:"N4 Verb"},
+      {f:"かんがえる",b:"To think / consider (考える)",hint:"N4 Verb"},
+      {f:"きめる",b:"To decide (決める)",hint:"N4 Verb"},
+      {f:"きまる",b:"To be decided (決まる)",hint:"N4 Verb"},
+      {f:"かわる",b:"To change — intrans. (変わる)",hint:"N4 Verb"},
+      {f:"かえる",b:"To change — trans. (変える)",hint:"N4 Verb"},
+      {f:"つづける",b:"To continue — trans. (続ける)",hint:"N4 Verb"},
+      {f:"つづく",b:"To continue — intrans. (続く)",hint:"N4 Verb"},
+      {f:"やめる",b:"To quit / stop (やめる)",hint:"N4 Verb",informal:"もうやめて — stop it (casual)"},
+      {f:"しらべる",b:"To investigate / look up (調べる)",hint:"N4 Verb"},
+      {f:"たすける",b:"To help / rescue (助ける)",hint:"N4 Verb"},
+      {f:"つかれる",b:"To get tired (疲れる)",hint:"N4 Verb",informal:"つかれた〜 — I'm beat (casual)"},
+      {f:"おどろく",b:"To be surprised (驚く)",hint:"N4 Verb"},
+      {f:"なく",b:"To cry (泣く)",hint:"N4 Verb"},
+      {f:"わらう",b:"To laugh / smile (笑う)",hint:"N4 Verb"},
+      {f:"おこる",b:"To get angry (怒る)",hint:"N4 Verb"},
+      {f:"よろこぶ",b:"To be glad / rejoice (喜ぶ)",hint:"N4 Verb"},
+      {f:"しんじる",b:"To believe / trust (信じる)",hint:"N4 Verb"},
+      {f:"まにあう",b:"To be in time / make it (間に合う)",hint:"N4 Verb"},
+      {f:"おくれる",b:"To be late (遅れる)",hint:"N4 Verb"},
+      {f:"とまる",b:"To stop / stay overnight (止まる・泊まる)",hint:"N4 Verb"},
+      {f:"うごく",b:"To move — intrans. (動く)",hint:"N4 Verb"},
+      {f:"ひっこす",b:"To move house (引っ越す)",hint:"N4 Verb"},
+      {f:"そだつ",b:"To grow up (育つ)",hint:"N4 Verb"},
+      {f:"なれる",b:"To get used to (慣れる)",hint:"N4 Verb"},
+      {f:"こまる",b:"To be troubled / stuck (困る)",hint:"N4 Verb"},
+      {f:"えらぶ",b:"To choose / select (選ぶ)",hint:"N4 Verb"},
+      {f:"あつめる",b:"To collect / gather (集める)",hint:"N4 Verb"},
+      {f:"おくる",b:"To send / see off (送る)",hint:"N4 Verb"},
+      {f:"もどる",b:"To return / go back (戻る)",hint:"N4 Verb"},
+      {f:"さがす",b:"To search / look for (探す)",hint:"N4 Verb"},
+      {f:"みつける",b:"To find (見つける)",hint:"N4 Verb"},
+      {f:"ちかづく",b:"To approach / get closer (近づく)",hint:"N4 Verb"},
+      {f:"うけとる",b:"To receive / accept (受け取る)",hint:"N4 Verb"},
+      {f:"かつ",b:"To win (勝つ)",hint:"N4 Verb"},
+      {f:"まける",b:"To lose / be defeated (負ける)",hint:"N4 Verb"},
+      // Adverbs & conjunctions
+      {f:"たとえば",b:"For example (例えば)",hint:"N4 Adverb"},
+      {f:"しかし",b:"However / But (しかし)",hint:"N4 Conjunction"},
+      {f:"だから",b:"Therefore / So (だから)",hint:"N4 Conjunction"},
+      {f:"それに",b:"Moreover / In addition (それに)",hint:"N4 Conjunction"},
+      {f:"ところで",b:"By the way (ところで)",hint:"N4 Expression"},
+      {f:"やっぱり",b:"After all / As expected (やっぱり)",hint:"N4 Adverb"},
+      {f:"もちろん",b:"Of course (もちろん)",hint:"N4 Adverb"},
+      {f:"ぜひ",b:"By all means / Please do (ぜひ)",hint:"N4 Adverb"},
+      {f:"かならず",b:"Certainly / Without fail (必ず)",hint:"N4 Adverb"},
+      {f:"なかなか",b:"Quite / Not easily (なかなか)",hint:"N4 Adverb"},
+      {f:"ほとんど",b:"Almost / Mostly (ほとんど)",hint:"N4 Adverb"},
+      {f:"だいたい",b:"Roughly / Generally (大体)",hint:"N4 Adverb"},
+      {f:"すこしずつ",b:"Little by little (少しずつ)",hint:"N4 Adverb"},
+      {f:"けっして",b:"Never / By no means (決して)",hint:"N4 Adverb"},
+      {f:"ちょうど",b:"Exactly / Just (ちょうど)",hint:"N4 Adverb"},
+    ],
+    kanji: [
+      {f:"体",b:"Body",hint:"N4 Kanji",formal:"たい (on) — 体力, 体験",informal:"からだ (kun) — 体（からだ）"},
+      {f:"心",b:"Heart / Mind",hint:"N4 Kanji",formal:"しん (on) — 安心, 心配",informal:"こころ (kun) — 心（こころ）"},
+      {f:"力",b:"Power / Strength",hint:"N4 Kanji",formal:"りょく/りき (on) — 体力, 努力",informal:"ちから (kun) — 力（ちから）"},
+      {f:"気",b:"Spirit / Feeling / Energy",hint:"N4 Kanji",formal:"き/け (on) — 天気, 元気, 気分"},
+      {f:"道",b:"Road / Way",hint:"N4 Kanji",formal:"どう (on) — 道路, 鉄道",informal:"みち (kun) — 道（みち）"},
+      {f:"町",b:"Town",hint:"N4 Kanji",formal:"ちょう (on) — 町長, 下町",informal:"まち (kun) — 町（まち）"},
+      {f:"村",b:"Village",hint:"N4 Kanji",formal:"そん (on) — 村長, 農村",informal:"むら (kun) — 村（むら）"},
+      {f:"花",b:"Flower",hint:"N4 Kanji",formal:"か (on) — 花火, 開花",informal:"はな (kun) — 花（はな）"},
+      {f:"鳥",b:"Bird",hint:"N4 Kanji",formal:"ちょう (on) — 野鳥, 鳥類",informal:"とり (kun) — 鳥（とり）"},
+      {f:"魚",b:"Fish",hint:"N4 Kanji",formal:"ぎょ (on) — 魚類, 金魚",informal:"さかな (kun) — 魚（さかな）"},
+      {f:"肉",b:"Meat / Flesh",hint:"N4 Kanji",formal:"にく (on) — 肉体, 筋肉"},
+      {f:"食",b:"Food / Eat",hint:"N4 Kanji",formal:"しょく (on) — 食事, 食堂",informal:"た (kun) — 食べる"},
+      {f:"飲",b:"Drink",hint:"N4 Kanji",formal:"いん (on) — 飲料, 飲食",informal:"の (kun) — 飲む"},
+      {f:"作",b:"Make / Create",hint:"N4 Kanji",formal:"さく (on) — 作品, 作家",informal:"つく (kun) — 作る"},
+      {f:"使",b:"Use",hint:"N4 Kanji",formal:"し (on) — 使用, 大使",informal:"つか (kun) — 使う"},
+      {f:"教",b:"Teach",hint:"N4 Kanji",formal:"きょう (on) — 教育, 教室",informal:"おし (kun) — 教える"},
+      {f:"勉",b:"Diligence",hint:"N4 Kanji",formal:"べん (on) — 勉強"},
+      {f:"強",b:"Strong",hint:"N4 Kanji",formal:"きょう (on) — 勉強, 強力",informal:"つよ (kun) — 強い"},
+      {f:"弱",b:"Weak",hint:"N4 Kanji",formal:"じゃく (on) — 弱点",informal:"よわ (kun) — 弱い"},
+      {f:"急",b:"Sudden / Urgent",hint:"N4 Kanji",formal:"きゅう (on) — 急行, 緊急",informal:"いそ (kun) — 急ぐ"},
+      {f:"早",b:"Early / Fast",hint:"N4 Kanji",formal:"そう (on) — 早退",informal:"はや (kun) — 早い"},
+      {f:"速",b:"Speed / Fast",hint:"N4 Kanji",formal:"そく (on) — 速度, 高速",informal:"はや (kun) — 速い"},
+      {f:"遅",b:"Late / Slow",hint:"N4 Kanji",formal:"ち (on) — 遅刻",informal:"おそ (kun) — 遅い, 遅れる"},
+      {f:"近",b:"Near / Close",hint:"N4 Kanji",formal:"きん (on) — 近所, 近代",informal:"ちか (kun) — 近い"},
+      {f:"遠",b:"Far / Distant",hint:"N4 Kanji",formal:"えん (on) — 遠足, 永遠",informal:"とお (kun) — 遠い"},
+      {f:"多",b:"Many / Much",hint:"N4 Kanji",formal:"た (on) — 多数, 多少",informal:"おお (kun) — 多い"},
+      {f:"少",b:"Few / Little",hint:"N4 Kanji",formal:"しょう (on) — 少年, 少数",informal:"すく/すこ (kun) — 少ない, 少し"},
+      {f:"高",b:"High / Expensive / Tall",hint:"N4 Kanji",formal:"こう (on) — 高校, 高速",informal:"たか (kun) — 高い"},
+      {f:"低",b:"Low",hint:"N4 Kanji",formal:"てい (on) — 低下, 最低",informal:"ひく (kun) — 低い"},
+      {f:"広",b:"Wide / Spacious",hint:"N4 Kanji",formal:"こう (on) — 広告, 広大",informal:"ひろ (kun) — 広い"},
+      {f:"重",b:"Heavy / Important",hint:"N4 Kanji",formal:"じゅう (on) — 重要, 重力",informal:"おも (kun) — 重い"},
+      {f:"軽",b:"Light (weight)",hint:"N4 Kanji",formal:"けい (on) — 軽量, 軽食",informal:"かる (kun) — 軽い"},
+      {f:"暑",b:"Hot (weather)",hint:"N4 Kanji",formal:"しょ (on) — 暑中",informal:"あつ (kun) — 暑い"},
+      {f:"寒",b:"Cold (weather)",hint:"N4 Kanji",formal:"かん (on) — 寒冷",informal:"さむ (kun) — 寒い"},
+      {f:"暖",b:"Warm",hint:"N4 Kanji",formal:"だん (on) — 暖房, 温暖",informal:"あたた (kun) — 暖かい"},
+      {f:"涼",b:"Cool / Fresh",hint:"N4 Kanji",formal:"りょう (on) — 涼感",informal:"すず (kun) — 涼しい"},
+      {f:"忙",b:"Busy",hint:"N4 Kanji",formal:"ぼう (on) — 多忙",informal:"いそが (kun) — 忙しい"},
+      {f:"楽",b:"Easy / Comfortable / Fun",hint:"N4 Kanji",formal:"らく/がく (on) — 音楽, 楽観",informal:"たの (kun) — 楽しい"},
+      {f:"悲",b:"Sad / Grief",hint:"N4 Kanji",formal:"ひ (on) — 悲劇",informal:"かな (kun) — 悲しい"},
+      {f:"怖",b:"Scary / Afraid",hint:"N4 Kanji",formal:"ふ (on) — 恐怖",informal:"こわ (kun) — 怖い"},
+      {f:"病",b:"Illness / Disease",hint:"N4 Kanji",formal:"びょう (on) — 病院, 病気",informal:"やまい (kun) — 病"},
+      {f:"薬",b:"Medicine",hint:"N4 Kanji",formal:"やく (on) — 薬局, 医薬",informal:"くすり (kun) — 薬"},
+      {f:"医",b:"Doctor / Medicine",hint:"N4 Kanji",formal:"い (on) — 医者, 医療"},
+      {f:"院",b:"Institution / Hospital",hint:"N4 Kanji",formal:"いん (on) — 病院, 大学院"},
+      {f:"読",b:"Read",hint:"N4 Kanji",formal:"どく (on) — 読書, 読者",informal:"よ (kun) — 読む"},
+      {f:"書",b:"Write",hint:"N4 Kanji",formal:"しょ (on) — 書類, 辞書",informal:"か (kun) — 書く"},
+      {f:"話",b:"Talk / Story",hint:"N4 Kanji",formal:"わ (on) — 会話, 電話",informal:"はな (kun) — 話す"},
+      {f:"買",b:"Buy",hint:"N4 Kanji",formal:"ばい (on) — 売買",informal:"か (kun) — 買う"},
+      {f:"売",b:"Sell",hint:"N4 Kanji",formal:"ばい (on) — 販売, 売店",informal:"う (kun) — 売る"},
+      {f:"会",b:"Meet / Association",hint:"N4 Kanji",formal:"かい (on) — 会社, 会議",informal:"あ (kun) — 会う"},
+    ],
+    grammar: [
+      {f:"〜でしょう / だろう",b:"Probably ~ / I think ~",hint:"N4 Grammar",example:"明日は雨でしょう — It will probably rain tomorrow\n（plain: だろう, polite: でしょう）"},
+      {f:"〜ので",b:"Because ~ (polite reason)",hint:"N4 Grammar",example:"忙しいので行けません — I can't go because I'm busy\n（more formal/softer than から）"},
+      {f:"〜ながら",b:"While doing ~",hint:"N4 Grammar",example:"音楽を聴きながら勉強する — Study while listening to music\n（verb stem + ながら; simultaneous actions）"},
+      {f:"〜てしまう / ちゃう",b:"End up doing ~ (regret or completion)",hint:"N4 Grammar",example:"食べてしまった — I ended up eating it all\n食べちゃった — casual form\n（often expresses regret or that something is done and over）"},
+      {f:"〜てみる",b:"Try doing ~",hint:"N4 Grammar",example:"食べてみる — I'll try eating it\n（て-form + みる = attempt something new）"},
+      {f:"〜てあげる / あげます",b:"Do ~ for someone (you give the favor)",hint:"N4 Grammar",example:"教えてあげる — I'll teach you\n（speaker does a favor for someone else）"},
+      {f:"〜てもらう / もらいます",b:"Have someone do ~ for you",hint:"N4 Grammar",example:"直してもらった — I had it fixed for me\n（speaker receives a favor from someone）"},
+      {f:"〜てくれる / くれます",b:"Do ~ for me (someone gives you a favor)",hint:"N4 Grammar",example:"手伝ってくれた — They helped me\n（third party does something for the speaker）"},
+      {f:"〜ば",b:"If ~ (conditional)",hint:"N4 Grammar",example:"食べれば元気になる — If you eat you'll feel better\n（formal conditional; not used for past events）"},
+      {f:"〜たら",b:"When / If ~ (conditional)",hint:"N4 Grammar",example:"家に帰ったら電話して — Call me when you get home\n（た-form + ら; sequential / when something happens）"},
+      {f:"〜なら",b:"If ~ is the case / Speaking of ~",hint:"N4 Grammar",example:"日本に行くなら京都がいい — If you're going to Japan, Kyoto is great\n（based on information given by the other person）"},
+      {f:"〜らしい",b:"Seems like ~ / I heard that ~",hint:"N4 Grammar",example:"彼は忙しいらしい — He seems to be busy\n（hearsay or inference from indirect evidence）"},
+      {f:"〜ようだ",b:"Appears to be ~ (direct observation)",hint:"N4 Grammar",example:"雨が降るようだ — It looks like it'll rain\n（based on what you can directly see or sense）"},
+      {f:"〜そうだ",b:"Looks like ~ (appearance) / I heard ~",hint:"N4 Grammar",example:"おいしそう — looks delicious\n雨が降りそう — looks like rain\n（adj stem / verb stem + そう = appearance；plain form + そうだ = hearsay）"},
+      {f:"〜すぎる",b:"Too much / Excessively ~",hint:"N4 Grammar",example:"食べすぎた — I ate too much\n難しすぎる — it's too difficult\n（adj stem or verb stem + すぎる）"},
+      {f:"〜ために",b:"In order to ~ / For the purpose of ~",hint:"N4 Grammar",example:"健康のために運動する — exercise for health\n試験に合格するために勉強する — study to pass the exam"},
+      {f:"〜ように",b:"So that ~ / In a way that ~",hint:"N4 Grammar",example:"聞こえるように大きな声で話す — speak loudly so people can hear\n（purpose with potential or state verbs）"},
+      {f:"〜によって",b:"Depending on ~ / By ~ / Due to ~",hint:"N4 Grammar",example:"人によって意見が違う — opinions differ by person\n（〜によって = depending on / through the means of）"},
+      {f:"〜について",b:"About ~ / Concerning ~",hint:"N4 Grammar",example:"環境問題について話し合う — discuss environmental issues\n（〜について = regarding, about a topic）"},
+      {f:"〜という",b:"Called ~ / Known as ~ / That ~",hint:"N4 Grammar",example:"東京という都市 — a city called Tokyo\n彼は来ないという — people say he won't come"},
+      {f:"〜と思う",b:"I think that ~",hint:"N4 Grammar",example:"明日は晴れると思う — I think it'll be sunny\n（plain form + と思う; speaker's opinion）"},
+      {f:"〜と言う",b:"Say that ~ / Tell ~",hint:"N4 Grammar",example:"先生は来ないと言った — The teacher said they wouldn't come\n（reporting speech）"},
+      {f:"〜かどうか",b:"Whether ~ or not",hint:"N4 Grammar",example:"行くかどうかまだわからない — I don't know yet whether I'll go\n（embedded yes/no question）"},
+      {f:"〜なければならない / ないといけない",b:"Must ~ / Have to ~",hint:"N4 Grammar",example:"宿題をしなければならない — I must do my homework\nしないといけない — have to do it (casual)"},
+      {f:"〜てもいい",b:"It's OK to ~ / May ~",hint:"N4 Grammar",example:"食べてもいいですよ — You may eat\n（giving permission）"},
+      {f:"〜てはいけない",b:"Must not ~ / Not allowed to ~",hint:"N4 Grammar",example:"ここで写真を撮ってはいけない — Must not take photos here"},
+      {f:"〜ほど",b:"To the extent of ~ / As ~ as ~",hint:"N4 Grammar",example:"死ぬほど疲れた — so tired I could die\n彼ほど上手じゃない — not as good as him"},
+      {f:"〜ばよかった",b:"Should have done ~ / Wish I had ~",hint:"N4 Grammar",example:"もっと勉強すればよかった — I should have studied more\n（regret about past action）"},
+      {f:"〜前に / 後で",b:"Before ~ / After ~",hint:"N4 Grammar",example:"寝る前に歯を磨く — brush before sleeping\n食べた後で散歩する — walk after eating"},
+      {f:"〜間に",b:"While ~ / During ~",hint:"N4 Grammar",example:"留守の間に電話があった — There was a call while I was out\n（a change occurs during a period）"},
+      {f:"〜ことがある",b:"There are times when ~ / Have done ~ before",hint:"N4 Grammar",example:"遅刻することがある — There are times I'm late\n日本に行ったことがある — I have been to Japan"},
+    ],
+    reading: [
+      {f:"毎朝七時に起きて朝ごはんを食べます",b:"I wake up at 7 every morning and eat breakfast",hint:"N4 Reading",informal:"毎朝七時に起きて朝ごはん食べてる (casual)"},
+      {f:"電車が遅れたので会議に遅刻しました",b:"The train was late so I was late to the meeting",hint:"N4 Reading",informal:"電車遅れて会議に遅刻しちゃった (casual)"},
+      {f:"この問題は思ったより難しかった",b:"This problem was harder than I thought",hint:"N4 Reading",informal:"この問題思ったより難しかった (casual)"},
+      {f:"先生に日本語を教えてもらいました",b:"I had my teacher teach me Japanese",hint:"N4 Reading",informal:"先生に日本語教えてもらった (casual)"},
+      {f:"週末は友達と買い物に行くつもりです",b:"I plan to go shopping with friends on the weekend",hint:"N4 Reading",informal:"週末友達と買い物行くつもり (casual)"},
+      {f:"日本に来てから三年が経ちました",b:"Three years have passed since I came to Japan",hint:"N4 Reading"},
+      {f:"子供の頃、毎日公園で遊んでいました",b:"When I was a child, I played in the park every day",hint:"N4 Reading",informal:"子供の頃、毎日公園で遊んでた (casual)"},
+      {f:"この映画はとても感動的でした",b:"This movie was very moving",hint:"N4 Reading",informal:"この映画めっちゃ感動した (casual)"},
+      {f:"健康のために毎日三十分歩くようにしています",b:"I try to walk 30 minutes every day for my health",hint:"N4 Reading",informal:"健康のために毎日三十分歩くようにしてる (casual)"},
+      {f:"試験に合格するために毎晩遅くまで勉強している",b:"I study late every night in order to pass the exam",hint:"N4 Reading",informal:"試験に合格するために毎晩遅くまで勉強してる (casual)"},
+      {f:"もっと早く出発すればよかったと後悔しています",b:"I regret that I should have departed earlier",hint:"N4 Reading",informal:"もっと早く出発すればよかった (casual)"},
+      {f:"友達から聞いた話によると、あのレストランはおいしいらしい",b:"According to what I heard from a friend, that restaurant seems good",hint:"N4 Reading"},
+      {f:"台風が来るそうなので外出を控えた方がいいでしょう",b:"Since a typhoon is coming, it would be best to stay in",hint:"N4 Reading"},
+      {f:"授業中にスマホを使ってはいけないと先生に言われた",b:"The teacher told me I must not use my phone during class",hint:"N4 Reading"},
+      {f:"どんなに頑張っても、うまくいかないことがある",b:"No matter how hard you try, there are times things don't go well",hint:"N4 Reading"},
+      {f:"旅行の準備をしながら、地図で場所を確認した",b:"While preparing for the trip, I confirmed the location on a map",hint:"N4 Reading"},
+      {f:"彼女は先月結婚したばかりなのに、もう転勤することになったらしい",b:"Even though she just got married last month, it seems she's already been transferred",hint:"N4 Reading"},
+      {f:"日本語がうまくなるために毎日練習することにしました",b:"I decided to practice every day to improve my Japanese",hint:"N4 Reading"},
+      {f:"いくら探しても財布が見つからなかった",b:"No matter how much I searched, I couldn't find my wallet",hint:"N4 Reading",informal:"いくら探しても財布が見つからなかった (same casual)"},
+      {f:"このごろ仕事が忙しくてなかなか家族と過ごす時間が取れない",b:"Lately work has been so busy I can barely find time to spend with my family",hint:"N4 Reading"},
+    ],
+  },
+
+  // ── N3 ──────────────────────────────────────────────────────
+  N3: {
+    vocab: [
+      // Nouns
+      {f:"いっぽう",b:"On the other hand / One side (一方)",hint:"N3 Noun"},
+      {f:"たいど",b:"Attitude (態度)",hint:"N3 Noun"},
+      {f:"かんきょう",b:"Environment (環境)",hint:"N3 Noun"},
+      {f:"じょうきょう",b:"Situation / Conditions (状況)",hint:"N3 Noun"},
+      {f:"せきにん",b:"Responsibility (責任)",hint:"N3 Noun"},
+      {f:"けんり",b:"Right / Privilege (権利)",hint:"N3 Noun"},
+      {f:"ぎむ",b:"Duty / Obligation (義務)",hint:"N3 Noun"},
+      {f:"きょうみ",b:"Interest / Curiosity (興味)",hint:"N3 Noun"},
+      {f:"いけん",b:"Opinion (意見)",hint:"N3 Noun"},
+      {f:"たいけん",b:"Experience — hands-on (体験)",hint:"N3 Noun"},
+      {f:"けいけん",b:"Experience — general (経験)",hint:"N3 Noun"},
+      {f:"ゆめ",b:"Dream (夢)",hint:"N3 Noun"},
+      {f:"きぼう",b:"Hope / Wish (希望)",hint:"N3 Noun"},
+      {f:"しんぱい",b:"Worry / Concern (心配)",hint:"N3 Noun"},
+      {f:"きんちょう",b:"Tension / Nervousness (緊張)",hint:"N3 Noun"},
+      {f:"まんぞく",b:"Satisfaction (満足)",hint:"N3 Noun"},
+      {f:"がっかり",b:"Disappointment (がっかり)",hint:"N3 Noun"},
+      {f:"ざんねん",b:"Regrettable / Too bad (残念)",hint:"N3 Na-adj"},
+      {f:"ふあん",b:"Anxiety / Unease (不安)",hint:"N3 Noun"},
+      {f:"かのうせい",b:"Possibility (可能性)",hint:"N3 Noun"},
+      {f:"げんいん",b:"Cause / Origin (原因)",hint:"N3 Noun"},
+      {f:"けっしん",b:"Determination (決心)",hint:"N3 Noun"},
+      {f:"のうりょく",b:"Ability / Capacity (能力)",hint:"N3 Noun"},
+      {f:"さいのう",b:"Talent (才能)",hint:"N3 Noun"},
+      {f:"どりょく",b:"Effort (努力)",hint:"N3 Noun"},
+      {f:"せいこう",b:"Success (成功)",hint:"N3 Noun"},
+      {f:"しっぱい",b:"Failure (失敗)",hint:"N3 Noun"},
+      {f:"もくひょう",b:"Goal / Target (目標)",hint:"N3 Noun"},
+      {f:"せいちょう",b:"Growth (成長)",hint:"N3 Noun"},
+      {f:"へんか",b:"Change (変化)",hint:"N3 Noun"},
+      {f:"しんぽ",b:"Progress (進歩)",hint:"N3 Noun"},
+      {f:"こうか",b:"Effect / Result (効果)",hint:"N3 Noun"},
+      {f:"えいきょう",b:"Influence / Impact (影響)",hint:"N3 Noun"},
+      {f:"ていあん",b:"Proposal / Suggestion (提案)",hint:"N3 Noun"},
+      {f:"じょうけん",b:"Condition / Requirement (条件)",hint:"N3 Noun"},
+      {f:"わだい",b:"Topic / Subject (話題)",hint:"N3 Noun"},
+      {f:"ないよう",b:"Content / Substance (内容)",hint:"N3 Noun"},
+      {f:"てじゅん",b:"Procedure / Steps (手順)",hint:"N3 Noun"},
+      {f:"けいかく",b:"Plan (計画)",hint:"N3 Noun"},
+      {f:"しんらい",b:"Trust / Reliability (信頼)",hint:"N3 Noun"},
+      // Adjectives & adverbs
+      {f:"きけん",b:"Dangerous (危険)",hint:"N3 Na-adj"},
+      {f:"あんぜん",b:"Safe (安全)",hint:"N3 Na-adj"},
+      {f:"ひつよう",b:"Necessary (必要)",hint:"N3 Na-adj"},
+      {f:"たいせつ",b:"Important / Precious (大切)",hint:"N3 Na-adj"},
+      {f:"ふくざつ",b:"Complicated (複雑)",hint:"N3 Na-adj"},
+      {f:"むだ",b:"Wasteful / Useless (無駄)",hint:"N3 Na-adj"},
+      {f:"こうへい",b:"Fair / Impartial (公平)",hint:"N3 Na-adj"},
+      {f:"せいかく",b:"Accurate / Precise (正確)",hint:"N3 Na-adj"},
+      {f:"てきとう",b:"Suitable / Appropriate (適当)",hint:"N3 Na-adj"},
+      {f:"きちんと",b:"Properly / Neatly (きちんと)",hint:"N3 Adverb"},
+      {f:"はっきり",b:"Clearly / Distinctly (はっきり)",hint:"N3 Adverb"},
+      {f:"すっかり",b:"Completely / Entirely (すっかり)",hint:"N3 Adverb"},
+      {f:"ちゃんと",b:"Properly / Correctly (ちゃんと)",hint:"N3 Adverb"},
+      {f:"わざと",b:"Intentionally / On purpose (わざと)",hint:"N3 Adverb"},
+      {f:"まさか",b:"No way! / Surely not (まさか)",hint:"N3 Expression"},
+      {f:"いまさら",b:"At this late stage / Now of all times (今更)",hint:"N3 Adverb"},
+      {f:"せっかく",b:"With much trouble / Specially / Taking the trouble to (せっかく)",hint:"N3 Adverb"},
+      {f:"たびたび",b:"Often / Repeatedly (度々)",hint:"N3 Adverb"},
+      {f:"めったに",b:"Rarely / Seldom (めったに)",hint:"N3 Adverb"},
+      // Verbs
+      {f:"あきらめる",b:"To give up (諦める)",hint:"N3 Verb"},
+      {f:"みとめる",b:"To recognize / admit (認める)",hint:"N3 Verb"},
+      {f:"くらべる",b:"To compare (比べる)",hint:"N3 Verb"},
+      {f:"そだてる",b:"To raise / nurture (育てる)",hint:"N3 Verb"},
+      {f:"こわれる",b:"To break — intrans. (壊れる)",hint:"N3 Verb"},
+      {f:"こわす",b:"To break — trans. (壊す)",hint:"N3 Verb"},
+      {f:"なおす",b:"To fix / correct (直す)",hint:"N3 Verb"},
+      {f:"みつかる",b:"To be found (見つかる)",hint:"N3 Verb"},
+      {f:"おこる",b:"To get angry / occur (怒る・起こる)",hint:"N3 Verb"},
+      {f:"たのむ",b:"To ask / request / rely on (頼む)",hint:"N3 Verb"},
+      {f:"こたえる",b:"To answer / respond (答える)",hint:"N3 Verb"},
+      {f:"せつめいする",b:"To explain (説明する)",hint:"N3 Verb"},
+      {f:"しょうかいする",b:"To introduce (紹介する)",hint:"N3 Verb"},
+      {f:"かくにんする",b:"To confirm / check (確認する)",hint:"N3 Verb"},
+      {f:"よういする",b:"To prepare (用意する)",hint:"N3 Verb"},
+      {f:"そうだんする",b:"To consult / discuss (相談する)",hint:"N3 Verb"},
+      {f:"えんりょする",b:"To hold back / be reserved (遠慮する)",hint:"N3 Verb"},
+      {f:"うたがう",b:"To doubt / suspect (疑う)",hint:"N3 Verb"},
+      {f:"ほめる",b:"To praise / compliment (褒める)",hint:"N3 Verb"},
+      {f:"しかる",b:"To scold (叱る)",hint:"N3 Verb"},
+      {f:"はげます",b:"To encourage / cheer up (励ます)",hint:"N3 Verb"},
+      {f:"あやまる",b:"To apologize (謝る)",hint:"N3 Verb"},
+      {f:"ゆるす",b:"To forgive / permit (許す)",hint:"N3 Verb"},
+      {f:"あらわす",b:"To express / show / represent (表す)",hint:"N3 Verb"},
+      {f:"つたえる",b:"To convey / tell / pass on (伝える)",hint:"N3 Verb"},
+      {f:"うけいれる",b:"To accept / take in (受け入れる)",hint:"N3 Verb"},
+      {f:"きをつかう",b:"To be considerate / take care (気を使う)",hint:"N3 Verb"},
+      {f:"かんどうする",b:"To be moved / touched (感動する)",hint:"N3 Verb"},
+      {f:"しっぱいする",b:"To fail / make a mistake (失敗する)",hint:"N3 Verb"},
+      {f:"せいこうする",b:"To succeed (成功する)",hint:"N3 Verb"},
+      {f:"はんだんする",b:"To judge / decide (判断する)",hint:"N3 Verb"},
+    ],
+    kanji: [
+      {f:"感",b:"Feel / Emotion",hint:"N3 Kanji",formal:"かん (on) — 感動, 感謝, 感情"},
+      {f:"思",b:"Think / Feel",hint:"N3 Kanji",formal:"し (on) — 思想, 思考",informal:"おも (kun) — 思う"},
+      {f:"知",b:"Know",hint:"N3 Kanji",formal:"ち (on) — 知識, 知能",informal:"し (kun) — 知る"},
+      {f:"考",b:"Think / Consider",hint:"N3 Kanji",formal:"こう (on) — 考慮, 参考",informal:"かんが (kun) — 考える"},
+      {f:"働",b:"Work",hint:"N3 Kanji",formal:"どう (on) — 労働, 行動",informal:"はたら (kun) — 働く"},
+      {f:"動",b:"Move",hint:"N3 Kanji",formal:"どう (on) — 運動, 動作",informal:"うご (kun) — 動く"},
+      {f:"止",b:"Stop",hint:"N3 Kanji",formal:"し (on) — 中止, 禁止",informal:"と/や (kun) — 止まる"},
+      {f:"始",b:"Begin",hint:"N3 Kanji",formal:"し (on) — 開始, 始業",informal:"はじ (kun) — 始まる"},
+      {f:"終",b:"End",hint:"N3 Kanji",formal:"しゅう (on) — 終了, 最終",informal:"お (kun) — 終わる"},
+      {f:"待",b:"Wait",hint:"N3 Kanji",formal:"たい (on) — 期待, 待機",informal:"ま (kun) — 待つ"},
+      {f:"遊",b:"Play",hint:"N3 Kanji",formal:"ゆう (on) — 遊園地",informal:"あそ (kun) — 遊ぶ"},
+      {f:"笑",b:"Laugh / Smile",hint:"N3 Kanji",formal:"しょう (on) — 微笑, 爆笑",informal:"わら (kun) — 笑う"},
+      {f:"泣",b:"Cry",hint:"N3 Kanji",formal:"きゅう (on) — 号泣",informal:"な (kun) — 泣く"},
+      {f:"怒",b:"Anger",hint:"N3 Kanji",formal:"ど (on) — 怒号",informal:"おこ/いか (kun) — 怒る"},
+      {f:"喜",b:"Joy / Rejoice",hint:"N3 Kanji",formal:"き (on) — 喜劇, 歓喜",informal:"よろこ (kun) — 喜ぶ"},
+      {f:"愛",b:"Love",hint:"N3 Kanji",formal:"あい (on) — 愛情, 愛国, 愛する"},
+      {f:"信",b:"Trust / Believe",hint:"N3 Kanji",formal:"しん (on) — 信頼, 自信, 信じる"},
+      {f:"願",b:"Wish / Desire",hint:"N3 Kanji",formal:"がん (on) — 願望, 志願",informal:"ねが (kun) — 願う"},
+      {f:"夢",b:"Dream",hint:"N3 Kanji",formal:"む (on) — 夢想",informal:"ゆめ (kun) — 夢"},
+      {f:"希",b:"Hope / Rare",hint:"N3 Kanji",formal:"き (on) — 希望, 希少"},
+      {f:"望",b:"Hope / Wish",hint:"N3 Kanji",formal:"ぼう (on) — 希望, 絶望",informal:"のぞ (kun) — 望む"},
+      {f:"努",b:"Effort",hint:"N3 Kanji",formal:"ど (on) — 努力",informal:"つと (kun) — 努める"},
+      {f:"勝",b:"Win / Surpass",hint:"N3 Kanji",formal:"しょう (on) — 勝利, 優勝",informal:"か (kun) — 勝つ"},
+      {f:"負",b:"Lose / Carry",hint:"N3 Kanji",formal:"ふ (on) — 負担, 勝負",informal:"ま (kun) — 負ける"},
+      {f:"選",b:"Choose / Select",hint:"N3 Kanji",formal:"せん (on) — 選択, 選挙",informal:"えら (kun) — 選ぶ"},
+      {f:"決",b:"Decide",hint:"N3 Kanji",formal:"けつ (on) — 決定, 解決",informal:"き (kun) — 決まる"},
+      {f:"成",b:"Become / Achieve",hint:"N3 Kanji",formal:"せい (on) — 成功, 成長, 成立"},
+      {f:"失",b:"Lose / Fail",hint:"N3 Kanji",formal:"しつ (on) — 失敗, 失礼, 紛失"},
+      {f:"伝",b:"Convey / Tradition",hint:"N3 Kanji",formal:"でん (on) — 伝統, 宣伝",informal:"つた (kun) — 伝える"},
+      {f:"表",b:"Express / Surface",hint:"N3 Kanji",formal:"ひょう (on) — 発表, 表現",informal:"あらわ (kun) — 表す, 表れる"},
+    ],
+    grammar: [
+      {f:"〜ばかり",b:"Just did ~ / Nothing but ~",hint:"N3 Grammar",example:"今来たばかり — I just arrived\nゲームばかりしている — Does nothing but play games\n（た-form + ばかり = just completed; noun + ばかり = only that）"},
+      {f:"〜わけだ / わけではない",b:"That's why ~ / It means that ~ / It's not that ~",hint:"N3 Grammar",example:"練習したわけだから上手なはずだ — Since you practiced, you should be good\nそういうわけではない — It's not that kind of thing"},
+      {f:"〜ことにする / ことにした",b:"Decide to ~",hint:"N3 Grammar",example:"毎日運動することにした — I decided to exercise every day\n（deliberate personal decision）"},
+      {f:"〜ことになる / ことになった",b:"It has been decided / It turns out that ~",hint:"N3 Grammar",example:"来月転勤することになった — It was decided I'll transfer next month\n（external decision or natural result）"},
+      {f:"〜ようにする",b:"Make an effort to ~ / Try to ~",hint:"N3 Grammar",example:"早く寝るようにしている — I try to go to bed early\n（ongoing effort toward a habit）"},
+      {f:"〜ようになる",b:"Come to ~ / Reach the point where ~",hint:"N3 Grammar",example:"日本語が話せるようになった — I became able to speak Japanese\n（gradual change in ability or state）"},
+      {f:"〜かもしれない",b:"Might ~ / Maybe ~",hint:"N3 Grammar",example:"雨が降るかもしれない — It might rain\n（less confident than でしょう; used with plain form）"},
+      {f:"〜はずだ / はずがない",b:"Should be ~ / Can't possibly be ~",hint:"N3 Grammar",example:"彼はもう来るはずだ — He should be here by now\nそんなはずがない — That simply can't be right"},
+      {f:"〜によって / による",b:"Depending on ~ / Due to ~ / By ~",hint:"N3 Grammar",example:"人によって意見が違う — Opinions differ by person\n技術の発展による変化 — Changes due to technological development"},
+      {f:"〜に対して / に対する",b:"Towards ~ / Against ~ / In contrast to ~",hint:"N3 Grammar",example:"先生に対して失礼だ — That's rude towards the teacher\n去年に対して今年は暖かい — Warmer this year compared to last"},
+      {f:"〜において / における",b:"In ~ / At ~ (formal context marker)",hint:"N3 Grammar",example:"現代における問題 — Problems in modern times\nビジネスにおいて重要だ — Important in the context of business"},
+      {f:"〜だけでなく〜も",b:"Not only ~ but also ~",hint:"N3 Grammar",example:"日本語だけでなく英語も話せる — Can speak not only Japanese but also English"},
+      {f:"〜ても〜ても / いくら〜ても",b:"No matter how ~ / Even if ~ repeatedly",hint:"N3 Grammar",example:"いくら食べても太らない — No matter how much I eat, I don't gain weight\n何度聞いても覚えられない — No matter how many times I hear it, I can't remember"},
+      {f:"〜てばかりいる",b:"Do nothing but ~ / Keep doing ~ (criticism)",hint:"N3 Grammar",example:"遊んでばかりいないで勉強しなさい — Stop just playing and study"},
+      {f:"〜つつある",b:"Be in the process of ~ (ongoing change)",hint:"N3 Grammar",example:"経済が回復しつつある — The economy is in the process of recovering"},
+      {f:"〜ものだ",b:"It is natural that ~ / Used to ~ (nostalgia)",hint:"N3 Grammar",example:"子供は泣くものだ — It's natural for children to cry\n昔はよく遊んだものだ — I used to play a lot back in the day"},
+      {f:"〜さえ〜ば",b:"If only ~ / As long as ~",hint:"N3 Grammar",example:"お金さえあれば何でも買える — As long as you have money, you can buy anything"},
+      {f:"〜たとえ〜ても",b:"Even if ~ (hypothetical)",hint:"N3 Grammar",example:"たとえ失敗しても諦めない — Even if I fail, I won't give up\n（たとえ emphasizes the hypothetical nature）"},
+      {f:"〜おかげで / せいで",b:"Thanks to ~ (positive) / Because of ~ (negative)",hint:"N3 Grammar",example:"先生のおかげで合格できた — I passed thanks to my teacher\n寝坊したせいで遅刻した — I was late because of oversleeping"},
+      {f:"〜にもかかわらず",b:"Despite ~ / In spite of ~",hint:"N3 Grammar",example:"反対にもかかわらず計画を進めた — Proceeded with the plan despite opposition\n（stronger contrast than のに）"},
+    ],
+    reading: [
+      {f:"環境問題は私たちの責任だと思います",b:"I think environmental problems are our responsibility",hint:"N3 Reading"},
+      {f:"子供の頃の夢はパイロットになることでした",b:"My childhood dream was to become a pilot",hint:"N3 Reading"},
+      {f:"彼女は諦めずに努力を続けました",b:"She continued to work hard without giving up",hint:"N3 Reading"},
+      {f:"この映画を見て日本の文化に興味を持ちました",b:"Watching this movie made me interested in Japanese culture",hint:"N3 Reading"},
+      {f:"最近仕事が忙しくてなかなか休めない",b:"Work has been so busy lately I can barely rest",hint:"N3 Reading"},
+      {f:"知らない人に声をかけられて驚いた",b:"I was surprised when a stranger called out to me",hint:"N3 Reading"},
+      {f:"一生懸命勉強したにもかかわらず、試験に落ちてしまった",b:"Despite studying hard, I ended up failing the exam",hint:"N3 Reading"},
+      {f:"インターネットの普及によって、私たちの生活は大きく変わった",b:"The spread of the internet has greatly changed our lives",hint:"N3 Reading"},
+      {f:"彼が成功したのは才能だけでなく努力のおかげでもある",b:"His success is due not only to talent but also to effort",hint:"N3 Reading"},
+      {f:"いくら謝っても、彼女はなかなか許してくれなかった",b:"No matter how much I apologized, she wouldn't easily forgive me",hint:"N3 Reading"},
+      {f:"目標を達成するためには、日々の積み重ねが大切だ",b:"To achieve a goal, daily accumulation is important",hint:"N3 Reading"},
+      {f:"失敗しても諦めずに挑戦し続けることが大切だと思う",b:"I think it's important to keep challenging yourself without giving up even when you fail",hint:"N3 Reading"},
+      {f:"最近、若者の間で伝統文化への関心が高まりつつある",b:"Recently, interest in traditional culture among young people is growing",hint:"N3 Reading"},
+      {f:"人間関係で悩んでいる時は、信頼できる人に相談することが一番だ",b:"When troubled by relationships, it's best to consult someone you trust",hint:"N3 Reading"},
+      {f:"どんなに忙しくても、家族との時間だけは大切にしたい",b:"No matter how busy I am, I want to treasure time with my family",hint:"N3 Reading"},
+    ],
+  },
+
+  // ── N2 ──────────────────────────────────────────────────────
+  N2: {
+    vocab: [
+      // Nouns
+      {f:"そうてい",b:"Assumption / Expectation (想定)",hint:"N2 Noun"},
+      {f:"ほうしん",b:"Policy / Direction (方針)",hint:"N2 Noun"},
+      {f:"けいこう",b:"Tendency / Trend (傾向)",hint:"N2 Noun"},
+      {f:"どうこう",b:"Movement / Trend (動向)",hint:"N2 Noun"},
+      {f:"きじゅん",b:"Standard / Criterion (基準)",hint:"N2 Noun"},
+      {f:"しょうひ",b:"Consumption (消費)",hint:"N2 Noun"},
+      {f:"せいさん",b:"Production (生産)",hint:"N2 Noun"},
+      {f:"りえき",b:"Profit / Benefit (利益)",hint:"N2 Noun"},
+      {f:"そんしつ",b:"Loss / Damage (損失)",hint:"N2 Noun"},
+      {f:"こうりつ",b:"Efficiency (効率)",hint:"N2 Noun"},
+      {f:"おもいやり",b:"Consideration / Empathy (思いやり)",hint:"N2 Noun"},
+      {f:"がまん",b:"Patience / Endurance (我慢)",hint:"N2 Noun"},
+      {f:"れんたい",b:"Solidarity / Cooperation (連帯)",hint:"N2 Noun"},
+      {f:"かんさつ",b:"Observation (観察)",hint:"N2 Noun"},
+      {f:"ぶんせき",b:"Analysis (分析)",hint:"N2 Noun"},
+      {f:"はあく",b:"Grasp / Understanding (把握)",hint:"N2 Noun"},
+      {f:"かつよう",b:"Practical use / Utilization (活用)",hint:"N2 Noun"},
+      {f:"こうけん",b:"Contribution (貢献)",hint:"N2 Noun"},
+      {f:"そくしん",b:"Promotion / Facilitation (促進)",hint:"N2 Noun"},
+      {f:"かいぜん",b:"Improvement (改善)",hint:"N2 Noun"},
+      {f:"あいまい",b:"Vague / Ambiguous (曖昧)",hint:"N2 Na-adj"},
+      {f:"きちょう",b:"Valuable / Precious (貴重)",hint:"N2 Na-adj"},
+      {f:"こうどう",b:"Action / Behavior (行動)",hint:"N2 Noun"},
+      {f:"はんのう",b:"Reaction / Response (反応)",hint:"N2 Noun"},
+      {f:"こうりょ",b:"Consideration / Deliberation (考慮)",hint:"N2 Noun"},
+      {f:"けんとう",b:"Examination / Consideration (検討)",hint:"N2 Noun"},
+      {f:"ぎろん",b:"Debate / Discussion (議論)",hint:"N2 Noun"},
+      {f:"ていきょう",b:"Provision / Supply (提供)",hint:"N2 Noun"},
+      {f:"しょうとつ",b:"Collision / Conflict (衝突)",hint:"N2 Noun"},
+      {f:"ちょうせい",b:"Adjustment / Coordination (調整)",hint:"N2 Noun"},
+      {f:"そうごう",b:"Comprehensive / Integrated (総合)",hint:"N2 Noun"},
+      {f:"かんりょう",b:"Completion (完了)",hint:"N2 Noun"},
+      {f:"いじ",b:"Maintenance / Preservation (維持)",hint:"N2 Noun"},
+      {f:"かくだい",b:"Expansion / Enlargement (拡大)",hint:"N2 Noun"},
+      {f:"しゅくしょう",b:"Reduction / Contraction (縮小)",hint:"N2 Noun"},
+      // Adjectives & adverbs
+      {f:"けんきょ",b:"Humble / Modest (謙虚)",hint:"N2 Na-adj"},
+      {f:"がんこ",b:"Stubborn (頑固)",hint:"N2 Na-adj"},
+      {f:"しんちょう",b:"Cautious / Careful (慎重)",hint:"N2 Na-adj"},
+      {f:"ちゅうしょうてき",b:"Abstract (抽象的)",hint:"N2 Na-adj"},
+      {f:"ぐたいてき",b:"Concrete / Specific (具体的)",hint:"N2 Na-adj"},
+      {f:"かくじつ",b:"Certain / Reliable (確実)",hint:"N2 Na-adj"},
+      {f:"いっかんした",b:"Consistent (一貫した)",hint:"N2 Na-adj"},
+      {f:"おのずと",b:"Naturally / Spontaneously (おのずと)",hint:"N2 Adverb"},
+      {f:"あいかわらず",b:"As usual / As always (相変わらず)",hint:"N2 Adverb"},
+      {f:"しきりに",b:"Repeatedly / Persistently (しきりに)",hint:"N2 Adverb"},
+      {f:"むしろ",b:"Rather / On the contrary (むしろ)",hint:"N2 Adverb"},
+      {f:"かえって",b:"On the contrary / Instead (かえって)",hint:"N2 Adverb"},
+      {f:"あらためて",b:"Once again / Formally (改めて)",hint:"N2 Adverb"},
+      // Verbs
+      {f:"はかる",b:"To measure / plan (測る・図る)",hint:"N2 Verb"},
+      {f:"みなす",b:"To regard as / consider (見なす)",hint:"N2 Verb"},
+      {f:"もたらす",b:"To bring about / cause (もたらす)",hint:"N2 Verb"},
+      {f:"うながす",b:"To urge / prompt (促す)",hint:"N2 Verb"},
+      {f:"さまたげる",b:"To hinder / obstruct (妨げる)",hint:"N2 Verb"},
+      {f:"ともなう",b:"To accompany / involve (伴う)",hint:"N2 Verb"},
+      {f:"なりたつ",b:"To hold true / consist of (成り立つ)",hint:"N2 Verb"},
+      {f:"きわめる",b:"To master / pursue to the end (極める)",hint:"N2 Verb"},
+      {f:"とりくむ",b:"To tackle / work on (取り組む)",hint:"N2 Verb"},
+      {f:"いかす",b:"To make use of / utilize (生かす)",hint:"N2 Verb"},
+      {f:"みこす",b:"To anticipate / foresee (見越す)",hint:"N2 Verb"},
+      {f:"くみたてる",b:"To build up / assemble (組み立てる)",hint:"N2 Verb"},
+      {f:"のりこえる",b:"To overcome / get over (乗り越える)",hint:"N2 Verb"},
+      {f:"つきとめる",b:"To pin down / identify (突き止める)",hint:"N2 Verb"},
+      {f:"やりとげる",b:"To accomplish / carry through (やり遂げる)",hint:"N2 Verb"},
+    ],
+    kanji: [
+      {f:"議",b:"Discuss / Deliberate",hint:"N2 Kanji",formal:"ぎ (on) — 会議, 議論, 議員"},
+      {f:"論",b:"Theory / Argue",hint:"N2 Kanji",formal:"ろん (on) — 議論, 理論, 論文"},
+      {f:"制",b:"System / Control",hint:"N2 Kanji",formal:"せい (on) — 制度, 規制, 体制"},
+      {f:"法",b:"Law / Method",hint:"N2 Kanji",formal:"ほう (on) — 法律, 方法, 司法"},
+      {f:"約",b:"Promise / Approximately",hint:"N2 Kanji",formal:"やく (on) — 約束, 条約, 契約"},
+      {f:"達",b:"Reach / Plural suffix",hint:"N2 Kanji",formal:"たつ (on) — 達成, 発達",informal:"たち — plural marker (友達)"},
+      {f:"続",b:"Continue",hint:"N2 Kanji",formal:"ぞく (on) — 継続, 持続",informal:"つづ (kun) — 続く, 続ける"},
+      {f:"変",b:"Change / Strange",hint:"N2 Kanji",formal:"へん (on) — 変化, 変更",informal:"か (kun) — 変わる, 変える"},
+      {f:"増",b:"Increase",hint:"N2 Kanji",formal:"ぞう (on) — 増加, 増大",informal:"ふ (kun) — 増える, 増やす"},
+      {f:"減",b:"Decrease",hint:"N2 Kanji",formal:"げん (on) — 減少, 削減",informal:"へ (kun) — 減る, 減らす"},
+      {f:"改",b:"Reform / Change",hint:"N2 Kanji",formal:"かい (on) — 改善, 改革, 改正"},
+      {f:"革",b:"Reform / Leather",hint:"N2 Kanji",formal:"かく (on) — 改革, 革命, 革新"},
+      {f:"提",b:"Propose / Carry",hint:"N2 Kanji",formal:"てい (on) — 提案, 提供, 前提"},
+      {f:"求",b:"Seek / Demand",hint:"N2 Kanji",formal:"きゅう (on) — 要求, 求人",informal:"もと (kun) — 求める"},
+      {f:"応",b:"Respond / Apply",hint:"N2 Kanji",formal:"おう (on) — 応用, 反応, 応答"},
+      {f:"述",b:"State / Mention",hint:"N2 Kanji",formal:"じゅつ (on) — 記述, 陳述",informal:"の (kun) — 述べる"},
+      {f:"評",b:"Evaluate / Criticism",hint:"N2 Kanji",formal:"ひょう (on) — 評価, 批評, 評判"},
+      {f:"判",b:"Judge / Verdict",hint:"N2 Kanji",formal:"はん (on) — 判断, 裁判, 批判"},
+      {f:"断",b:"Cut off / Decide",hint:"N2 Kanji",formal:"だん (on) — 判断, 断言",informal:"こと/た (kun) — 断る, 断つ"},
+      {f:"維",b:"Maintain / Fiber",hint:"N2 Kanji",formal:"い (on) — 維持, 維新"},
+      {f:"持",b:"Hold / Have",hint:"N2 Kanji",formal:"じ (on) — 維持, 支持",informal:"も (kun) — 持つ"},
+      {f:"拡",b:"Expand / Spread",hint:"N2 Kanji",formal:"かく (on) — 拡大, 拡張, 拡散"},
+      {f:"縮",b:"Shrink / Reduce",hint:"N2 Kanji",formal:"しゅく (on) — 縮小, 圧縮",informal:"ちぢ (kun) — 縮む"},
+      {f:"促",b:"Urge / Promote",hint:"N2 Kanji",formal:"そく (on) — 促進, 催促"},
+      {f:"妨",b:"Hinder / Obstruct",hint:"N2 Kanji",formal:"ぼう (on) — 妨害, 妨げ",informal:"さまた (kun) — 妨げる"},
+    ],
+    grammar: [
+      {f:"〜にもかかわらず",b:"Despite ~ / In spite of ~",hint:"N2 Grammar",example:"雨にもかかわらず試合が行われた — The match was held despite the rain\n（formal; despite unfavorable conditions）"},
+      {f:"〜に基づいて / に基づく",b:"Based on ~",hint:"N2 Grammar",example:"データに基づいて判断した — Made a judgment based on data\n（formal; used with facts, rules, evidence）"},
+      {f:"〜わけにはいかない",b:"Cannot ~ (moral/social obligation prevents)",hint:"N2 Grammar",example:"約束したのに行かないわけにはいかない — I can't not go when I made a promise\n（strong obligation prevents the action）"},
+      {f:"〜ざるを得ない",b:"Cannot help but ~ / Forced to ~",hint:"N2 Grammar",example:"認めざるを得ない — I have no choice but to admit it\n（〜ざる = negative + を得ない = cannot not do）"},
+      {f:"〜に違いない",b:"Must be ~ / No doubt ~",hint:"N2 Grammar",example:"彼が犯人に違いない — He must be the culprit\n（strong conviction; stronger than はずだ）"},
+      {f:"〜にしては",b:"For ~ / Considering that ~ (unexpected result)",hint:"N2 Grammar",example:"子供にしては上手だ — That's good for a child\n（result is unexpected given the condition）"},
+      {f:"〜からには",b:"Now that ~ / Since ~ (one must follow through)",hint:"N2 Grammar",example:"引き受けたからには最後までやる — Now that I've accepted, I'll see it through"},
+      {f:"〜を通じて / を通して",b:"Through ~ / Via ~",hint:"N2 Grammar",example:"経験を通じて成長する — Grow through experience\n（means or medium of achieving something）"},
+      {f:"〜に関して / に関する",b:"Regarding ~ / Concerning ~",hint:"N2 Grammar",example:"この問題に関してご意見をください — Please give your opinion regarding this issue"},
+      {f:"〜にとって",b:"For ~ / From the perspective of ~",hint:"N2 Grammar",example:"私にとって日本語は難しい — Japanese is difficult for me\n（how something affects a specific person or group）"},
+      {f:"〜をめぐって / をめぐる",b:"Surrounding ~ / Concerning ~",hint:"N2 Grammar",example:"その問題をめぐって議論が続いている — Debate continues surrounding that issue"},
+      {f:"〜かねない",b:"Might possibly ~ (undesirable outcome)",hint:"N2 Grammar",example:"このままでは失敗しかねない — The way things are, we might fail\n（suggests a negative possibility if things continue）"},
+      {f:"〜かねる",b:"Cannot bring oneself to ~ / Find it hard to ~",hint:"N2 Grammar",example:"その要求には応じかねます — I find it difficult to comply with that request\n（polite refusal; implies reluctance）"},
+      {f:"〜にあたって / にあたり",b:"On the occasion of ~ / When doing ~",hint:"N2 Grammar",example:"試験にあたって注意事項を確認する — Confirm precautions when taking the exam\n（formal; preparatory before important event）"},
+      {f:"〜ものの",b:"Although ~ / Even though ~",hint:"N2 Grammar",example:"努力したものの結果は出なかった — Although I tried hard, no results came\n（contrast between effort and unexpected outcome）"},
+      {f:"〜をもとに",b:"Based on ~ / Using ~ as a foundation",hint:"N2 Grammar",example:"アンケートをもとに計画を立てた — Drew up a plan based on the survey\n（〜をもとに = using something as the basis/source）"},
+      {f:"〜といえば",b:"Speaking of ~ / When you say ~",hint:"N2 Grammar",example:"日本といえば富士山だ — Speaking of Japan, there's Mt. Fuji\n（association; what comes to mind when ~ is mentioned）"},
+      {f:"〜に加えて",b:"In addition to ~",hint:"N2 Grammar",example:"実力に加えて運も必要だ — In addition to skill, luck is also needed"},
+      {f:"〜を踏まえて",b:"Taking ~ into account / Based on ~",hint:"N2 Grammar",example:"現状を踏まえて対策を考える — Think of countermeasures taking the current situation into account"},
+      {f:"〜にあたる",b:"Correspond to ~ / Amount to ~ / Count as ~",hint:"N2 Grammar",example:"この行為は違反にあたる — This action amounts to a violation"},
+    ],
+    reading: [
+      {f:"少子高齢化が進む日本では労働力不足が深刻だ",b:"Japan, where the declining birthrate and aging population are advancing, faces a serious labor shortage",hint:"N2 Reading"},
+      {f:"環境問題に対して各国が協力して取り組む必要がある",b:"It is necessary for each country to work together on environmental issues",hint:"N2 Reading"},
+      {f:"経済成長と環境保護を両立させることが求められている",b:"There is a demand to achieve both economic growth and environmental protection",hint:"N2 Reading"},
+      {f:"データに基づいた政策決定が重要視されている",b:"Data-based policy decisions are being highly valued",hint:"N2 Reading"},
+      {f:"グローバル化の進展により異文化理解の重要性が高まっている",b:"The importance of cross-cultural understanding is growing with the advancement of globalization",hint:"N2 Reading"},
+      {f:"科学技術の発展は私たちに利益をもたらす一方で、新たなリスクも生み出している",b:"While the development of science and technology brings us benefits, it also creates new risks",hint:"N2 Reading"},
+      {f:"近年、企業の社会的責任に対する関心が高まってきている",b:"In recent years, interest in corporate social responsibility has been growing",hint:"N2 Reading"},
+      {f:"現代社会における情報過多の問題は個人の判断力に影響を与えかねない",b:"The problem of information overload in modern society might affect individuals' judgment",hint:"N2 Reading"},
+      {f:"少数派の意見にもかかわらず、多数決で方針が決定された",b:"Despite the minority opinion, the policy was decided by majority vote",hint:"N2 Reading"},
+      {f:"国際協力の観点から見ると、この問題は単独では解決できない",b:"From the perspective of international cooperation, this problem cannot be solved unilaterally",hint:"N2 Reading"},
+      {f:"伝統と革新のバランスをいかに保つかが今後の課題となっている",b:"How to maintain the balance between tradition and innovation is a challenge going forward",hint:"N2 Reading"},
+      {f:"現状を踏まえた上で、より効果的な解決策を模索することが重要だ",b:"It is important to search for more effective solutions taking the current situation into account",hint:"N2 Reading"},
+    ],
+  },
+
+  // ── N1 ──────────────────────────────────────────────────────
+  N1: {
+    vocab: [
+      // High-level nouns
+      {f:"きょじゅう",b:"Residence (居住)",hint:"N1 Noun"},
+      {f:"かいしゃく",b:"Interpretation (解釈)",hint:"N1 Noun"},
+      {f:"ぜんてい",b:"Premise / Prerequisite (前提)",hint:"N1 Noun"},
+      {f:"しんぎ",b:"Deliberation / Authenticity (審議・真偽)",hint:"N1 Noun"},
+      {f:"けんしょう",b:"Verification / Examination (検証)",hint:"N1 Noun"},
+      {f:"そうかつ",b:"Summary / Comprehensive review (総括)",hint:"N1 Noun"},
+      {f:"しゅくめい",b:"Fate / Destiny (宿命)",hint:"N1 Noun"},
+      {f:"ふへん",b:"Universal / Unchanging (普遍)",hint:"N1 Noun"},
+      {f:"くうそう",b:"Fantasy / Daydream (空想)",hint:"N1 Noun"},
+      {f:"どうよう",b:"Agitation / Disturbance (動揺)",hint:"N1 Noun"},
+      {f:"ふくし",b:"Welfare (福祉)",hint:"N1 Noun"},
+      {f:"よくあつ",b:"Suppression / Oppression (抑圧)",hint:"N1 Noun"},
+      {f:"せいさい",b:"Sanction / Restraint (制裁)",hint:"N1 Noun"},
+      {f:"いかん",b:"Result / How something turns out (如何)",hint:"N1 Noun"},
+      {f:"こうそく",b:"Restraint / Binding (拘束)",hint:"N1 Noun"},
+      {f:"はっぽう",b:"All directions / Every quarter (八方)",hint:"N1 Noun"},
+      {f:"ぎてい",b:"Formality / Ceremony (儀定)",hint:"N1 Noun"},
+      {f:"たんきゅう",b:"Pursuit / Search (探求)",hint:"N1 Noun"},
+      {f:"しそう",b:"Thought / Ideology (思想)",hint:"N1 Noun"},
+      {f:"じしゃく",b:"Magnet / Magnetism (磁石)",hint:"N1 Noun"},
+      // Adjectives
+      {f:"いちじるしい",b:"Remarkable / Striking (著しい)",hint:"N1 Adj"},
+      {f:"かんばしい",b:"Favorable / Fragrant (芳しい)",hint:"N1 Adj"},
+      {f:"こころよい",b:"Pleasant / Agreeable (快い)",hint:"N1 Adj"},
+      {f:"いぶかしい",b:"Suspicious / Dubious (訝しい)",hint:"N1 Adj"},
+      {f:"うとましい",b:"Disagreeable / Repulsive (疎ましい)",hint:"N1 Adj"},
+      {f:"けだかい",b:"Noble / Lofty (気高い)",hint:"N1 Adj"},
+      {f:"なだらか",b:"Gentle slope / Smooth (なだらか)",hint:"N1 Na-adj"},
+      {f:"うつろ",b:"Empty / Hollow (虚ろ)",hint:"N1 Na-adj"},
+      {f:"おろそか",b:"Neglectful / Careless (疎か)",hint:"N1 Na-adj"},
+      {f:"あからさま",b:"Frank / Open / Blatant (あからさま)",hint:"N1 Na-adj"},
+      // Verbs
+      {f:"いとなむ",b:"To operate / manage / live (営む)",hint:"N1 Verb"},
+      {f:"かんがみる",b:"To consider / reflect upon (鑑みる)",hint:"N1 Verb"},
+      {f:"はばむ",b:"To obstruct / hinder (阻む)",hint:"N1 Verb"},
+      {f:"ゆがむ",b:"To warp / distort / be biased (歪む)",hint:"N1 Verb"},
+      {f:"そびえる",b:"To tower / loom (そびえる)",hint:"N1 Verb"},
+      {f:"かたよる",b:"To be biased / lean toward (偏る)",hint:"N1 Verb"},
+      {f:"しのぐ",b:"To endure / surpass / outdo (凌ぐ)",hint:"N1 Verb"},
+      {f:"ただよう",b:"To drift / float / waft (漂う)",hint:"N1 Verb"},
+      {f:"みなぎる",b:"To surge / be full of (漲る)",hint:"N1 Verb"},
+      {f:"たたずむ",b:"To stand still / linger (佇む)",hint:"N1 Verb"},
+      {f:"さかのぼる",b:"To go back / trace back (遡る)",hint:"N1 Verb"},
+      {f:"きわだつ",b:"To stand out / be prominent (際立つ)",hint:"N1 Verb"},
+      {f:"うちとける",b:"To open up / become familiar (打ち解ける)",hint:"N1 Verb"},
+      {f:"くつがえす",b:"To overturn / reverse (覆す)",hint:"N1 Verb"},
+      {f:"ふまえる",b:"To base on / take into account (踏まえる)",hint:"N1 Verb"},
+    ],
+    kanji: [
+      {f:"慮",b:"Consider / Deliberate",hint:"N1 Kanji",formal:"りょ (on) — 考慮, 遠慮, 配慮"},
+      {f:"奮",b:"Strive / Rouse oneself",hint:"N1 Kanji",formal:"ふん (on) — 奮闘, 興奮, 奮発"},
+      {f:"粛",b:"Solemn / Strict",hint:"N1 Kanji",formal:"しゅく (on) — 厳粛, 粛清, 粛然"},
+      {f:"矛",b:"Spear / Contradiction",hint:"N1 Kanji",formal:"む (on) — 矛盾"},
+      {f:"盾",b:"Shield / Contradiction",hint:"N1 Kanji",formal:"じゅん (on) — 矛盾"},
+      {f:"概",b:"Outline / Generally",hint:"N1 Kanji",formal:"がい (on) — 概念, 大概, 概要"},
+      {f:"貫",b:"Pierce / Be consistent",hint:"N1 Kanji",formal:"かん (on) — 一貫, 貫徹",informal:"つらぬ (kun) — 貫く"},
+      {f:"尽",b:"Exhaust / Use up completely",hint:"N1 Kanji",formal:"じん (on) — 尽力, 無尽",informal:"つく (kun) — 尽くす, 尽きる"},
+      {f:"即",b:"Immediate / Conform to",hint:"N1 Kanji",formal:"そく (on) — 即座, 即興, 即決"},
+      {f:"兼",b:"Double / Combine / Also serve as",hint:"N1 Kanji",formal:"けん (on) — 兼任, 兼業",informal:"か (kun) — 兼ねる"},
+      {f:"凌",b:"Endure / Surpass",hint:"N1 Kanji",formal:"りょう (on) — 凌駕",informal:"しの (kun) — 凌ぐ"},
+      {f:"漂",b:"Drift / Float",hint:"N1 Kanji",formal:"ひょう (on) — 漂流, 漂白",informal:"ただよ (kun) — 漂う"},
+      {f:"篤",b:"Sincere / Serious (illness)",hint:"N1 Kanji",formal:"とく (on) — 篤実, 危篤"},
+      {f:"誇",b:"Pride / Boast",hint:"N1 Kanji",formal:"こ (on) — 誇大",informal:"ほこ (kun) — 誇る"},
+      {f:"惑",b:"Confuse / Bewildered",hint:"N1 Kanji",formal:"わく (on) — 迷惑, 惑星",informal:"まど (kun) — 惑う"},
+      {f:"遂",b:"Accomplish / Finally",hint:"N1 Kanji",formal:"すい (on) — 遂行, 完遂",informal:"と/つい (kun) — 遂げる"},
+      {f:"傍",b:"Side / Bystander",hint:"N1 Kanji",formal:"ぼう (on) — 傍観",informal:"かたわ/そば (kun) — 傍ら"},
+      {f:"翻",b:"Turn over / Translate",hint:"N1 Kanji",formal:"ほん (on) — 翻訳, 翻弄",informal:"ひるがえ (kun) — 翻る"},
+      {f:"覆",b:"Overturn / Cover",hint:"N1 Kanji",formal:"ふく (on) — 覆面, 転覆",informal:"おお/くつがえ (kun) — 覆う, 覆す"},
+      {f:"偏",b:"Biased / One-sided",hint:"N1 Kanji",formal:"へん (on) — 偏見, 偏差",informal:"かたよ (kun) — 偏る"},
+    ],
+    grammar: [
+      {f:"〜いかんによって / いかんだ",b:"Depending on ~ / It all depends on ~",hint:"N1 Grammar",example:"結果いかんによっては再考が必要だ — Depending on the results, reconsideration may be needed\n（very formal; いかん = 如何 = how / what kind）"},
+      {f:"〜をもって",b:"With ~ / By means of ~ / As of ~ (formal)",hint:"N1 Grammar",example:"本日をもって退職します — I will resign as of today\n能力をもって解決する — Resolve it with one's ability"},
+      {f:"〜に際して / に際し",b:"On the occasion of ~ / At the time of ~",hint:"N1 Grammar",example:"出発に際して注意事項を説明した — Explained precautions upon departure\n（formal; for important or significant moments）"},
+      {f:"〜にほかならない",b:"Is nothing but ~ / Is exactly ~",hint:"N1 Grammar",example:"それは努力の結果にほかならない — That is nothing but the result of effort\n（emphatic assertion; only one explanation)"},
+      {f:"〜ならではの",b:"Unique to ~ / Only possible with ~",hint:"N1 Grammar",example:"日本ならではの文化 — A culture unique to Japan\n（〜ならでは = only because of ~, can't be done otherwise）"},
+      {f:"〜ずにはいられない",b:"Cannot help but ~",hint:"N1 Grammar",example:"笑わずにはいられない — I can't help but laugh\n（〜ずに = without + はいられない = cannot stand）"},
+      {f:"〜といえども",b:"Even though ~ / Even if ~ (formal)",hint:"N1 Grammar",example:"専門家といえども間違うことがある — Even experts can make mistakes\n（formal equivalent of 〜でも; literary tone）"},
+      {f:"〜をおいて",b:"Excluding ~ / Apart from ~ / No one but ~",hint:"N1 Grammar",example:"彼をおいて他にいない — There is no one else but him\n（〜をおいて = setting ~ aside, there is nothing else）"},
+      {f:"〜のみならず",b:"Not only ~ but also ~ (formal)",hint:"N1 Grammar",example:"国内のみならず海外でも知られている — Known not only domestically but overseas\n（formal version of だけでなく）"},
+      {f:"〜ともなると / ともなれば",b:"When it comes to ~ / Once one becomes ~",hint:"N1 Grammar",example:"社長ともなると責任も大きい — Once you become president, responsibility is great\n（implies expectations that come with a position）"},
+      {f:"〜にたえる / にたえない",b:"Worth ~ / Cannot bear to ~",hint:"N1 Grammar",example:"この作品は鑑賞にたえる — This work is worth appreciating\n見るにたえない — Unbearable to watch"},
+      {f:"〜てやまない",b:"Never stop ~ / Sincerely ~ (deep feeling)",hint:"N1 Grammar",example:"成功を願ってやまない — I sincerely and continually hope for your success\n（expresses deep, unceasing feeling）"},
+      {f:"〜をよそに",b:"Regardless of ~ / Ignoring ~",hint:"N1 Grammar",example:"周囲の反対をよそに計画を進めた — Proceeded with the plan regardless of surrounding opposition"},
+      {f:"〜にたる / にたりない",b:"Worthy of ~ / Not worth ~",hint:"N1 Grammar",example:"信頼にたる人物 — A person worthy of trust\n問題にたりない — Not worth making an issue of"},
+      {f:"〜とあれば",b:"If ~ / In the event of ~ (willingness)",hint:"N1 Grammar",example:"必要とあれば何でもします — If it is necessary, I will do anything"},
+      {f:"〜が最後",b:"Once ~ starts, there's no stopping",hint:"N1 Grammar",example:"飲み始めたが最後、止まらない — Once I start drinking, I can't stop\n（once the action begins, the result is inevitable）"},
+      {f:"〜ばこそ",b:"Precisely because ~ / It is because ~",hint:"N1 Grammar",example:"苦しければこそ、成長できる — Precisely because it's hard, you can grow\n（emphasizes the reason as the key factor）"},
+      {f:"〜にあって",b:"In ~ / Under the circumstances of ~",hint:"N1 Grammar",example:"非常時にあって冷静さを保った — Maintained composure even in an emergency\n（formal; describes the context or situation one is in）"},
+      {f:"〜ことなく",b:"Without doing ~ / Never ~",hint:"N1 Grammar",example:"諦めることなく努力を続けた — Continued to make effort without giving up\n（literary; more formal than 〜ないで）"},
+      {f:"〜もさることながら",b:"~ goes without saying, but also ~",hint:"N1 Grammar",example:"実力もさることながら、努力も大切だ — Ability goes without saying, but effort is also important\n（acknowledges first item as given, then adds more）"},
+    ],
+    reading: [
+      {f:"個人の自由と社会の秩序をどのように両立させるかが民主主義の根本的な課題である",b:"How to reconcile individual freedom and social order is a fundamental challenge of democracy",hint:"N1 Reading"},
+      {f:"技術革新は私たちの生活に利便性をもたらす一方で、雇用問題という新たな課題も生み出している",b:"While technological innovation brings convenience to our lives, it also creates new challenges such as employment issues",hint:"N1 Reading"},
+      {f:"文化的背景の異なる人々が共存するためには相互理解と尊重が不可欠だ",b:"Mutual understanding and respect are indispensable for people with different cultural backgrounds to coexist",hint:"N1 Reading"},
+      {f:"経済的格差の拡大は社会の安定を脅かす深刻な問題となっている",b:"The widening economic gap has become a serious problem threatening social stability",hint:"N1 Reading"},
+      {f:"人工知能の発展にともない、人間の仕事が機械に取って代わられる可能性が高まっている",b:"With the development of AI, the possibility of machines replacing human jobs is increasing",hint:"N1 Reading"},
+      {f:"言語とは単なるコミュニケーションの手段ではなく、思考そのものを形成するものだという見方がある",b:"There is a view that language is not merely a means of communication, but something that shapes thought itself",hint:"N1 Reading"},
+      {f:"近代化の過程で失われた伝統的な価値観を再評価する動きが世界各地で見られる",b:"There are movements in various parts of the world to re-evaluate traditional values lost in the process of modernization",hint:"N1 Reading"},
+      {f:"民主主義が機能するためには、市民一人ひとりが政治に関心を持ち積極的に参加することが求められる",b:"For democracy to function, each citizen is required to take an interest in politics and participate actively",hint:"N1 Reading"},
+      {f:"科学的根拠に基づかない情報が社会に広まることで、誤った判断や行動が引き起こされかねない",b:"The spread of information not based on scientific evidence could cause incorrect judgments and actions in society",hint:"N1 Reading"},
+      {f:"環境保護と経済発展という一見相反する目標を達成するには、既存の枠組みを超えた発想が必要だ",b:"To achieve the seemingly contradictory goals of environmental protection and economic development requires thinking that transcends existing frameworks",hint:"N1 Reading"},
+    ],
+  },
+};
+
+// ─────────────────────────────────────────────────────────────
+// PARTICLES — fill-in-the-blank exercises
+// ─────────────────────────────────────────────────────────────
+const PARTICLES = [
+  // は (topic marker)
+  { sentence: ["わたし", "___", "がくせい", "です"], blank: 1, answer: "は", options: ["は","が","を","に"], hint: "は marks the topic of the sentence", explanation: "は (wa) is the topic marker. It tells us what the sentence is about. 'わたし は がくせい です' = 'As for me, I am a student.' Use は when introducing what you're talking about." },
+  { sentence: ["これ", "___", "ほん", "です"], blank: 1, answer: "は", options: ["は","が","の","で"], hint: "は marks what we're talking about", explanation: "は marks the topic. 'これ は ほん です' = 'This is a book.' は tells the listener: here's what I'm discussing right now." },
+  { sentence: ["たなかさん", "___", "せんせい", "です"], blank: 1, answer: "は", options: ["は","が","を","と"], hint: "Topic marker for Tanaka-san", explanation: "は marks Tanaka-san as the topic. 'たなかさん は せんせい です' = 'Tanaka-san is a teacher.'" },
+  // が (subject marker)
+  { sentence: ["ねこ", "___", "います"], blank: 1, answer: "が", options: ["は","が","を","に"], hint: "が marks the subject with いる/ある", explanation: "が (ga) marks the subject, especially with existence verbs like います (there is/are). 'ねこ が います' = 'There is a cat.' が emphasizes the subject itself." },
+  { sentence: ["あめ", "___", "ふって", "います"], blank: 1, answer: "が", options: ["は","が","で","に"], hint: "が marks what's happening naturally", explanation: "が marks the subject of a natural occurrence. 'あめ が ふって います' = 'It is raining.' (literally: Rain is falling.)" },
+  { sentence: ["にほんご", "___", "すきです"], blank: 1, answer: "が", options: ["は","が","を","の"], hint: "が is used with 好き (like)", explanation: "が is used before 好き (like), 嫌い (dislike), and できる (can do). 'にほんご が すきです' = 'I like Japanese.' This is a fixed pattern!" },
+  // を (object marker)
+  { sentence: ["りんご", "___", "たべます"], blank: 1, answer: "を", options: ["は","が","を","で"], hint: "を marks the thing being eaten", explanation: "を (wo/o) marks the direct object — the thing receiving the action. 'りんご を たべます' = 'I eat an apple.' The apple is being eaten, so it gets を." },
+  { sentence: ["おんがく", "___", "ききます"], blank: 1, answer: "を", options: ["は","が","を","に"], hint: "を marks what you listen to", explanation: "を marks the object of the action. 'おんがく を ききます' = 'I listen to music.' Music is what's being listened to — it gets を." },
+  { sentence: ["にほんご", "___", "べんきょうします"], blank: 1, answer: "を", options: ["は","が","を","で"], hint: "を marks what you study", explanation: "'にほんご を べんきょうします' = 'I study Japanese.' Japanese is the thing being studied, so を marks it as the object." },
+  // に (direction / time / location of existence)
+  { sentence: ["がっこう", "___", "いきます"], blank: 1, answer: "に", options: ["は","で","を","に"], hint: "に shows destination", explanation: "に (ni) marks direction or destination. 'がっこう に いきます' = 'I go to school.' Think of に as an arrow pointing where you're going." },
+  { sentence: ["つくえの", "うえ", "___", "ほんがあります"], blank: 2, answer: "に", options: ["は","が","を","に"], hint: "に shows where something exists", explanation: "に marks where something exists (with あります/います). 'つくえの うえ に ほんがあります' = 'There is a book on top of the desk.' に points to the location of existence." },
+  { sentence: ["しちじ", "___", "おきます"], blank: 1, answer: "に", options: ["は","で","を","に"], hint: "に marks a specific time", explanation: "に marks a specific point in time. 'しちじ に おきます' = 'I wake up at 7 o'clock.' Use に with clock times, days, and dates." },
+  // で (location of action / means)
+  { sentence: ["としょかん", "___", "べんきょうします"], blank: 1, answer: "で", options: ["に","で","を","が"], hint: "で marks where an action happens", explanation: "で (de) marks the location where an action takes place. 'としょかん で べんきょうします' = 'I study at the library.' The key difference from に: で is for where you DO something, に is for where you simply exist or go to." },
+  { sentence: ["でんしゃ", "___", "いきます"], blank: 1, answer: "で", options: ["に","で","を","と"], hint: "で marks the means of transport", explanation: "で marks the means or method. 'でんしゃ で いきます' = 'I go by train.' The train is the means of getting there, so it takes で." },
+  { sentence: ["にほんご", "___", "はなします"], blank: 1, answer: "で", options: ["は","で","を","に"], hint: "で marks the language you use", explanation: "で marks the tool or means. 'にほんご で はなします' = 'I speak in Japanese.' Japanese is the tool of communication, so で marks it." },
+  // の (possessive / noun modifier)
+  { sentence: ["わたし", "___", "ほん"], blank: 1, answer: "の", options: ["は","が","の","を"], hint: "の connects nouns — possessive", explanation: "の (no) connects nouns and shows possession or description. 'わたし の ほん' = 'my book.' Think of の like the English apostrophe-s ('s). A の B = B that belongs to A." },
+  { sentence: ["にほん", "___", "ぶんか"], blank: 1, answer: "の", options: ["は","が","の","で"], hint: "の connects two nouns descriptively", explanation: "'にほん の ぶんか' = 'Japanese culture' (literally: culture of Japan). の connects two nouns where the first describes or belongs to the second." },
+  // と (and / with)
+  { sentence: ["ともだち", "___", "えいがをみました"], blank: 1, answer: "と", options: ["は","で","と","に"], hint: "と means 'together with'", explanation: "と (to) means 'and' between nouns, or 'together with' a person. 'ともだち と えいがをみました' = 'I watched a movie with a friend.'" },
+  { sentence: ["りんご", "___", "みかん"], blank: 1, answer: "と", options: ["は","と","で","が"], hint: "と lists nouns: A and B", explanation: "と connects nouns in a list. 'りんご と みかん' = 'apple and orange.' と is exhaustive — it means just these items and nothing else." },
+  // から / まで
+  { sentence: ["くじ", "___", "じゅういちじまで", "はたらきます"], blank: 1, answer: "から", options: ["から","まで","に","で"], hint: "から = from (starting point)", explanation: "から (kara) means 'from' — it marks the starting point of time or place. 'くじ から じゅういちじ まで' = 'from 9 o'clock until 11 o'clock.'" },
+  { sentence: ["えき", "___", "あるいていきます"], blank: 1, answer: "まで", options: ["から","まで","に","へ"], hint: "まで = until / as far as", explanation: "まで (made) means 'until' or 'as far as.' 'えき まで あるいていきます' = 'I walk as far as the station.'" },
+  // も
+  { sentence: ["わたし", "___", "がくせいです"], blank: 1, answer: "も", options: ["は","が","も","を"], hint: "も means 'also / too'", explanation: "も (mo) means 'also' or 'too.' It replaces は, が, or を. 'わたし も がくせいです' = 'I am also a student.' Use も when adding another item that shares the same quality." },
+  // へ
+  { sentence: ["とうきょう", "___", "いきます"], blank: 1, answer: "へ", options: ["に","へ","で","を"], hint: "へ shows direction of movement", explanation: "へ (e) is similar to に for direction but emphasizes the direction of travel rather than the destination. 'とうきょう へ いきます' = 'I'm heading toward Tokyo.'" },
+];
+
+// ─────────────────────────────────────────────────────────────
+// SENTENCE BUILDER — arrange words into correct Japanese order
+// ─────────────────────────────────────────────────────────────
+const SENTENCES = {
+  N5: [
+    { english: "I eat breakfast every morning.", words: ["まいあさ","わたしは","あさごはんを","たべます"], answer: ["わたしは","まいあさ","あさごはんを","たべます"], explanation: "Japanese word order: Topic (わたしは) → Time (まいあさ) → Object (あさごはんを) → Verb (たべます). The verb always comes last in Japanese!" },
+    { english: "There is a cat in the room.", words: ["います","へやに","ねこが"], answer: ["へやに","ねこが","います"], explanation: "Location (へやに) comes before the subject (ねこが), and the verb います (there is) comes last. に marks where something exists." },
+    { english: "I go to school by train.", words: ["いきます","でんしゃで","がっこうに"], answer: ["でんしゃで","がっこうに","いきます"], explanation: "Means (でんしゃで = by train) → Destination (がっこうに = to school) → Verb (いきます). で marks the means of transport, に marks the destination." },
+    { english: "I like Japanese food.", words: ["すきです","にほんりょうりが","わたしは"], answer: ["わたしは","にほんりょうりが","すきです"], explanation: "Topic (わたしは) → Subject of feeling (にほんりょうりが) → Adjective (すきです). が is always used before 好き (like)." },
+    { english: "Tanaka-san is a teacher.", words: ["せんせいです","は","たなかさん"], answer: ["たなかさん","は","せんせいです"], explanation: "Topic (たなかさん) + は + Description (せんせいです). This is the basic A は B です pattern — the most fundamental sentence structure in Japanese!" },
+    { english: "I study Japanese every day.", words: ["べんきょうします","まいにち","にほんごを","わたしは"], answer: ["わたしは","まいにち","にほんごを","べんきょうします"], explanation: "Topic → Time → Object → Verb. Time words like まいにち (every day) usually come near the beginning, after the topic." },
+    { english: "The weather today is good.", words: ["いいです","きょうの","てんきは"], answer: ["きょうの","てんきは","いいです"], explanation: "の connects nouns: きょうの てんき = 'today's weather.' は marks it as the topic, いいです is the adjective at the end." },
+    { english: "I drank coffee at the café.", words: ["のみました","カフェで","コーヒーを","わたしは"], answer: ["わたしは","カフェで","コーヒーを","のみました"], explanation: "Topic → Location (カフェで, where the action happens) → Object (コーヒーを) → Verb. で marks the location of an action." },
+    { english: "My friend is kind.", words: ["しんせつです","の","ともだちは","わたし"], answer: ["わたし","の","ともだちは","しんせつです"], explanation: "の connects nouns: わたし の ともだち = 'my friend.' Then は marks it as the topic, and しんせつです describes it." },
+    { english: "I wake up at 7 o'clock.", words: ["おきます","しちじに","わたしは"], answer: ["わたしは","しちじに","おきます"], explanation: "Topic → Time with に (specific time points always use に) → Verb. に is required for clock times!" },
+  ],
+  N4: [
+    { english: "Because I was tired, I slept early.", words: ["はやくねました","つかれたので","わたしは"], answer: ["わたしは","つかれたので","はやくねました"], explanation: "ので connects cause and result (polite). つかれた (was tired) → ので (because) → はやくねました (slept early). The reason comes before the result." },
+    { english: "I tried eating sushi for the first time.", words: ["たべてみました","はじめて","すしを","わたしは"], answer: ["わたしは","はじめて","すしを","たべてみました"], explanation: "〜てみる means 'to try doing something.' はじめて (for the first time) is an adverb placed before the object. Verb てみました comes last." },
+    { english: "Please wait a little.", words: ["ください","すこし","まって"], answer: ["すこし","まって","ください"], explanation: "〜てください = 'please do ~.' The て-form of the verb (まって) comes before ください. すこし (a little) modifies the verb." },
+    { english: "I had my teacher correct my homework.", words: ["なおしてもらいました","せんせいに","しゅくだいを","わたしは"], answer: ["わたしは","せんせいに","しゅくだいを","なおしてもらいました"], explanation: "〜てもらう = receive a favor. に marks the person who did the favor (せんせいに = from/by my teacher). Object → verb last." },
+    { english: "I decided to study every day.", words: ["ことにしました","まいにち","べんきょうする","わたしは"], answer: ["わたしは","まいにち","べんきょうする","ことにしました"], explanation: "〜ことにする = to decide to do. The dictionary form (べんきょうする) comes before ことにしました. A personal, deliberate decision." },
+    { english: "It looks like it's going to rain tomorrow.", words: ["ようです","あしたは","ふる","あめが"], answer: ["あしたは","あめが","ふる","ようです"], explanation: "〜ようです expresses appearance based on observation. あした は (topic: tomorrow) → あめが (subject) → ふる (dictionary form) → ようです." },
+    { english: "I studied for the exam while listening to music.", words: ["べんきょうしました","おんがくをききながら","しけんのために","わたしは"], answer: ["わたしは","しけんのために","おんがくをききながら","べんきょうしました"], explanation: "ために = for the purpose of (purpose first). ながら = while doing simultaneously. Both modifiers come before the main verb." },
+    { english: "If it rains tomorrow, I won't go.", words: ["いきません","あしたあめがふったら","わたしは"], answer: ["わたしは","あしたあめがふったら","いきません"], explanation: "〜たら = conditional 'if/when.' The condition clause (〜たら) comes before the result. In Japanese, cause/condition always precedes effect." },
+  ],
+  N3: [
+    { english: "Despite studying hard, I failed the exam.", words: ["しけんにおちてしまった","いっしょうけんめいべんきょうしたのに","わたしは"], answer: ["わたしは","いっしょうけんめいべんきょうしたのに","しけんにおちてしまった"], explanation: "のに expresses disappointment — 'even though / despite.' The surprising or disappointing result comes after のに. 〜てしまった adds a sense of regret." },
+    { english: "I have come to be able to speak Japanese.", words: ["ようになりました","にほんごが","はなせる","わたしは"], answer: ["わたしは","にほんごが","はなせる","ようになりました"], explanation: "〜ようになる = to come to a state (gradual change). が marks the language, はなせる is the potential form (can speak), ようになりました shows the change happened over time." },
+    { english: "No matter how much I eat, I don't gain weight.", words: ["ふとらない","いくらたべても","わたしは"], answer: ["わたしは","いくらたべても","ふとらない"], explanation: "いくら〜ても = 'no matter how much ~.' The concessive clause (no matter how much I eat) comes before the result (I don't gain weight). ても = even if/though." },
+    { english: "She continued working hard without giving up.", words: ["どりょくをつづけました","かのじょは","あきらめずに"], answer: ["かのじょは","あきらめずに","どりょくをつづけました"], explanation: "ずに = without doing (negative て-form). あきらめずに = without giving up. This modifier comes before the main verb. The topic (かのじょは) starts the sentence." },
+    { english: "I try to go to bed early every day.", words: ["ようにしています","わたしは","まいにち","はやくねる"], answer: ["わたしは","まいにち","はやくねる","ようにしています"], explanation: "〜ようにしている = making an ongoing effort to do something. The dictionary form (はやくねる) precedes ようにしています. Adverbs like まいにち come near the front." },
+    { english: "It was decided that I will transfer next month.", words: ["ことになりました","らいげつ","わたしは","てんきんする"], answer: ["わたしは","らいげつ","てんきんする","ことになりました"], explanation: "〜ことになる = it has been decided / it turns out (external decision). Contrast with ことにする (personal decision). てんきんする (to transfer) comes before ことになりました." },
+  ],
+  N2: [
+    { english: "Despite the rain, the game was held.", words: ["おこなわれた","にもかかわらず","しあいは","あめ"], answer: ["あめ","にもかかわらず","しあいは","おこなわれた"], explanation: "にもかかわらず = despite / in spite of (formal). The unexpected condition (あめ = rain) + にもかかわらず comes first, then the surprising result. More formal than のに." },
+    { english: "A judgment was made based on the data.", words: ["はんだんがくだされた","にもとづいて","データ"], answer: ["データ","にもとづいて","はんだんがくだされた"], explanation: "にもとづいて = based on (formal). The basis/foundation (データ) + にもとづいて comes first, then the action taken. Used in formal writing and speech." },
+    { english: "Now that I accepted, I will see it through to the end.", words: ["さいごまでやります","うけたからには","わたしは"], answer: ["わたしは","うけたからには","さいごまでやります"], explanation: "からには = now that / since (one must follow through). The past action (うけた = accepted) + からには signals obligation. The speaker commits to the result." },
+    { english: "That was nothing but the result of effort.", words: ["にほかならない","それは","どりょくのけっか"], answer: ["それは","どりょくのけっか","にほかならない"], explanation: "にほかならない = is nothing but / is exactly. It's an emphatic assertion. どりょくのけっか (result of effort) is given as the one and only explanation." },
+    { english: "I cannot help but admit it.", words: ["ざるをえない","みとめ","わたしは"], answer: ["わたしは","みとめ","ざるをえない"], explanation: "ざるをえない = cannot help but / forced to. みとめ is the negative stem of みとめる (to admit). The structure is: verb negative stem + ざるをえない." },
+  ],
+  N1: [
+    { english: "I will resign as of today.", words: ["たいしょくします","をもって","わたしは","ほんじつ"], answer: ["わたしは","ほんじつ","をもって","たいしょくします"], explanation: "をもって = with / by means of / as of (very formal). ほんじつ (today, formal) + をもって marks the point in time. Used in official announcements and formal letters." },
+    { english: "There is no one else but him for this role.", words: ["他にいない","かれをおいて","この役は"], answer: ["この役は","かれをおいて","他にいない"], explanation: "をおいて = excluding / apart from. かれをおいて (setting him aside, there is...) emphasizes that only he can do this. A strong assertion of uniqueness." },
+    { english: "Even experts can make mistakes.", words: ["まちがうことがある","専門家といえども"], answer: ["専門家といえども","まちがうことがある"], explanation: "といえども = even though / even if (literary/formal). The concessive subject (専門家 = experts) + といえども comes first. More formal than 〜でも. ことがある = there are times when." },
+    { english: "Precisely because it is hard, you can grow.", words: ["成長できる","苦しければこそ","あなたは"], answer: ["あなたは","苦しければこそ","成長できる"], explanation: "ばこそ = precisely because. 苦しければこそ = precisely because it is hard. This pattern emphasizes the reason as the key factor. More emphatic than から or ので." },
+    { english: "A culture unique to Japan was introduced.", words: ["が紹介された","日本ならではの","文化"], answer: ["日本ならではの","文化","が紹介された"], explanation: "ならではの = unique to / only possible with. 日本ならではの修飾語 (noun modifier) comes before 文化 (culture). が marks the subject of the passive verb 紹介された (was introduced)." },
+  ],
+};
+
+// ─────────────────────────────────────────────────────────────
+// KATAKANA WORDS DECK (loanwords — unlocked with scripts)
+// ─────────────────────────────────────────────────────────────
+const KATAKANA_WORDS = [
+  // Food & drink
+  {f:"コーヒー",b:"Coffee (kōhī)",hint:"Food & drink"},
+  {f:"アイスクリーム",b:"Ice cream (aisukurīmu)",hint:"Food & drink"},
+  {f:"チョコレート",b:"Chocolate (chokoreeto)",hint:"Food & drink"},
+  {f:"ハンバーガー",b:"Hamburger (hanbāgā)",hint:"Food & drink"},
+  {f:"ピザ",b:"Pizza (piza)",hint:"Food & drink"},
+  {f:"ジュース",b:"Juice (jūsu)",hint:"Food & drink"},
+  {f:"ケーキ",b:"Cake (kēki)",hint:"Food & drink"},
+  {f:"サンドイッチ",b:"Sandwich (sandoicchi)",hint:"Food & drink"},
+  {f:"スパゲティ",b:"Spaghetti (supageti)",hint:"Food & drink"},
+  {f:"ビール",b:"Beer (bīru)",hint:"Food & drink"},
+  {f:"ワイン",b:"Wine (wain)",hint:"Food & drink"},
+  {f:"バター",b:"Butter (batā)",hint:"Food & drink"},
+  {f:"チーズ",b:"Cheese (chīzu)",hint:"Food & drink"},
+  {f:"ヨーグルト",b:"Yogurt (yōguruto)",hint:"Food & drink"},
+  {f:"カレー",b:"Curry (karē)",hint:"Food & drink"},
+  {f:"ソース",b:"Sauce (sōsu)",hint:"Food & drink"},
+  {f:"サラダ",b:"Salad (sarada)",hint:"Food & drink"},
+  {f:"スープ",b:"Soup (sūpu)",hint:"Food & drink"},
+  {f:"アイス",b:"Ice / Ice cream (aisu)",hint:"Food & drink"},
+  {f:"クッキー",b:"Cookie (kukkī)",hint:"Food & drink"},
+  // Technology
+  {f:"テレビ",b:"Television (terebi)",hint:"Technology"},
+  {f:"スマホ",b:"Smartphone (sumaho)",hint:"Technology"},
+  {f:"パソコン",b:"Computer (pasokon)",hint:"Technology"},
+  {f:"ゲーム",b:"Game (gēmu)",hint:"Technology"},
+  {f:"インターネット",b:"Internet (intānetto)",hint:"Technology"},
+  {f:"カメラ",b:"Camera (kamera)",hint:"Technology"},
+  {f:"ラジオ",b:"Radio (rajio)",hint:"Technology"},
+  {f:"エアコン",b:"Air conditioner (eakon)",hint:"Technology"},
+  {f:"プリンター",b:"Printer (purintā)",hint:"Technology"},
+  {f:"スピーカー",b:"Speaker (supīkā)",hint:"Technology"},
+  {f:"マイク",b:"Microphone (maiku)",hint:"Technology"},
+  {f:"アプリ",b:"App (apuri)",hint:"Technology"},
+  {f:"パスワード",b:"Password (pasuwādo)",hint:"Technology"},
+  // Places & transport
+  {f:"レストラン",b:"Restaurant (resutoran)",hint:"Places"},
+  {f:"ホテル",b:"Hotel (hoteru)",hint:"Places"},
+  {f:"スーパー",b:"Supermarket (sūpā)",hint:"Places"},
+  {f:"デパート",b:"Department store (depāto)",hint:"Places"},
+  {f:"アパート",b:"Apartment (apāto)",hint:"Places"},
+  {f:"マンション",b:"Condominium / flat (manshon)",hint:"Places"},
+  {f:"コンビニ",b:"Convenience store (konbini)",hint:"Places"},
+  {f:"バス",b:"Bus (basu)",hint:"Transport"},
+  {f:"タクシー",b:"Taxi (takushī)",hint:"Transport"},
+  {f:"エレベーター",b:"Elevator (erebētā)",hint:"Places"},
+  {f:"エスカレーター",b:"Escalator (esukarētā)",hint:"Places"},
+  // Countries & cities
+  {f:"アメリカ",b:"America (Amerika)",hint:"Country"},
+  {f:"イギリス",b:"England (Igirisu)",hint:"Country"},
+  {f:"フランス",b:"France (Furansu)",hint:"Country"},
+  {f:"ドイツ",b:"Germany (Doitsu)",hint:"Country"},
+  {f:"オーストラリア",b:"Australia (Ōsutoraria)",hint:"Country"},
+  {f:"カナダ",b:"Canada (Kanada)",hint:"Country"},
+  {f:"イタリア",b:"Italy (Itaria)",hint:"Country"},
+  {f:"スペイン",b:"Spain (Supein)",hint:"Country"},
+  {f:"ブラジル",b:"Brazil (Burajiru)",hint:"Country"},
+  {f:"ロシア",b:"Russia (Roshia)",hint:"Country"},
+  {f:"チャイナ",b:"China (Chaina)",hint:"Country"},
+  {f:"コリア",b:"Korea (Koria)",hint:"Country"},
+  // Everyday life & objects
+  {f:"テーブル",b:"Table (tēburu)",hint:"Everyday"},
+  {f:"ソファ",b:"Sofa (sofa)",hint:"Everyday"},
+  {f:"トイレ",b:"Toilet / bathroom (toire)",hint:"Everyday"},
+  {f:"シャワー",b:"Shower (shawā)",hint:"Everyday"},
+  {f:"バッグ",b:"Bag (baggu)",hint:"Everyday"},
+  {f:"ズボン",b:"Trousers / pants (zubon)",hint:"Everyday"},
+  {f:"セーター",b:"Sweater (sētā)",hint:"Everyday"},
+  {f:"ネクタイ",b:"Necktie (nekutai)",hint:"Everyday"},
+  {f:"ベッド",b:"Bed (beddo)",hint:"Everyday"},
+  {f:"カーテン",b:"Curtain (kāten)",hint:"Everyday"},
+  {f:"ペット",b:"Pet (petto)",hint:"Everyday"},
+  {f:"ビニール",b:"Vinyl / plastic (binīru)",hint:"Everyday"},
+  // Sports & hobbies
+  {f:"サッカー",b:"Soccer / football (sakkā)",hint:"Sports"},
+  {f:"テニス",b:"Tennis (tenisu)",hint:"Sports"},
+  {f:"バスケット",b:"Basketball (basuketto)",hint:"Sports"},
+  {f:"スキー",b:"Skiing (sukī)",hint:"Sports"},
+  {f:"ダンス",b:"Dance (dansu)",hint:"Hobby"},
+  {f:"ギター",b:"Guitar (gitā)",hint:"Hobby"},
+  {f:"ピアノ",b:"Piano (piano)",hint:"Hobby"},
+  {f:"バイオリン",b:"Violin (baiorin)",hint:"Hobby"},
+  // Work & lifestyle
+  {f:"ドライブ",b:"Drive / going for a drive (doraibu)",hint:"Activity"},
+  {f:"ショッピング",b:"Shopping (shoppingu)",hint:"Activity"},
+  {f:"アルバイト",b:"Part-time job (arubaito)",hint:"Work"},
+  {f:"ボランティア",b:"Volunteer (borantia)",hint:"Work"},
+  {f:"スタッフ",b:"Staff (sutaffu)",hint:"Work"},
+  {f:"サービス",b:"Service (sābisu)",hint:"Work"},
+  {f:"ビジネス",b:"Business (bijinesu)",hint:"Work"},
+  {f:"プロジェクト",b:"Project (purojekuto)",hint:"Work"},
+  {f:"スケジュール",b:"Schedule (sukejūru)",hint:"Work"},
+  // Loanword adjectives / expressions
+  {f:"ナイス",b:"Nice (naisu)",hint:"Expression"},
+  {f:"クール",b:"Cool (kūru)",hint:"Expression"},
+  {f:"ハード",b:"Hard / difficult (hādo)",hint:"Expression"},
+  {f:"ソフト",b:"Soft / gentle (sofuto)",hint:"Expression"},
+  {f:"フリー",b:"Free (furī)",hint:"Expression"},
+  {f:"ベスト",b:"Best (besuto)",hint:"Expression"},
+  {f:"チャンス",b:"Chance / opportunity (chansu)",hint:"Expression"},
+  {f:"ポイント",b:"Point (pointo)",hint:"Expression"},
+  {f:"レベル",b:"Level (reberu)",hint:"Expression"},
+  {f:"ステップ",b:"Step (suteppu)",hint:"Expression"},
+];
+
+// All JLPT levels in order
+const LEVELS = ["N5","N4","N3","N2","N1"];
+const LEVEL_COLORS = { N5:"#22c55e", N4:"#3b82f6", N3:"#f97316", N2:"#a855f7", N1:"#ef4444" };
+const CATEGORIES = ["vocab","kanji","grammar","reading"];
+const CAT_META = {
+  vocab:   { icon:"語", label:"Vocabulary" },
+  kanji:   { icon:"漢", label:"Kanji"      },
+  grammar: { icon:"文", label:"Grammar"    },
+  reading: { icon:"読", label:"Reading"    },
+};
+
+// ─────────────────────────────────────────────────────────────
+// SCRIPT MNEMONICS
+// ─────────────────────────────────────────────────────────────
+const MNEMONICS = {
+  "あ":"Looks like an 'A' with arms spread wide saying 'ahh!'",
+  "い":"Two strokes like two 'i' letters side by side — 'ee'",
+  "う":"Like a little hook catching a 'oo' sound",
+  "え":"Looks like a person dancing with arms up — 'eh!'",
+  "お":"Like 'oh!' with a surprised open mouth",
+  "か":"A sword ('ka-tana') slashing diagonally","き":"Like a key ('ki') with two horizontal bars",
+  "く":"A crow's beak opening to say 'ku'","け":"A person with a tall hat — 'ke'",
+  "こ":"Two lines like a 'ko'ld road","さ":"Cross with a curl — 'sa'murai sword",
+  "し":"A fishhook — 'shi'ny and curved","す":"A 'su'bway loop","せ":"A 'se'at with a backrest",
+  "そ":"Like a 'so'ccer ball with a curve","た":"A 'ta'ble with one leg",
+  "ち":"Like a 'chi'cken facing left","つ":"A wave — 'tsu' as water rushes",
+  "て":"A hand reaching out — 'te' means hand!","と":"A 'to'e with a spike",
+  "な":"'na'tural swirling lines","に":"Two lines — 'ni' means 2!",
+  "ぬ":"Like 'nu'dles swirling","ね":"A cat's tail — 'ne' (cats say nyan!)",
+  "の":"A spinning top — just a circle with a tail","は":"Like H with an extra stroke",
+  "ひ":"A smiling mouth saying 'hee!'","ふ":"Mount 'fu'ji with 4 strokes",
+  "へ":"A small tent peak","ほ":"Like 'ho'me — a house",
+  "ま":"Like 'ma'ma holding a baby","み":"A fish hook going 'mi'les deep",
+  "む":"A cow face — moo → 'mu'","め":"A swirling eye — 'me' means eye!",
+  "も":"A fishing hook with two worms","や":"Like a 'ya'k with horns",
+  "ゆ":"'yu'niverse swirling","よ":"Like the letter F — 'yo' bro!",
+  "ら":"A 'la'zy person lounging","り":"Legs running — 'ri'ght away!",
+  "る":"A 'ru'g being rolled up","れ":"A 're'ed blowing in wind",
+  "ろ":"A 'ro'ad that loops back","わ":"'wa'ter rippling — あ without left stroke",
+  "を":"Special particle — 'wo'nderful but rare","ん":"Backwards 'n' — it IS just 'n'!",
+  "ア":"Like the capital A!","イ":"Two strokes like 'i' — 'ee'",
+  "ウ":"Like a crown — 'oo' royalty","エ":"Like H on its side — 'eh'",
+  "オ":"Like an 'o'ar for rowing","カ":"A 'ka'rate chop!",
+  "キ":"A 'ki'te string with crossbars","ク":"A crow's beak — 'ku'",
+  "ケ":"A 'ke'ttle with a spout","コ":"A 'co'rner — two right angles",
+  "サ":"A 'sa'murai's crossed blades","シ":"Three dots — a 'shi'ny smile",
+  "ス":"A 'su'rfboard standing up","セ":"A person 'se'ated at a desk",
+  "ソ":"Two dots and a slash — 'so'nar","タ":"A 'ta'xi with antenna",
+  "チ":"A 'chi'mney with a curve","ツ":"Three dots and a swish — 'tsu'nami",
+  "テ":"A 'te'levision antenna","ト":"A 'to'tem pole with a wing",
+  "ナ":"A 'na'il through a plank","ニ":"Two lines — 'ni' means 2!",
+  "ヌ":"'nu'dles crossing over","ネ":"A 'ne'twork of crossed lines",
+  "ノ":"A single slash — 'no' more strokes!","ハ":"Two people bowing — 'ha'!",
+  "ヒ":"Like the letter F — 'hee'!","フ":"A funny little hook — 'fu'",
+  "ヘ":"Same as hiragana へ — a tent peak!","ホ":"A 'ho'ly cross with extra strokes",
+  "マ":"A 'ma'gic wand with a curl","ミ":"Three lines — 'mi' fingers",
+  "ム":"A 'mu'stache shape","メ":"A big X — 'me'!",
+  "モ":"'mo're lines than ヨ","ヤ":"A 'ya'rd pitchfork",
+  "ユ":"Like a U — 'yu'!","ヨ":"Like the letter E — 'yo'!",
+  "ラ":"A 'la'mp with a curved base","リ":"Two clean strokes — 'ri'ght!",
+  "ル":"A 'ru'ler with a bent end","レ":"A check mark — 're'!",
+  "ロ":"A 'ro'om — a square box","ワ":"'wa'ter dripping from a spout",
+  "ヲ":"Rare particle — 'wo'rthy of memory","ン":"Like a backwards ン — just 'n'!",
+};
+
+// ─────────────────────────────────────────────────────────────
+// SPACED REPETITION
+// ─────────────────────────────────────────────────────────────
+function applyRating(prog, rating) {
+  let { interval, easeFactor, repetitions } = prog;
+  if (rating === 1) { interval = 1; repetitions = 0; }
+  else {
+    if (repetitions === 0) interval = 1;
+    else if (repetitions === 1) interval = 6;
+    else interval = Math.round(interval * easeFactor);
+    repetitions += 1;
+    easeFactor = Math.max(1.3, easeFactor + 0.1 - (4 - rating) * (0.08 + (4 - rating) * 0.02));
+  }
+  return { interval, easeFactor, repetitions, due: Date.now() + interval * 60 * 1000 * 10 };
+}
+
+function freshProg() { return { interval:0, easeFactor:2.5, due:Date.now(), repetitions:0, introduced:false }; }
+
+// ─────────────────────────────────────────────────────────────
+// QUIZ BUILDER (for hiragana/katakana unlock tests)
+// ─────────────────────────────────────────────────────────────
+function buildQuiz(deck) {
+  const cards = [...deck].sort(() => Math.random() - 0.5);
+  return cards.map((card) => {
+    const wrong = deck.filter(c => c.b !== card.b).sort(() => Math.random() - 0.5).slice(0,3).map(c => c.b);
+    const options = [...wrong, card.b].sort(() => Math.random() - 0.5);
+    return { question: card.f, answer: card.b, options, card };
+  });
+}
+
+const PASS_THRESHOLD = 0.8;
+const RATINGS = [
+  {label:"Again",value:1,color:"#ef4444",desc:"Didn't know"},
+  {label:"Hard", value:2,color:"#f97316",desc:"Struggled"},
+  {label:"Good", value:3,color:"#22c55e",desc:"Got it"},
+  {label:"Easy", value:4,color:"#3b82f6",desc:"Too easy"},
+];
+
+// ─────────────────────────────────────────────────────────────
+// STORAGE HELPERS
+// ─────────────────────────────────────────────────────────────
+function loadState(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+}
+function saveState(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+
+// ─────────────────────────────────────────────────────────────
+// EXPANSION BOX (formal/informal/on-yomi/kun-yomi)
+// ─────────────────────────────────────────────────────────────
+function ExpansionBox({ mode, card }) {
+  if (!mode || !card) return null;
+  const raw = mode === 'formal' ? card.formal : card.informal;
+  if (!raw) return null;
+  const [jpPart, ...rest] = raw.split(' — ');
+  const enPart = rest.join(' — ');
+  const colors = { formal:{bg:"rgba(59,130,246,0.07)",border:"rgba(59,130,246,0.2)"}, informal:{bg:"rgba(249,115,22,0.07)",border:"rgba(249,115,22,0.2)"} };
+  const c = colors[mode];
+  return (
+    <div style={{padding:"12px 14px",background:c.bg,border:`1px solid ${c.border}`,borderRadius:10,display:"flex",flexDirection:"column",gap:4}} className="card-back-reveal">
+      <div style={{fontSize:17,color:"#f0ede8",lineHeight:1.4}}>{jpPart}</div>
+      {enPart && <div style={{fontSize:12,color:"#8a8070",fontFamily:"monospace"}}>{enPart}</div>}
+    </div>
+  );
+}
+
+function CardToggles({ card, section, mode, setMode }) {
+  if (!card) return null;
+  const isKanji = section === 'kanji';
+  const hasF = !!card.formal, hasI = !!card.informal;
+  if (!hasF && !hasI) return null;
+  const toggle = val => setMode(mode === val ? null : val);
+  return (
+    <div style={{width:"100%",display:"flex",flexDirection:"column",gap:10,marginTop:4}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        {hasF && <button style={{...S.toggleBtn,...(mode==='formal'?S.formalActive:{})}} onClick={e=>{e.stopPropagation();toggle('formal');}}>
+          {isKanji?"音 On'yomi":"丁寧 Formal"}</button>}
+        {hasI && <button style={{...S.toggleBtn,...(mode==='informal'?S.informalActive:{})}} onClick={e=>{e.stopPropagation();toggle('informal');}}>
+          {isKanji?"訓 Kun'yomi":"普通 Casual"}</button>}
+      </div>
+      <ExpansionBox mode={mode} card={card} />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// APP
+// ─────────────────────────────────────────────────────────────
+export default function App() {
+  // ── Persistent state ──
+  const [scriptUnlocked, setScriptUnlocked] = useState(() => loadState("nh_scripts", {hiragana:false,katakana:false}));
+  const [levelProgress, setLevelProgress] = useState(() => loadState("nh_levelProgress", {current:"N5", passed:{}}));
+  const [cardProgress, setCardProgress] = useState(() => loadState("nh_cardProg", {}));
+  const [dailyLimit, setDailyLimit] = useState(() => loadState("nh_dailyLimit", 10));
+  const [dailyIntroduced, setDailyIntroduced] = useState(() => {
+    const saved = loadState("nh_daily", {date:"",count:0});
+    const today = new Date().toDateString();
+    return saved.date === today ? saved.count : 0;
+  });
+
+  // ── UI state ──
+  const [screen, setScreen] = useState("home");
+  const [activeLevel, setActiveLevel] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [theme, setTheme] = useState(() => loadState("nh_theme", "dark"));
+  const [katakanaWordsProg, setKatakanaWordsProg] = useState(() =>
+    loadState("nh_kwProg", KATAKANA_WORDS.map(() => freshProg()))
+  );
+
+  const isDark = theme === "dark";
+  const T = {
+    bg:        isDark ? "#0a0a0f" : "#f5f5f0",
+    bg2:       isDark ? "#13131a" : "#ffffff",
+    bg3:       isDark ? "#0d0d14" : "#f0ede8",
+    border:    isDark ? "#1e1e2a" : "#e0ddd8",
+    border2:   isDark ? "#2a2a38" : "#d0cdc8",
+    text:      isDark ? "#f0ede8" : "#1a1a22",
+    textSub:   isDark ? "#c8c0b0" : "#4a4a5a",
+    textMuted: isDark ? "#8a8070" : "#9090a0",
+    textFaint: isDark ? "#3a3a48" : "#c0c0cc",
+  };
+
+  const saveTheme = (v) => { saveState("nh_theme", v); setTheme(v); };
+
+  // Study
+  const [queue, setQueue] = useState([]);
+  const [queueIndex, setQueueIndex] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [animKey, setAnimKey] = useState(0);
+  const [toggleMode, setToggleMode] = useState(null);
+  const [sessionStats, setSessionStats] = useState({correct:0,total:0});
+
+  // Daily mistakes log
+  const [dailyMistakes, setDailyMistakes] = useState(() => {
+    const saved = loadState("nh_mistakes", {date:"",mistakes:[]});
+    const today = new Date().toDateString();
+    return saved.date === today ? saved.mistakes : [];
+  });
+  const [mistakeReviewIndex, setMistakeReviewIndex] = useState(0);
+  const [mistakeExplanation, setMistakeExplanation] = useState("");
+  const [mistakeExplLoading, setMistakeExplLoading] = useState(false);
+
+  const saveMistake = (card, level, cat) => {
+    const today = new Date().toDateString();
+    const entry = {
+      front: card.f || card.front,
+      back:  card.b || card.back,
+      hint:  card.hint || cat,
+      level, cat,
+      formal:   card.formal   || null,
+      informal: card.informal || null,
+      example:  card.example  || null,
+      time: Date.now(),
+    };
+    setDailyMistakes(prev => {
+      // avoid exact duplicates
+      const deduped = prev.filter(m => m.front !== entry.front);
+      const next = [...deduped, entry];
+      saveState("nh_mistakes", {date: today, mistakes: next});
+      return next;
+    });
+  };
+
+  // Script quiz
+  const [quizDeck, setQuizDeck] = useState("hiragana");
+  const [quizQuestions, setQuizQuestions] = useState([]);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [quizAnswers, setQuizAnswers] = useState([]);
+  const [quizSelected, setQuizSelected] = useState(null);
+  const [quizConfirmed, setQuizConfirmed] = useState(false);
+  const [wrongAnswers, setWrongAnswers] = useState([]);
+
+  // Review
+  const [reviewIndex, setReviewIndex] = useState(0);
+  const [aiMnemonic, setAiMnemonic] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+
+  // JLPT level test
+  const [levelTestLevel, setLevelTestLevel] = useState(null);
+  const [levelTestQuestions, setLevelTestQuestions] = useState([]);
+  const [levelTestIndex, setLevelTestIndex] = useState(0);
+  const [levelTestAnswers, setLevelTestAnswers] = useState([]);
+  const [levelTestSelected, setLevelTestSelected] = useState(null);
+  const [levelTestConfirmed, setLevelTestConfirmed] = useState(false);
+
+  // Particle exercise
+  const [particleIndex, setParticleIndex] = useState(0);
+  const [particleSelected, setParticleSelected] = useState(null);
+  const [particleConfirmed, setParticleConfirmed] = useState(false);
+  const [particleScore, setParticleScore] = useState({correct:0,total:0});
+  const [particleOrder, setParticleOrder] = useState(() => [...Array(PARTICLES.length).keys()].sort(()=>Math.random()-0.5));
+  const [particlePassed, setParticlePassed] = useState(() => loadState("nh_particlePassed", false));
+
+  // Sentence builder
+  const [sentenceLevel, setSentenceLevel] = useState(null);
+  const [sentenceIndex, setSentenceIndex] = useState(0);
+  const [sentenceOrder, setSentenceOrder] = useState(() => ({}));
+  const [placed, setPlaced] = useState([]); // words placed in the answer area
+  const [remaining, setRemaining] = useState([]); // words not yet placed
+  const [sentenceChecked, setSentenceChecked] = useState(false);
+  const [sentenceCorrect, setSentenceCorrect] = useState(false);
+  const [sentenceScore, setSentenceScore] = useState({correct:0,total:0});
+
+  const scriptsPassed = scriptUnlocked.hiragana && scriptUnlocked.katakana;
+  const currentLevel = levelProgress.current;
+
+  // Save helpers
+  const saveScripts = v => { saveState("nh_scripts", v); setScriptUnlocked(v); };
+  const saveLevelProgress = v => { saveState("nh_levelProgress", v); setLevelProgress(v); };
+  const saveCardProgress = v => { saveState("nh_cardProg", v); setCardProgress(v); };
+  const saveDailyLimit = v => { saveState("nh_dailyLimit", v); setDailyLimit(v); };
+
+  const bumpDaily = (n=1) => {
+    const today = new Date().toDateString();
+    const next = dailyIntroduced + n;
+    saveState("nh_daily", {date:today,count:next});
+    setDailyIntroduced(next);
+    return next;
+  };
+
+  // ── Card key ──
+  const cardKey = (level, cat, idx) => `${level}_${cat}_${idx}`;
+  const getProgFor = (level, cat, idx) => cardProgress[cardKey(level,cat,idx)] || freshProg();
+
+  // ── Build today's study queue for a level+category ──
+  const buildStudyQueue = useCallback((level, cat) => {
+    const cards = JLPT[level][cat];
+    const today = new Date().toDateString();
+    const introduced = cards.reduce((a,_,i) => {
+      const p = cardProgress[cardKey(level,cat,i)];
+      return a + (p && p.introduced ? 1 : 0);
+    }, 0);
+
+    // Due reviews first
+    const due = cards.map((card,i) => {
+      const p = getProgFor(level,cat,i);
+      return {card,i,prog:p};
+    }).filter(({prog}) => prog.introduced && prog.due <= Date.now())
+      .sort((a,b) => a.prog.due - b.prog.due);
+
+    // New cards (up to daily limit remaining)
+    const todayCount = loadState("nh_daily",{date:"",count:0});
+    const usedToday = todayCount.date === today ? todayCount.count : 0;
+    const remaining = Math.max(0, dailyLimit - usedToday);
+    const newCards = cards.map((card,i) => ({card,i,prog:getProgFor(level,cat,i)}))
+      .filter(({prog}) => !prog.introduced)
+      .slice(0, remaining);
+
+    return [...due, ...newCards];
+  }, [cardProgress, dailyLimit]);
+
+  const startStudy = (level, cat) => {
+    const q = buildStudyQueue(level, cat);
+    if (q.length === 0) { alert("No cards due! Come back tomorrow or lower your daily limit."); return; }
+    setActiveLevel(level); setActiveCategory(cat);
+    setQueue(q); setQueueIndex(0); setFlipped(false); setToggleMode(null);
+    setSessionStats({correct:0,total:0}); setAnimKey(k=>k+1);
+    setScreen("study");
+  };
+
+  // Script flashcard study (hiragana/katakana — separate from JLPT)
+  const startScriptStudy = (scriptKey) => {
+    const deck = scriptKey === "hiragana" ? HIRAGANA : KATAKANA;
+    const progKey = `nh_scriptProg_${scriptKey}`;
+    const savedProg = loadState(progKey, deck.map(() => freshProg()));
+    const due = deck.map((card, i) => ({card:{f:card.f,b:card.b,front:card.f,back:card.b}, i, prog:savedProg[i]}))
+      .filter(({prog}) => prog.introduced && prog.due <= Date.now());
+    const newCards = deck.map((card, i) => ({card:{f:card.f,b:card.b,front:card.f,back:card.b}, i, prog:savedProg[i]}))
+      .filter(({prog}) => !prog.introduced)
+      .slice(0, dailyLimit);
+    const q = due.length > 0 ? due : newCards.length > 0 ? newCards : deck.map((card, i) => ({card:{f:card.f,b:card.b,front:card.f,back:card.b}, i, prog:savedProg[i]}));
+    setActiveLevel(scriptKey); setActiveCategory(scriptKey);
+    setQueue(q); setQueueIndex(0); setFlipped(false); setToggleMode(null);
+    setSessionStats({correct:0,total:0}); setAnimKey(k=>k+1);
+    setScreen("study");
+  };
+
+  const startKatakanaWords = () => {
+    const today = new Date().toDateString();
+    const todaySaved = loadState("nh_daily", {date:"",count:0});
+    const usedToday = todaySaved.date === today ? todaySaved.count : 0;
+    const remaining = Math.max(0, dailyLimit - usedToday);
+    const due = KATAKANA_WORDS
+      .map((card, i) => ({ card, i, prog: katakanaWordsProg[i] }))
+      .filter(({prog}) => prog.introduced && prog.due <= Date.now());
+    const newCards = KATAKANA_WORDS
+      .map((card, i) => ({ card, i, prog: katakanaWordsProg[i] }))
+      .filter(({prog}) => !prog.introduced)
+      .slice(0, remaining);
+    const q = [...due, ...newCards];
+    if (q.length === 0) { alert("No katakana words due! Come back tomorrow."); return; }
+    setActiveLevel("KW"); setActiveCategory("katakana_words");
+    setQueue(q); setQueueIndex(0); setFlipped(false); setToggleMode(null);
+    setSessionStats({correct:0,total:0}); setAnimKey(k=>k+1);
+    setScreen("study");
+  };
+
+  const handleFlip = () => {
+    if (flipped) return;
+    setIsFlipping(true);
+    setTimeout(() => { setFlipped(true); setIsFlipping(false); }, 150);
+  };
+
+  const handleRate = (rating) => {
+    const {i, prog} = queue[queueIndex];
+    const wasNew = !prog.introduced;
+    const newProg = { ...applyRating(prog, rating), introduced: true };
+    if (activeCategory === "katakana_words") {
+      const updated = [...katakanaWordsProg];
+      updated[i] = newProg;
+      saveState("nh_kwProg", updated);
+      setKatakanaWordsProg(updated);
+    } else if (activeCategory === "hiragana" || activeCategory === "katakana") {
+      const progKey = `nh_scriptProg_${activeCategory}`;
+      const deck = activeCategory === "hiragana" ? HIRAGANA : KATAKANA;
+      const saved = loadState(progKey, deck.map(() => freshProg()));
+      saved[i] = newProg;
+      saveState(progKey, saved);
+    } else {
+      const updated = { ...cardProgress, [cardKey(activeLevel,activeCategory,i)]: newProg };
+      saveCardProgress(updated);
+    }
+    if (wasNew) bumpDaily(1);
+    if (rating <= 2) saveMistake(queue[queueIndex].card, activeLevel, activeCategory);
+    setSessionStats(s => ({correct: s.correct + (rating >= 3 ? 1 : 0), total: s.total + 1}));
+    if (queueIndex + 1 >= queue.length) setScreen("done");
+    else { setFlipped(false); setToggleMode(null); setAnimKey(k=>k+1); setQueueIndex(c=>c+1); }
+  };
+
+  // ── Script quiz ──
+  const startScriptQuiz = (deck) => {
+    setQuizDeck(deck);
+    setQuizQuestions(buildQuiz(deck === "hiragana" ? HIRAGANA : KATAKANA));
+    setQuizIndex(0); setQuizAnswers([]); setWrongAnswers([]);
+    setQuizSelected(null); setQuizConfirmed(false);
+    setScreen("scriptQuiz");
+  };
+
+  const handleScriptSelect = opt => { if (!quizConfirmed) setQuizSelected(opt); };
+  const handleScriptConfirm = () => {
+    if (!quizSelected) return;
+    const q = quizQuestions[quizIndex];
+    const correct = quizSelected === q.answer;
+    const newAnswers = [...quizAnswers, {selected:quizSelected,correct}];
+    setQuizAnswers(newAnswers);
+    if (!correct) setWrongAnswers(w => [...w, {...q,chosen:quizSelected}]);
+    setQuizConfirmed(true);
+    setTimeout(() => {
+      if (quizIndex + 1 >= quizQuestions.length) {
+        const score = newAnswers.filter(a=>a.correct).length / quizQuestions.length;
+        if (score >= PASS_THRESHOLD) saveScripts({...scriptUnlocked,[quizDeck]:true});
+        setScreen("scriptQuizResult");
+      } else {
+        setQuizIndex(i=>i+1); setQuizSelected(null); setQuizConfirmed(false);
+      }
+    }, 700);
+  };
+
+  // ── Missed card review ──
+  const startReview = () => { setReviewIndex(0); setAiMnemonic(""); loadMnemonic(wrongAnswers[0]); setScreen("review"); };
+
+  const loadMistakeExplanation = async (mistake) => {
+    if (!mistake) return;
+    setMistakeExplLoading(true);
+    setMistakeExplanation("");
+    try {
+      const contextParts = [];
+      if (mistake.example) contextParts.push(`Example: ${mistake.example.replace(/\n/g, " / ")}`);
+      if (mistake.formal)  contextParts.push(`Formal: ${mistake.formal}`);
+      if (mistake.informal) contextParts.push(`Casual: ${mistake.informal}`);
+      const context = contextParts.length ? `\nExtra context: ${contextParts.join(" | ")}` : "";
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514", max_tokens: 1000,
+          messages: [{
+            role: "user",
+            content: `You are a friendly Japanese tutor helping a beginner. The student got this card wrong:
+Card: "${mistake.front}" → "${mistake.back}" (${mistake.hint})${context}
+
+Write a short beginner-friendly explanation (3-5 sentences) covering:
+1. What this word/pattern/character means and how to use it
+2. A simple memory tip or trick to remember it
+3. One natural example sentence with English translation
+
+Keep it warm, encouraging, and simple. No jargon. Reply with just the explanation, no headings.`
+          }]
+        })
+      });
+      const data = await res.json();
+      setMistakeExplanation(data.content?.[0]?.text || "Keep practicing — every mistake is a step forward!");
+    } catch {
+      setMistakeExplanation("Keep practicing — every mistake is a step forward! Try making a sentence with this word today.");
+    }
+    setMistakeExplLoading(false);
+  };
+  const loadMnemonic = async (q) => {
+    if (!q) return;
+    const builtin = MNEMONICS[q.question];
+    if (builtin) { setAiMnemonic(builtin); return; }
+    setAiLoading(true); setAiMnemonic("");
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,
+          messages:[{role:"user",content:`Give a single short vivid mnemonic (1-2 sentences) to help an English speaker remember that "${q.question}" means "${q.answer}" in Japanese. Reply with only the mnemonic.`}]
+        })
+      });
+      const data = await res.json();
+      setAiMnemonic(data.content?.[0]?.text || "Connect the shape or sound to a vivid image!");
+    } catch { setAiMnemonic("Try connecting the word to a vivid mental image!"); }
+    setAiLoading(false);
+  };
+  const goToReview = idx => { setReviewIndex(idx); setAiMnemonic(""); loadMnemonic(wrongAnswers[idx]); };
+
+  // ── JLPT level test ──
+  const startLevelTest = (level) => {
+    // Build a 20-question test from vocab across all categories
+    const allCards = [...JLPT[level].vocab, ...JLPT[level].kanji].sort(() => Math.random() - 0.5).slice(0,20);
+    const allPool = [...JLPT[level].vocab, ...JLPT[level].kanji];
+    const questions = allCards.map(card => {
+      const wrong = allPool.filter(c=>c.b!==card.b).sort(()=>Math.random()-0.5).slice(0,3).map(c=>c.b);
+      const options = [...wrong,card.b].sort(()=>Math.random()-0.5);
+      return {question:card.f, answer:card.b, options};
+    });
+    setLevelTestLevel(level); setLevelTestQuestions(questions);
+    setLevelTestIndex(0); setLevelTestAnswers([]);
+    setLevelTestSelected(null); setLevelTestConfirmed(false);
+    setScreen("levelTest");
+  };
+
+  const handleLevelTestSelect = opt => { if (!levelTestConfirmed) setLevelTestSelected(opt); };
+  const handleLevelTestConfirm = () => {
+    if (!levelTestSelected) return;
+    const correct = levelTestSelected === levelTestQuestions[levelTestIndex].answer;
+    const newAnswers = [...levelTestAnswers, {selected:levelTestSelected,correct}];
+    setLevelTestAnswers(newAnswers);
+    setLevelTestConfirmed(true);
+    setTimeout(() => {
+      if (levelTestIndex + 1 >= levelTestQuestions.length) {
+        const score = newAnswers.filter(a=>a.correct).length / levelTestQuestions.length;
+        if (score >= PASS_THRESHOLD) {
+          const nextIdx = LEVELS.indexOf(levelTestLevel) + 1;
+          const nextLevel = LEVELS[nextIdx] || levelTestLevel;
+          const newPassed = {...levelProgress.passed, [levelTestLevel]:true};
+          saveLevelProgress({current: nextIdx < LEVELS.length ? nextLevel : levelTestLevel, passed: newPassed});
+        }
+        setScreen("levelTestResult");
+      } else {
+        setLevelTestIndex(i=>i+1); setLevelTestSelected(null); setLevelTestConfirmed(false);
+      }
+    }, 700);
+  };
+
+  const levelTestScore = levelTestAnswers.filter(a=>a.correct).length;
+  const levelTestPassed = levelTestScore / (levelTestQuestions.length||1) >= PASS_THRESHOLD;
+  const scriptQuizScore = quizAnswers.filter(a=>a.correct).length;
+  const scriptQuizPassed = scriptQuizScore / (quizQuestions.length||1) >= PASS_THRESHOLD;
+
+  // ── Particle exercise ──
+  const startParticles = () => {
+    setParticleIndex(0);
+    setParticleSelected(null);
+    setParticleConfirmed(false);
+    setParticleScore({correct:0,total:0});
+    setParticleOrder([...Array(PARTICLES.length).keys()].sort(()=>Math.random()-0.5));
+    setScreen("particles");
+  };
+
+  const handleParticleSelect = (opt) => { if (!particleConfirmed) setParticleSelected(opt); };
+
+  const handleParticleConfirm = () => {
+    if (!particleSelected) return;
+    const q = PARTICLES[particleOrder[particleIndex]];
+    const correct = particleSelected === q.answer;
+    const newScore = {correct: particleScore.correct+(correct?1:0), total: particleScore.total+1};
+    setParticleScore(newScore);
+    setParticleConfirmed(true);
+    // Check if passed (80% after all questions)
+    if (particleIndex + 1 >= PARTICLES.length) {
+      const pct = newScore.correct / PARTICLES.length;
+      if (pct >= PASS_THRESHOLD && !particlePassed) {
+        saveState("nh_particlePassed", true);
+        setParticlePassed(true);
+      }
+    }
+  };
+
+  const nextParticle = () => {
+    if (particleIndex + 1 >= PARTICLES.length) { setScreen("particlesResult"); return; }
+    setParticleIndex(i => i+1);
+    setParticleSelected(null);
+    setParticleConfirmed(false);
+  };
+
+  // ── Sentence builder ──
+  const startSentenceBuilder = (level) => {
+    const shuffled = [...Array(SENTENCES[level].length).keys()].sort(()=>Math.random()-0.5);
+    setSentenceLevel(level);
+    setSentenceIndex(0);
+    setSentenceOrder(prev => ({...prev, [level]: shuffled}));
+    const firstIdx = shuffled[0];
+    const words = [...SENTENCES[level][firstIdx].words].sort(()=>Math.random()-0.5);
+    setRemaining(words.map((w,i)=>({w,id:i})));
+    setPlaced([]);
+    setSentenceChecked(false);
+    setSentenceCorrect(false);
+    setSentenceScore({correct:0,total:0});
+    setScreen("sentenceBuilder");
+  };
+
+  const placeWord = (item) => {
+    if (sentenceChecked) return;
+    setRemaining(r => r.filter(x => x.id !== item.id));
+    setPlaced(p => [...p, item]);
+  };
+
+  const removeWord = (item) => {
+    if (sentenceChecked) return;
+    setPlaced(p => p.filter(x => x.id !== item.id));
+    setRemaining(r => [...r, item]);
+  };
+
+  const checkSentence = () => {
+    if (placed.length === 0) return;
+    const level = sentenceLevel;
+    const idx = sentenceOrder[level]?.[sentenceIndex] ?? sentenceIndex;
+    const correct = placed.map(x=>x.w).join("") === SENTENCES[level][idx].answer.join("");
+    setSentenceCorrect(correct);
+    setSentenceChecked(true);
+    setSentenceScore(s => ({correct: s.correct+(correct?1:0), total: s.total+1}));
+    if (!correct) saveMistake({f: SENTENCES[level][idx].english, b: SENTENCES[level][idx].answer.join(" "), hint:`${level} Sentence`}, level, "reading");
+  };
+
+  const nextSentence = () => {
+    const level = sentenceLevel;
+    const total = SENTENCES[level].length;
+    if (sentenceIndex + 1 >= total) { setScreen("sentenceResult"); return; }
+    const nextIdx = sentenceIndex + 1;
+    const dataIdx = sentenceOrder[level]?.[nextIdx] ?? nextIdx;
+    const words = [...SENTENCES[level][dataIdx].words].sort(()=>Math.random()-0.5);
+    setSentenceIndex(nextIdx);
+    setRemaining(words.map((w,i)=>({w,id:i})));
+    setPlaced([]);
+    setSentenceChecked(false);
+    setSentenceCorrect(false);
+  };
+
+  // ── Due counts ──
+  const getDueCount = (level, cat) => {
+    if (!JLPT[level] || !JLPT[level][cat]) return 0;
+    return JLPT[level][cat].filter((_,i) => {
+      const p = cardProgress[cardKey(level,cat,i)];
+      return p && p.introduced && p.due <= Date.now();
+    }).length;
+  };
+  const getNewCount = (level, cat) => {
+    if (!JLPT[level] || !JLPT[level][cat]) return 0;
+    return JLPT[level][cat].filter((_,i) => {
+      const p = cardProgress[cardKey(level,cat,i)];
+      return !p || !p.introduced;
+    }).length;
+  };
+
+  const card = queue[queueIndex];
+  const isScript = screen === 'study' && (activeCategory === 'hiragana' || activeCategory === 'katakana');
+
+  return (
+    <div style={{...S.root, background: T.bg, color: T.text}}>
+      <style>{CSS}</style>
+
+      {/* ── HOME ── */}
+      {screen === "home" && (
+        <div style={S.home}>
+          {/* Settings gear button */}
+          <button
+            style={{position:"fixed",top:16,right:16,background:T.bg2,border:`1px solid ${T.border}`,borderRadius:10,width:40,height:40,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:99,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}
+            onClick={() => setScreen("settings")}
+            title="Settings"
+          >⚙</button>
+
+          {/* Daily review button */}
+          {dailyMistakes.length > 0 && (
+            <button
+              style={{position:"fixed",top:16,right:64,background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.4)",borderRadius:10,padding:"0 12px",height:40,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:6,zIndex:99,color:"#ef4444",fontFamily:"Georgia,serif"}}
+              onClick={() => { setMistakeReviewIndex(0); setMistakeExplanation(""); loadMistakeExplanation(dailyMistakes[0]); setScreen("dailyReview"); }}>
+              📝 {dailyMistakes.length}
+            </button>
+          )}
+
+          <div style={S.header}>
+            <div style={S.logo}><span style={{...S.logoJp,color:T.text}}>日本語</span><span style={{...S.logoEn,color:T.textMuted}}>NIHONGO</span></div>
+            <p style={{...S.tagline,color:T.textMuted}}>N5 to N1 — Learn Japanese the right way</p>
+          </div>
+
+          {/* Script gates */}
+          {(!scriptUnlocked.hiragana || !scriptUnlocked.katakana) && (
+            <div style={{...S.gateBanner,background:T.bg2,border:`1px solid ${T.border}`}}>
+              <span style={S.gateIcon}>🔒</span>
+              <div><div style={{...S.gateTitle,color:T.text}}>Pass both script tests to unlock JLPT study</div>
+              <div style={{...S.gateSub,color:T.textMuted}}>Study → Take Test → 80% to pass each</div></div>
+            </div>
+          )}
+
+          {/* Script cards */}
+          <div style={S.sectionLabel}>Scripts</div>
+          <div style={S.grid2}>
+            {[{key:"hiragana",deck:HIRAGANA,color:"#e11d48",icon:"あ",label:"Hiragana"},
+              {key:"katakana",deck:KATAKANA,color:"#7c3aed",icon:"ア",label:"Katakana"}].map(sc => (
+              <div key={sc.key} style={{display:"flex",flexDirection:"column",gap:6}}>
+                <button style={{...S.sectionCard,"--accent":sc.color}} className="section-card"
+                  onClick={() => startScriptStudy(sc.key)}>
+                  <span style={{...S.sectionIcon,color:sc.color}}>{sc.icon}</span>
+                  <span style={S.sectionName}>{sc.label}</span>
+                  <span style={S.sectionCount}>{sc.deck.length} cards</span>
+                  {scriptUnlocked[sc.key] && <span style={S.passedBadge}>✓ passed</span>}
+                </button>
+                <button style={{...S.testBtn,borderColor:scriptUnlocked[sc.key]?"#22c55e":sc.color,color:scriptUnlocked[sc.key]?"#22c55e":sc.color}}
+                  className="test-btn" onClick={() => startScriptQuiz(sc.key)}>
+                  {scriptUnlocked[sc.key] ? "✓ Retake Test" : "Take Test →"}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* JLPT levels */}
+          <div style={{...S.sectionLabel,marginTop:24}}>JLPT Levels</div>
+          {LEVELS.map(level => {
+            const locked = !scriptsPassed || (LEVELS.indexOf(level) > 0 && !levelProgress.passed[LEVELS[LEVELS.indexOf(level)-1]]);
+            const isActive = level === currentLevel && !locked;
+            const passed = levelProgress.passed[level];
+            const totalDue = CATEGORIES.reduce((s,c) => s + getDueCount(level,c), 0);
+            const totalNew = CATEGORIES.reduce((s,c) => s + getNewCount(level,c), 0);
+            return (
+              <div key={level} style={{...S.levelCard, opacity:locked?0.4:1, border:`1px solid ${locked?"#1e1e2a":LEVEL_COLORS[level]}22`}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <span style={{...S.levelBadge,background:locked?"#2a2a38":LEVEL_COLORS[level]}}>{level}</span>
+                    <span style={{fontSize:13,color:locked?"#555":"#f0ede8",fontWeight:600}}>
+                      {passed ? "Complete ✓" : isActive ? "In Progress" : locked ? "Locked 🔒" : "Available"}
+                    </span>
+                  </div>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    {totalDue > 0 && <span style={{...S.duePill,background:LEVEL_COLORS[level]}}>{totalDue} due</span>}
+                    {!locked && !passed && (
+                      <button style={{...S.testBtn,borderColor:LEVEL_COLORS[level],color:LEVEL_COLORS[level],padding:"4px 12px",fontSize:11}}
+                        onClick={() => startLevelTest(level)}>
+                        Take {level} Test →
+                      </button>
+                    )}
+                    {passed && (
+                      <button style={{...S.testBtn,borderColor:"#22c55e",color:"#22c55e",padding:"4px 12px",fontSize:11}}
+                        onClick={() => startLevelTest(level)}>
+                        Retake
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {!locked && (
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
+                    {CATEGORIES.map(cat => {
+                      const due = getDueCount(level,cat);
+                      const newC = getNewCount(level,cat);
+                      const total = JLPT[level][cat].length;
+                      const introduced = total - newC;
+                      return (
+                        <button key={cat} style={{...S.catBtn,"--accent":LEVEL_COLORS[level]}} className="cat-btn"
+                          onClick={() => !locked && startStudy(level, cat)}>
+                          <span style={{fontSize:20,color:LEVEL_COLORS[level]}}>{CAT_META[cat].icon}</span>
+                          <span style={{fontSize:11,color:"#f0ede8"}}>{CAT_META[cat].label}</span>
+                          <span style={{fontSize:10,color:"#8a8070"}}>{introduced}/{total}</span>
+                          {due > 0 && <span style={{fontSize:10,color:LEVEL_COLORS[level],fontFamily:"monospace"}}>{due} due</span>}
+                          {due === 0 && newC > 0 && <span style={{fontSize:10,color:"#8a8070"}}>{Math.min(dailyLimit,newC)} new</span>}
+                          {due === 0 && newC === 0 && <span style={{fontSize:10,color:"#22c55e"}}>✓ done</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+
+          {/* Katakana Words + Sentences — side by side */}
+          {/* Practice section — always visible */}
+          <div style={{marginTop:10}}>
+            <div style={{...S.sectionLabel,marginTop:0}}>Practice</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                {/* Katakana Words */}
+                <button
+                  style={{...S.sectionCard,"--accent":"#0891b2",flexDirection:"column",alignItems:"flex-start"}}
+                  className="section-card"
+                  onClick={startKatakanaWords}>
+                  <span style={{fontSize:28,color:"#0891b2",marginBottom:4}}>カ</span>
+                  <span style={{fontSize:13,fontWeight:600,color:T.text}}>Katakana Words</span>
+                  <span style={{fontSize:11,color:T.textMuted}}>{KATAKANA_WORDS.length} loanwords</span>
+                  {(() => {
+                    const kDue = katakanaWordsProg.filter(p=>p.introduced&&p.due<=Date.now()).length;
+                    const kNew = katakanaWordsProg.filter(p=>!p.introduced).length;
+                    if (kDue>0) return <span style={{...S.duePill,background:"#0891b2",position:"absolute",top:10,right:10}}>{kDue} due</span>;
+                    if (kNew>0) return <span style={{fontSize:10,color:T.textMuted,fontFamily:"monospace"}}>{Math.min(dailyLimit,kNew)} new</span>;
+                    return <span style={{fontSize:10,color:"#22c55e",fontFamily:"monospace"}}>✓ done</span>;
+                  })()}
+                </button>
+
+                {/* Sentences */}
+                <button
+                  style={{...S.sectionCard,"--accent":"#7c3aed",flexDirection:"column",alignItems:"flex-start"}}
+                  className="section-card"
+                  onClick={() => setScreen("sentencesMenu")}>
+                  <span style={{fontSize:28,color:"#7c3aed",marginBottom:4}}>文</span>
+                  <span style={{fontSize:13,fontWeight:600,color:T.text}}>Sentences</span>
+                  <span style={{fontSize:11,color:T.textMuted}}>Particles & builders</span>
+                  <span style={{fontSize:10,color:"#7c3aed",fontFamily:"monospace",marginTop:2}}>
+                    {particlePassed ? "✓ particles passed" : "Start with particles"}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+        </div>
+      )}
+
+      {/* ── SENTENCES MENU ── */}
+      {screen === "sentencesMenu" && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={{...S.backBtn,color:T.textMuted}} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill,background:"#7c3aed"}}>文 Sentences</span>
+            <span style={{width:40}}/>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:10,paddingTop:8}}>
+            <div style={{fontSize:12,color:T.textMuted,marginBottom:4}}>Pass Particles first to unlock sentence levels.</div>
+
+            {/* Particles */}
+            <button
+              style={{...S.submenuCard,"--accent":"#0891b2",border:`1px solid ${T.border}`,background:T.bg2}}
+              className="section-card"
+              onClick={startParticles}>
+              <span style={{fontSize:36,color:"#0891b2"}}>助</span>
+              <div style={{flex:1,textAlign:"left"}}>
+                <div style={{fontSize:15,fontWeight:600,color:T.text}}>Particles</div>
+                <div style={{fontSize:12,color:T.textMuted,marginTop:2}}>Fill in the blank — は、が、を、に、で · {PARTICLES.length} exercises</div>
+                {particlePassed
+                  ? <div style={{fontSize:11,color:"#22c55e",marginTop:4,fontFamily:"monospace"}}>✓ passed</div>
+                  : <div style={{fontSize:11,color:"#0891b2",marginTop:4,fontFamily:"monospace"}}>Pass 80% to unlock sentences →</div>}
+              </div>
+            </button>
+
+            {/* Sentence builder levels */}
+            {LEVELS.map(lv => {
+              const idx = LEVELS.indexOf(lv);
+              const locked = !particlePassed || (idx > 0 && !levelProgress.passed[LEVELS[idx-1]]);
+              const color = LEVEL_COLORS[lv];
+              return (
+                <button key={lv}
+                  style={{...S.submenuCard,"--accent":color,border:`1px solid ${locked?T.border:color+"44"}`,background:T.bg2,opacity:locked?0.45:1,cursor:locked?"not-allowed":"pointer"}}
+                  className={locked?"":"section-card"}
+                  onClick={() => !locked && startSentenceBuilder(lv)}>
+                  <span style={{fontSize:28,fontWeight:700,color:locked?"#555":color}}>{locked?"🔒":lv}</span>
+                  <div style={{flex:1,textAlign:"left"}}>
+                    <div style={{fontSize:15,fontWeight:600,color:T.text}}>{lv} Sentences</div>
+                    <div style={{fontSize:12,color:T.textMuted,marginTop:2}}>
+                      Arrange words into the correct order · {SENTENCES[lv].length} sentences
+                    </div>
+                    {locked && <div style={{fontSize:11,color:T.textFaint,marginTop:4,fontFamily:"monospace"}}>
+                      {!particlePassed ? "Pass Particles first" : `Pass ${LEVELS[idx-1]} level test first`}
+                    </div>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── PARTICLES ── */}
+      {screen === "particles" && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={{...S.backBtn,color:T.textMuted}} onClick={() => setScreen("sentencesMenu")}>← Back</button>
+            <span style={{...S.sectionPill,background:"#0891b2"}}>助 Particles</span>
+            <span style={{...S.progressLabel,color:T.textMuted}}>{particleIndex+1}/{PARTICLES.length}</span>
+          </div>
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${((particleIndex)/PARTICLES.length)*100}%`,background:"#0891b2"}}/>
+          </div>
+          {(() => {
+            const q = PARTICLES[particleOrder[particleIndex]];
+            return (
+              <div style={S.cardArea}>
+                <div style={{...S.quizCard,background:T.bg2,border:`1px solid ${T.border}`,gap:20}} className="flashcard">
+                  <div style={{fontSize:11,color:"#0891b2",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>{q.hint}</div>
+
+                  {/* Sentence with blank */}
+                  <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",justifyContent:"center",gap:6,fontSize:22,lineHeight:2}}>
+                    {q.sentence.map((part,i) => (
+                      part === "___" ? (
+                        <span key={i} style={{
+                          display:"inline-block",minWidth:48,height:36,borderBottom:`2px solid ${particleConfirmed?(particleSelected===q.answer?"#22c55e":"#ef4444"):"#0891b2"}`,
+                          textAlign:"center",color:particleConfirmed?( particleSelected===q.answer?"#22c55e":"#ef4444"):T.text,
+                          fontWeight:700,fontSize:20,lineHeight:"36px"
+                        }}>{particleConfirmed ? particleSelected : ""}</span>
+                      ) : (
+                        <span key={i} style={{color:T.text}}>{part}</span>
+                      )
+                    ))}
+                  </div>
+
+                  {/* Options */}
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,width:"100%"}}>
+                    {q.options.map(opt => {
+                      const isSelected = particleSelected === opt;
+                      const isCorrect = opt === q.answer;
+                      let bg=T.bg3, border=T.border2, color=T.text;
+                      if (particleConfirmed) {
+                        if (isCorrect) { bg="rgba(34,197,94,0.15)"; border="#22c55e"; color="#22c55e"; }
+                        else if (isSelected) { bg="rgba(239,68,68,0.15)"; border="#ef4444"; color="#ef4444"; }
+                      } else if (isSelected) { border="#0891b2"; bg="rgba(8,145,178,0.1)"; }
+                      return (
+                        <button key={opt} style={{border:`1px solid ${border}`,borderRadius:10,padding:"14px 6px",fontSize:20,cursor:"pointer",background:bg,color,transition:"all 0.15s",fontFamily:"Georgia,serif"}}
+                          onClick={() => handleParticleSelect(opt)}>{opt}</button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Confirm / explanation */}
+                  {!particleConfirmed && particleSelected && (
+                    <button style={{...S.confirmBtn,background:"#0891b2"}} onClick={handleParticleConfirm}>Confirm</button>
+                  )}
+                  {particleConfirmed && (
+                    <div style={{width:"100%",display:"flex",flexDirection:"column",gap:10}} className="card-back-reveal">
+                      <div style={{background:particleSelected===q.answer?"rgba(34,197,94,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${particleSelected===q.answer?"rgba(34,197,94,0.3)":"rgba(239,68,68,0.3)"}`,borderRadius:10,padding:"12px 14px"}}>
+                        <div style={{fontSize:12,fontWeight:700,color:particleSelected===q.answer?"#22c55e":"#ef4444",marginBottom:6}}>
+                          {particleSelected===q.answer?"✓ Correct!":"✗ The answer is "+q.answer}
+                        </div>
+                        <div style={{fontSize:13,color:T.textSub,lineHeight:1.7}}>{q.explanation}</div>
+                      </div>
+                      <button style={{...S.primaryBtn,background:"#0891b2"}} onClick={nextParticle}>
+                        {particleIndex+1 >= PARTICLES.length ? "See Results" : "Next →"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* ── PARTICLES RESULT ── */}
+      {screen === "particlesResult" && (
+        <div style={{...S.doneWrap,background:T.bg}}>
+          <div style={{...S.doneCard,background:T.bg2,border:`1px solid ${T.border}`}}>
+            <div style={S.doneEmoji}>{particleScore.correct/PARTICLES.length>=PASS_THRESHOLD?"🎉":"📚"}</div>
+            <h2 style={{...S.doneTitle,color:T.text}}>
+              {particleScore.correct/PARTICLES.length>=PASS_THRESHOLD?"Particles Passed!":"Keep Practicing"}
+            </h2>
+            <div style={{...S.scoreBig,color:particleScore.correct/PARTICLES.length>=PASS_THRESHOLD?"#22c55e":"#ef4444"}}>
+              {particleScore.correct}/{PARTICLES.length}
+            </div>
+            <div style={{...S.scorePercent,color:T.textMuted}}>
+              {Math.round(particleScore.correct/PARTICLES.length*100)}% · Need 80% to unlock sentences
+            </div>
+            <div style={{fontSize:13,color:T.textMuted,lineHeight:1.7,marginBottom:24,textAlign:"center"}}>
+              {particleScore.correct/PARTICLES.length>=PASS_THRESHOLD
+                ? "Great work! N5 sentences are now unlocked. Particles are the glue of Japanese — keep them sharp!"
+                : "Particles can be tricky — review the explanations and try again. Each one has a clear rule!"}
+            </div>
+            <div style={S.doneActions}>
+              <button style={{...S.primaryBtn,background:"#0891b2"}} onClick={startParticles}>Try Again</button>
+              <button style={{...S.secondaryBtn,color:T.textMuted,border:`1px solid ${T.border}`}} onClick={() => setScreen("sentencesMenu")}>Back to Sentences</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SENTENCE BUILDER ── */}
+      {screen === "sentenceBuilder" && sentenceLevel && (() => {
+        const idx = sentenceOrder[sentenceLevel]?.[sentenceIndex] ?? sentenceIndex;
+        const q = SENTENCES[sentenceLevel][idx];
+        const color = LEVEL_COLORS[sentenceLevel];
+        return (
+          <div style={{...S.studyWrap,background:T.bg}}>
+            <div style={S.studyHeader}>
+              <button style={{...S.backBtn,color:T.textMuted}} onClick={() => setScreen("home")}>← Back</button>
+              <span style={{...S.sectionPill,background:color}}>{sentenceLevel} Sentences</span>
+              <span style={{...S.progressLabel,color:T.textMuted}}>{sentenceIndex+1}/{SENTENCES[sentenceLevel].length}</span>
+            </div>
+            <div style={S.progressBarWrap}>
+              <div style={{...S.progressBarFill,width:`${(sentenceIndex/SENTENCES[sentenceLevel].length)*100}%`,background:color}}/>
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:14,paddingBottom:20}}>
+              {/* English prompt */}
+              <div style={{background:T.bg2,border:`1px solid ${T.border}`,borderRadius:14,padding:"16px 18px"}}>
+                <div style={{fontSize:10,color:T.textFaint,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>English</div>
+                <div style={{fontSize:16,color:T.text,lineHeight:1.5,fontStyle:"italic"}}>{q.english}</div>
+              </div>
+
+              {/* Answer area — placed words */}
+              <div>
+                <div style={{fontSize:10,color:color,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Your sentence — tap to remove</div>
+                <div style={{
+                  minHeight:60,background:T.bg2,border:`2px dashed ${sentenceChecked?(sentenceCorrect?"#22c55e":"#ef4444"):T.border}`,
+                  borderRadius:14,padding:"12px 14px",display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"
+                }}>
+                  {placed.length === 0 && (
+                    <span style={{fontSize:13,color:T.textFaint,fontStyle:"italic"}}>Tap words below to build your sentence…</span>
+                  )}
+                  {placed.map((item) => (
+                    <button key={item.id}
+                      style={{background:sentenceChecked?(sentenceCorrect?"rgba(34,197,94,0.15)":"rgba(239,68,68,0.15)"):"rgba(8,145,178,0.12)",border:`1px solid ${sentenceChecked?(sentenceCorrect?"#22c55e":"#ef4444"):"#0891b2"}`,borderRadius:8,padding:"8px 12px",fontSize:16,color:sentenceChecked?(sentenceCorrect?"#22c55e":"#ef4444"):T.text,cursor:sentenceChecked?"default":"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"}}
+                      onClick={() => removeWord(item)}>
+                      {item.w}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Word bank — remaining words */}
+              <div>
+                <div style={{fontSize:10,color:T.textFaint,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Word bank — tap to place</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                  {remaining.map((item) => (
+                    <button key={item.id}
+                      style={{background:T.bg2,border:`1px solid ${T.border2}`,borderRadius:8,padding:"8px 12px",fontSize:16,color:T.text,cursor:"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"}}
+                      className="rating-btn"
+                      onClick={() => placeWord(item)}>
+                      {item.w}
+                    </button>
+                  ))}
+                  {remaining.length === 0 && !sentenceChecked && (
+                    <span style={{fontSize:13,color:T.textFaint,fontStyle:"italic"}}>All words placed!</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Check / result */}
+              {!sentenceChecked && placed.length > 0 && (
+                <button style={{...S.primaryBtn,background:color}} onClick={checkSentence}>Check Answer</button>
+              )}
+
+              {sentenceChecked && (
+                <div style={{display:"flex",flexDirection:"column",gap:10}} className="card-back-reveal">
+                  {/* Correct answer if wrong */}
+                  {!sentenceCorrect && (
+                    <div style={{background:T.bg2,border:`1px solid ${T.border}`,borderRadius:12,padding:"14px 16px"}}>
+                      <div style={{fontSize:10,color:"#22c55e",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Correct order</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                        {q.answer.map((w,i) => (
+                          <span key={i} style={{background:"rgba(34,197,94,0.12)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:8,padding:"6px 10px",fontSize:16,color:"#22c55e"}}>{w}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Explanation */}
+                  <div style={{background:sentenceCorrect?"rgba(34,197,94,0.07)":"rgba(239,68,68,0.07)",border:`1px solid ${sentenceCorrect?"rgba(34,197,94,0.2)":"rgba(239,68,68,0.2)"}`,borderRadius:12,padding:"14px 16px"}}>
+                    <div style={{fontSize:12,fontWeight:700,color:sentenceCorrect?"#22c55e":"#ef4444",marginBottom:8}}>
+                      {sentenceCorrect?"✓ Correct! Here's why:":"✗ Not quite — here's what to know:"}
+                    </div>
+                    <div style={{fontSize:13,color:T.textSub,lineHeight:1.8}}>{q.explanation}</div>
+                  </div>
+                  <button style={{...S.primaryBtn,background:color}} onClick={nextSentence}>
+                    {sentenceIndex+1 >= SENTENCES[sentenceLevel].length ? "See Results" : "Next →"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── SENTENCE RESULT ── */}
+      {screen === "sentenceResult" && sentenceLevel && (
+        <div style={{...S.doneWrap,background:T.bg}}>
+          <div style={{...S.doneCard,background:T.bg2,border:`1px solid ${T.border}`}}>
+            <div style={S.doneEmoji}>{sentenceScore.correct/SENTENCES[sentenceLevel].length>=0.6?"🎌":"📖"}</div>
+            <h2 style={{...S.doneTitle,color:T.text}}>{sentenceLevel} Sentences Done!</h2>
+            <div style={{...S.scoreBig,color:sentenceScore.correct/SENTENCES[sentenceLevel].length>=0.6?"#22c55e":"#f97316"}}>
+              {sentenceScore.correct}/{SENTENCES[sentenceLevel].length}
+            </div>
+            <div style={{...S.scorePercent,color:T.textMuted}}>{Math.round(sentenceScore.correct/SENTENCES[sentenceLevel].length*100)}% correct</div>
+            <div style={{fontSize:13,color:T.textMuted,lineHeight:1.7,marginBottom:24,textAlign:"center"}}>
+              {sentenceScore.correct/SENTENCES[sentenceLevel].length>=0.8
+                ? "Excellent! Japanese word order is clicking. Keep it up!"
+                : sentenceScore.correct/SENTENCES[sentenceLevel].length>=0.5
+                ? "Good effort! Review the explanations for the ones you missed."
+                : "Word order takes time — read the explanations carefully and try again!"}
+            </div>
+            <div style={S.doneActions}>
+              <button style={{...S.primaryBtn,background:LEVEL_COLORS[sentenceLevel]}} onClick={() => startSentenceBuilder(sentenceLevel)}>Try Again</button>
+              <button style={{...S.secondaryBtn,color:T.textMuted,border:`1px solid ${T.border}`}} onClick={() => setScreen("sentencesMenu")}>Back to Sentences</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SETTINGS ── */}
+      {screen === "settings" && (
+        <div style={{...S.studyWrap, background: T.bg}}>          <div style={S.studyHeader}>
+            <button style={{...S.backBtn, color: T.textMuted}} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill, background:"#555"}}>⚙ Settings</span>
+            <span style={{width:40}}/>
+          </div>
+
+          {/* Daily cards */}
+          <div style={{...S.settingsBox, background:T.bg2, border:`1px solid ${T.border}`, marginTop:24}}>
+            <div style={{...S.settingsTitle, color:T.textMuted}}>📚 New cards per day</div>
+            <div style={{fontSize:12,color:T.textMuted,marginTop:4,marginBottom:12}}>
+              How many new cards to introduce each day across all sections.
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8}}>
+              {[5,10,15,20,30].map(n => (
+                <button key={n}
+                  style={{
+                    border:`1px solid ${dailyLimit===n?"#22c55e":T.border2}`,
+                    borderRadius:10,padding:"14px 6px",fontSize:14,fontFamily:"monospace",fontWeight:600,
+                    color:dailyLimit===n?"#22c55e":T.textMuted,
+                    background:dailyLimit===n?"rgba(34,197,94,0.08)":T.bg3,
+                    cursor:"pointer",transition:"all 0.15s",display:"flex",flexDirection:"column",alignItems:"center",gap:3
+                  }}
+                  onClick={() => saveDailyLimit(n)}>
+                  {n}
+                  <span style={{fontSize:10,opacity:0.7}}>cards</span>
+                </button>
+              ))}
+            </div>
+            <div style={{fontSize:11,color:T.textFaint,marginTop:10}}>Introduced today: {dailyIntroduced} / {dailyLimit}</div>
+          </div>
+
+          {/* Theme */}
+          <div style={{...S.settingsBox, background:T.bg2, border:`1px solid ${T.border}`, marginTop:14}}>
+            <div style={{...S.settingsTitle, color:T.textMuted}}>🎨 App theme</div>
+            <div style={{fontSize:12,color:T.textMuted,marginTop:4,marginBottom:12}}>
+              Choose between dark mode and light mode.
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <button
+                style={{border:`2px solid ${theme==="dark"?"#22c55e":"#2a2a38"}`,borderRadius:12,padding:"16px",cursor:"pointer",background:theme==="dark"?"rgba(34,197,94,0.08)":"#13131a",transition:"all 0.15s",display:"flex",flexDirection:"column",alignItems:"center",gap:8}}
+                onClick={() => saveTheme("dark")}>
+                <span style={{fontSize:28}}>🌙</span>
+                <span style={{fontSize:13,color:theme==="dark"?"#22c55e":"#f0ede8",fontFamily:"Georgia,serif"}}>Dark</span>
+                {theme==="dark" && <span style={{fontSize:10,color:"#22c55e",fontFamily:"monospace"}}>✓ active</span>}
+              </button>
+              <button
+                style={{border:`2px solid ${theme==="light"?"#22c55e":"#e0ddd8"}`,borderRadius:12,padding:"16px",cursor:"pointer",background:theme==="light"?"rgba(34,197,94,0.08)":"#ffffff",transition:"all 0.15s",display:"flex",flexDirection:"column",alignItems:"center",gap:8}}
+                onClick={() => saveTheme("light")}>
+                <span style={{fontSize:28}}>☀️</span>
+                <span style={{fontSize:13,color:theme==="light"?"#22c55e":"#1a1a22",fontFamily:"Georgia,serif"}}>Light</span>
+                {theme==="light" && <span style={{fontSize:10,color:"#22c55e",fontFamily:"monospace"}}>✓ active</span>}
+              </button>
+            </div>
+          </div>
+
+          {/* Daily review */}
+          {dailyMistakes.length > 0 && (
+            <button
+              style={{width:"100%",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:12,padding:"16px",cursor:"pointer",display:"flex",alignItems:"center",gap:14,marginTop:14,textAlign:"left"}}
+              onClick={() => { setMistakeReviewIndex(0); setMistakeExplanation(""); loadMistakeExplanation(dailyMistakes[0]); setScreen("dailyReview"); }}>
+              <span style={{fontSize:28}}>📝</span>
+              <div>
+                <div style={{fontSize:14,fontWeight:600,color:"#ef4444"}}>Review Today's Mistakes</div>
+                <div style={{fontSize:12,color:T.textMuted}}>{dailyMistakes.length} card{dailyMistakes.length>1?"s":""} marked Again or Hard today</div>
+              </div>
+            </button>
+          )}
+          {dailyMistakes.length === 0 && (
+            <div style={{...S.settingsBox,background:T.bg2,border:`1px solid ${T.border}`,marginTop:14,textAlign:"center",padding:"20px"}}>
+              <div style={{fontSize:24,marginBottom:8}}>🎉</div>
+              <div style={{fontSize:13,color:T.textMuted}}>No mistakes logged today yet!</div>
+              <div style={{fontSize:11,color:T.textFaint,marginTop:4}}>Cards rated Again or Hard will appear here</div>
+            </div>
+          )}
+          <div style={{...S.settingsBox, background:T.bg2, border:`1px solid ${T.border}`, marginTop:14}}>
+            <div style={{...S.settingsTitle, color:T.textMuted}}>📊 Progress</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:10}}>
+              {LEVELS.map(lv => {
+                const total = CATEGORIES.reduce((s,c) => s + JLPT[lv][c].length, 0);
+                const done = CATEGORIES.reduce((s,c) => s + JLPT[lv][c].filter((_,i) => {
+                  const p = cardProgress[cardKey(lv,c,i)]; return p && p.introduced;
+                }).length, 0);
+                return (
+                  <div key={lv} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 12px"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                      <span style={{fontSize:12,fontWeight:700,color:LEVEL_COLORS[lv]}}>{lv}</span>
+                      <span style={{fontSize:11,color:T.textMuted,fontFamily:"monospace"}}>{done}/{total}</span>
+                    </div>
+                    <div style={{height:4,background:T.border,borderRadius:2,overflow:"hidden"}}>
+                      <div style={{height:"100%",width:`${total>0?(done/total)*100:0}%`,background:LEVEL_COLORS[lv],borderRadius:2}}/>
+                    </div>
+                    {levelProgress.passed[lv] && <div style={{fontSize:10,color:"#22c55e",marginTop:4,fontFamily:"monospace"}}>✓ passed</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── STUDY ── */}
+      {/* ── DAILY REVIEW ── */}
+      {screen === "dailyReview" && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={{...S.backBtn,color:T.textMuted}} onClick={() => setScreen("settings")}>← Back</button>
+            <span style={{...S.sectionPill,background:"#ef4444"}}>📝 Daily Review</span>
+            <span style={{...S.progressLabel,color:T.textMuted}}>{mistakeReviewIndex+1}/{dailyMistakes.length}</span>
+          </div>
+
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${((mistakeReviewIndex+1)/dailyMistakes.length)*100}%`,background:"#ef4444"}}/>
+          </div>
+
+          {dailyMistakes.length === 0 ? (
+            <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,textAlign:"center"}}>
+              <div style={{fontSize:52}}>🎉</div>
+              <div style={{fontSize:20,color:T.text,fontWeight:400}}>No mistakes today!</div>
+              <div style={{fontSize:13,color:T.textMuted}}>Cards rated Again or Hard will appear here for review.</div>
+              <button style={{...S.secondaryBtn,marginTop:8,color:T.textMuted,border:`1px solid ${T.border}`}} onClick={() => setScreen("settings")}>Back to Settings</button>
+            </div>
+          ) : (
+            <>
+              <div style={S.cardArea}>
+                <div style={{...S.reviewCard,background:T.bg2,border:`1px solid ${T.border}`,gap:16}} className="flashcard">
+
+                  {/* Card header */}
+                  <div style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <span style={{fontSize:11,color:"#ef4444",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>
+                      {dailyMistakes[mistakeReviewIndex].hint}
+                    </span>
+                    <span style={{fontSize:10,color:T.textFaint,fontFamily:"monospace"}}>
+                      {new Date(dailyMistakes[mistakeReviewIndex].time).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}
+                    </span>
+                  </div>
+
+                  {/* Front → Back */}
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:16,flexWrap:"wrap"}}>
+                    <div style={{fontSize:44,color:T.text,lineHeight:1,textAlign:"center"}}>
+                      {dailyMistakes[mistakeReviewIndex].front}
+                    </div>
+                    <div style={{fontSize:20,color:T.textFaint}}>→</div>
+                    <div style={{fontSize:22,color:"#22c55e",fontFamily:"monospace",fontWeight:700,textAlign:"center"}}>
+                      {dailyMistakes[mistakeReviewIndex].back}
+                    </div>
+                  </div>
+
+                  <div style={{width:"100%",height:1,background:T.border}}/>
+
+                  {/* AI Explanation */}
+                  <div style={{width:"100%",display:"flex",flexDirection:"column",gap:10}}>
+                    <div style={{fontSize:11,color:"#7c3aed",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>
+                      💡 Tutor Explanation
+                    </div>
+                    {mistakeExplLoading ? (
+                      <div style={{fontSize:13,color:T.textMuted,fontFamily:"monospace"}}>
+                        <span className="loading-dots">Generating explanation</span>
+                      </div>
+                    ) : (
+                      <div style={{fontSize:14,color:T.textSub,lineHeight:1.8}} className="card-back-reveal">
+                        {mistakeExplanation || "—"}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Formal / Informal / Example extras */}
+                  {(dailyMistakes[mistakeReviewIndex].formal || dailyMistakes[mistakeReviewIndex].informal || dailyMistakes[mistakeReviewIndex].example) && (
+                    <div style={{width:"100%",display:"flex",flexDirection:"column",gap:8}}>
+                      {dailyMistakes[mistakeReviewIndex].example && (
+                        <div style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 12px"}}>
+                          <div style={{fontSize:10,color:"#065f46",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>例文 Example</div>
+                          {dailyMistakes[mistakeReviewIndex].example.split('\n').map((line,i) => (
+                            <div key={i} style={{fontSize:13,color:i%2===0?T.text:T.textMuted,lineHeight:1.6}}>{line}</div>
+                          ))}
+                        </div>
+                      )}
+                      {(dailyMistakes[mistakeReviewIndex].formal || dailyMistakes[mistakeReviewIndex].informal) && (
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                          {dailyMistakes[mistakeReviewIndex].formal && (
+                            <div style={{background:"rgba(59,130,246,0.07)",border:"1px solid rgba(59,130,246,0.2)",borderRadius:10,padding:"10px 12px"}}>
+                              <div style={{fontSize:10,color:"#3b82f6",fontFamily:"monospace",letterSpacing:1,marginBottom:4}}>
+                                {dailyMistakes[mistakeReviewIndex].cat==="kanji" ? "音 ON'YOMI" : "丁寧 FORMAL"}
+                              </div>
+                              <div style={{fontSize:13,color:T.text,lineHeight:1.5}}>{dailyMistakes[mistakeReviewIndex].formal.split(" — ")[0]}</div>
+                              <div style={{fontSize:11,color:T.textMuted,marginTop:3}}>{dailyMistakes[mistakeReviewIndex].formal.split(" — ")[1]}</div>
+                            </div>
+                          )}
+                          {dailyMistakes[mistakeReviewIndex].informal && (
+                            <div style={{background:"rgba(249,115,22,0.07)",border:"1px solid rgba(249,115,22,0.2)",borderRadius:10,padding:"10px 12px"}}>
+                              <div style={{fontSize:10,color:"#f97316",fontFamily:"monospace",letterSpacing:1,marginBottom:4}}>
+                                {dailyMistakes[mistakeReviewIndex].cat==="kanji" ? "訓 KUN'YOMI" : "普通 CASUAL"}
+                              </div>
+                              <div style={{fontSize:13,color:T.text,lineHeight:1.5}}>{dailyMistakes[mistakeReviewIndex].informal.split(" — ")[0]}</div>
+                              <div style={{fontSize:11,color:T.textMuted,marginTop:3}}>{dailyMistakes[mistakeReviewIndex].informal.split(" — ")[1]}</div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Navigation */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,paddingBottom:20,marginTop:12}}>
+                <button
+                  style={{...S.navBtn,background:T.bg2,border:`1px solid ${T.border}`,color:T.textMuted,opacity:mistakeReviewIndex===0?0.3:1}}
+                  disabled={mistakeReviewIndex===0}
+                  onClick={() => {
+                    const idx = mistakeReviewIndex - 1;
+                    setMistakeReviewIndex(idx);
+                    setMistakeExplanation("");
+                    loadMistakeExplanation(dailyMistakes[idx]);
+                  }}>← Prev</button>
+                {mistakeReviewIndex < dailyMistakes.length - 1 ? (
+                  <button
+                    style={{...S.navBtnPrimary,background:"#ef4444"}}
+                    onClick={() => {
+                      const idx = mistakeReviewIndex + 1;
+                      setMistakeReviewIndex(idx);
+                      setMistakeExplanation("");
+                      loadMistakeExplanation(dailyMistakes[idx]);
+                    }}>Next →</button>
+                ) : (
+                  <button style={{...S.navBtnPrimary,background:"#22c55e"}} onClick={() => setScreen("settings")}>
+                    Done ✓
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── READING SUBMENU ── */}
+      {screen === "readingSubmenu" && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={S.backBtn} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill,background:"#0891b2"}}>カ Katakana Words</span>
+            <span style={{width:40}}/>
+          </div>
+          <div style={{flex:1,display:"flex",flexDirection:"column",justifyContent:"center",gap:14}}>
+            <div style={{textAlign:"center",marginBottom:4}}>
+              <div style={{fontSize:13,color:"#8a8070",letterSpacing:1}}>Loanwords & foreign terms in katakana</div>
+            </div>
+            <button style={{...S.submenuCard,"--accent":"#0891b2"}} className="section-card"
+              onClick={startKatakanaWords}>
+              <span style={{fontSize:40,color:"#0891b2"}}>カ</span>
+              <div style={{display:"flex",flexDirection:"column",gap:4,textAlign:"left",flex:1}}>
+                <span style={{fontSize:16,fontWeight:600,color:"#f0ede8"}}>Katakana Words</span>
+                <span style={{fontSize:12,color:"#8a8070"}}>{KATAKANA_WORDS.length} loanwords — food, tech, countries & more</span>
+                {(() => {
+                  const kDue = katakanaWordsProg.filter(p => p.introduced && p.due <= Date.now()).length;
+                  const kNew = katakanaWordsProg.filter(p => !p.introduced).length;
+                  if (kDue > 0) return <span style={{fontSize:12,color:"#0891b2",fontFamily:"monospace"}}>{kDue} due for review</span>;
+                  if (kNew > 0) return <span style={{fontSize:12,color:"#8a8070",fontFamily:"monospace"}}>{Math.min(dailyLimit,kNew)} new today</span>;
+                  return <span style={{fontSize:12,color:"#22c55e"}}>✓ all caught up</span>;
+                })()}
+              </div>
+            </button>
+            <div style={{background:"#0d0d14",border:"1px solid #1e1e2a",borderRadius:12,padding:"14px 16px"}}>
+              <div style={{fontSize:11,color:"#3a3a48",letterSpacing:1,textTransform:"uppercase",fontFamily:"monospace",marginBottom:8}}>Level reading</div>
+              <div style={{fontSize:12,color:"#8a8070",lineHeight:1.6}}>To study kanji sentences, tap the <span style={{color:"#f0ede8"}}>読 Reading</span> button inside any JLPT level card on the home screen.</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {screen === "study" && queue.length > 0 && card && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={S.backBtn} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill,background:activeLevel && LEVEL_COLORS[activeLevel] ? LEVEL_COLORS[activeLevel] : "#0891b2"}}>
+              {activeCategory === "katakana_words" ? "カ Katakana Words" : `${activeLevel} · ${CAT_META[activeCategory]?.label || activeCategory}`}
+            </span>
+            <span style={S.progressLabel}>{queueIndex+1}/{queue.length}</span>
+          </div>
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${(queueIndex/queue.length)*100}%`,background:activeCategory==="katakana_words"?"#0891b2":LEVEL_COLORS[activeLevel]||"#555"}} />
+          </div>
+          <div style={S.cardArea}>
+            <div key={animKey} className={`flashcard${isFlipping?" flipping":""}`} style={{...S.card, background:T.bg2, border:`1px solid ${T.border}`}} onClick={!flipped?handleFlip:undefined}>
+              <div style={{...S.cardHint,color:T.textFaint}}>{card.card.hint || (activeCategory === "katakana_words" ? "Katakana Word" : `${activeLevel} · ${activeCategory}`)}</div>
+              {!card.prog.introduced && <div style={S.newBadge}>NEW</div>}
+              <div style={{...S.cardFront,fontSize:activeCategory==='reading'?20:activeCategory==='grammar'?24:60,lineHeight:1.4,color:T.text}}>
+                {card.card.f || card.card.front}
+              </div>
+              {flipped && (
+                <div style={S.cardBack} className="card-back-reveal">
+                  <div style={{...S.divider,background:T.border}}/>
+                  <div style={{...S.cardAnswer,color:T.textSub}}>{card.card.b || card.card.back}</div>
+                  {(isScript || activeCategory==='hiragana'||activeCategory==='katakana') && MNEMONICS[card.card.f] && (
+                    <div style={S.scriptMnemonic}>💡 {MNEMONICS[card.card.f]}</div>
+                  )}
+                  {card.card.example && (
+                    <div style={S.exampleBox} className="card-back-reveal">
+                      <div style={S.exampleLabel}>例文 Example</div>
+                      {card.card.example.split('\n').map((line,i) => (
+                        <div key={i} style={{fontSize:13,color:i%2===0?"#f0ede8":"#8a8070",lineHeight:1.6}}>{line}</div>
+                      ))}
+                    </div>
+                  )}
+                  <CardToggles card={card.card} section={activeCategory} mode={toggleMode} setMode={setToggleMode}/>
+                </div>
+              )}
+              {!flipped && <div style={S.tapHint}>tap to reveal</div>}
+            </div>
+          </div>
+          {flipped && (
+            <div style={S.ratingRow} className="rating-reveal">
+              {RATINGS.map(r => (
+                <button key={r.value} style={{...S.ratingBtn,borderColor:r.color,color:r.color}} className="rating-btn" onClick={() => handleRate(r.value)}>
+                  <span style={S.ratingLabel}>{r.label}</span><span style={S.ratingDesc}>{r.desc}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── SCRIPT QUIZ ── */}
+      {screen === "scriptQuiz" && quizQuestions.length > 0 && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={S.backBtn} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill,background:quizDeck==="hiragana"?"#e11d48":"#7c3aed"}}>
+              {quizDeck === "hiragana" ? "あ Hiragana" : "ア Katakana"} Test
+            </span>
+            <span style={S.progressLabel}>{quizIndex+1}/{quizQuestions.length}</span>
+          </div>
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${(quizIndex/quizQuestions.length)*100}%`,background:quizDeck==="hiragana"?"#e11d48":"#7c3aed"}} />
+          </div>
+          <div style={S.cardArea}>
+            <div style={{...S.quizCard,background:T.bg2,border:`1px solid ${T.border}`}} className="flashcard">
+              <div style={{...S.quizPromptLabel,color:T.textMuted}}>What is the reading for</div>
+              <div style={{...S.quizChar,color:T.text}}>{quizQuestions[quizIndex].question}</div>
+              <div style={S.quizOptions}>
+                {quizQuestions[quizIndex].options.map(opt => {
+                  const isSel = quizSelected === opt, isCorr = opt === quizQuestions[quizIndex].answer;
+                  let bg="#0d0d14",border="#1e1e2a",color="#f0ede8";
+                  if (quizConfirmed) {
+                    if (isCorr) {bg="rgba(34,197,94,0.15)";border="#22c55e";color="#22c55e";}
+                    else if (isSel) {bg="rgba(239,68,68,0.15)";border="#ef4444";color="#ef4444";}
+                  } else if (isSel) {border=quizDeck==="hiragana"?"#e11d48":"#7c3aed";bg="rgba(255,255,255,0.05)";}
+                  return <button key={opt} style={{...S.quizOpt,background:bg,borderColor:border,color}} onClick={() => handleScriptSelect(opt)}>{opt}</button>;
+                })}
+              </div>
+              {quizSelected && !quizConfirmed && (
+                <button style={{...S.confirmBtn,background:quizDeck==="hiragana"?"#e11d48":"#7c3aed"}} onClick={handleScriptConfirm}>Confirm</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SCRIPT QUIZ RESULT ── */}
+      {screen === "scriptQuizResult" && (
+        <div style={{...S.doneWrap,background:T.bg}}>
+          <div style={{...S.doneCard,maxWidth:440}}>
+            <div style={S.doneEmoji}>{scriptQuizPassed?"🎉":"😤"}</div>
+            <h2 style={S.doneTitle}>{scriptQuizPassed?"Test Passed!":"Not Quite"}</h2>
+            <div style={{...S.scoreBig,color:scriptQuizPassed?"#22c55e":"#ef4444"}}>{scriptQuizScore}/{quizQuestions.length}</div>
+            <div style={S.scorePercent}>{Math.round(scriptQuizScore/quizQuestions.length*100)}% · Need 80%</div>
+            {wrongAnswers.length > 0 && (
+              <div style={S.wrongSummary}>
+                <div style={S.wrongSummaryTitle}>Missed {wrongAnswers.length} characters</div>
+                <div style={S.wrongChars}>{wrongAnswers.map((q,i) => (
+                  <span key={i} style={S.wrongCharPill}>{q.question} <span style={{color:"#8a8070",fontSize:11}}>{q.answer}</span></span>
+                ))}</div>
+              </div>
+            )}
+            <div style={scriptQuizPassed?S.passMsg:S.failMsg}>
+              {scriptQuizPassed
+                ? scriptUnlocked.hiragana && scriptUnlocked.katakana
+                  ? "Both scripts passed! JLPT study is now unlocked. 頑張って！"
+                  : `${quizDeck === "hiragana" ? "Hiragana" : "Katakana"} passed! Now pass the other script test.`
+                : "Keep studying and try again!"}
+            </div>
+            <div style={S.doneActions}>
+              {wrongAnswers.length > 0 && <button style={{...S.primaryBtn,background:"#7c3aed"}} onClick={startReview}>📖 Review Missed</button>}
+              <button style={{...S.primaryBtn,background:quizDeck==="hiragana"?"#e11d48":"#7c3aed",opacity:0.8}} onClick={() => startScriptQuiz(quizDeck)}>Retry Test</button>
+              <button style={S.secondaryBtn} onClick={() => setScreen("home")}>Back to Home</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── REVIEW (missed cards) ── */}
+      {screen === "review" && wrongAnswers.length > 0 && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={S.backBtn} onClick={() => setScreen("scriptQuizResult")}>← Results</button>
+            <span style={{...S.sectionPill,background:"#7c3aed"}}>📖 Review</span>
+            <span style={S.progressLabel}>{reviewIndex+1}/{wrongAnswers.length}</span>
+          </div>
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${((reviewIndex+1)/wrongAnswers.length)*100}%`,background:"#7c3aed"}} />
+          </div>
+          <div style={S.cardArea}>
+            <div style={S.reviewCard} className="flashcard">
+              <div style={S.reviewTop}>
+                <div style={S.reviewChar}>{wrongAnswers[reviewIndex].question}</div>
+                <div style={S.reviewArrow}>→</div>
+                <div style={S.reviewAnswer}>{wrongAnswers[reviewIndex].answer}</div>
+              </div>
+              <div style={S.reviewDivider}/>
+              <div style={S.mnemonicSection}>
+                <div style={S.mnemonicLabel}>💡 Memory tip</div>
+                {aiLoading ? <div style={S.mnemonicLoading}><span className="loading-dots">Generating</span></div>
+                  : <div style={S.mnemonicText} className="card-back-reveal">{aiMnemonic||"—"}</div>}
+              </div>
+              <div style={S.reviewMistake}>
+                <span style={S.reviewWrong}>You chose: <strong style={{color:"#ef4444"}}>{wrongAnswers[reviewIndex].chosen}</strong> · Correct: <strong style={{color:"#22c55e"}}>{wrongAnswers[reviewIndex].answer}</strong></span>
+              </div>
+            </div>
+          </div>
+          <div style={S.reviewNav}>
+            <button style={{...S.navBtn,opacity:reviewIndex===0?0.3:1}} disabled={reviewIndex===0} onClick={() => goToReview(reviewIndex-1)}>← Prev</button>
+            {reviewIndex < wrongAnswers.length-1
+              ? <button style={{...S.navBtnPrimary,background:"#7c3aed"}} onClick={() => goToReview(reviewIndex+1)}>Next →</button>
+              : <button style={{...S.navBtnPrimary,background:"#7c3aed"}} onClick={() => startScriptQuiz(quizDeck)}>Retry Test →</button>}
+          </div>
+        </div>
+      )}
+
+      {/* ── JLPT LEVEL TEST ── */}
+      {screen === "levelTest" && levelTestQuestions.length > 0 && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={S.backBtn} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill,background:LEVEL_COLORS[levelTestLevel]}}>{levelTestLevel} Test</span>
+            <span style={S.progressLabel}>{levelTestIndex+1}/{levelTestQuestions.length}</span>
+          </div>
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${(levelTestIndex/levelTestQuestions.length)*100}%`,background:LEVEL_COLORS[levelTestLevel]}} />
+          </div>
+          <div style={S.cardArea}>
+            <div style={S.quizCard} className="flashcard">
+              <div style={S.quizPromptLabel}>What does this mean?</div>
+              <div style={{...S.quizChar,fontSize:32}}>{levelTestQuestions[levelTestIndex].question}</div>
+              <div style={{...S.quizOptions,gridTemplateColumns:"1fr"}}>
+                {levelTestQuestions[levelTestIndex].options.map(opt => {
+                  const isSel = levelTestSelected === opt, isCorr = opt === levelTestQuestions[levelTestIndex].answer;
+                  let bg="#0d0d14",border="#1e1e2a",color="#f0ede8";
+                  if (levelTestConfirmed) {
+                    if (isCorr) {bg="rgba(34,197,94,0.15)";border="#22c55e";color="#22c55e";}
+                    else if (isSel) {bg="rgba(239,68,68,0.15)";border="#ef4444";color="#ef4444";}
+                  } else if (isSel) {border=LEVEL_COLORS[levelTestLevel];bg="rgba(255,255,255,0.05)";}
+                  return <button key={opt} style={{...S.quizOpt,background:bg,borderColor:border,color,fontSize:14,textAlign:"left",padding:"12px 16px"}} onClick={() => handleLevelTestSelect(opt)}>{opt}</button>;
+                })}
+              </div>
+              {levelTestSelected && !levelTestConfirmed && (
+                <button style={{...S.confirmBtn,background:LEVEL_COLORS[levelTestLevel]}} onClick={handleLevelTestConfirm}>Confirm</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── JLPT LEVEL TEST RESULT ── */}
+      {screen === "levelTestResult" && (
+        <div style={{...S.doneWrap,background:T.bg}}>
+          <div style={S.doneCard}>
+            <div style={S.doneEmoji}>{levelTestPassed?"🎌":"📚"}</div>
+            <h2 style={S.doneTitle}>{levelTestPassed?`${levelTestLevel} Passed!`:"Keep Studying"}</h2>
+            <div style={{...S.scoreBig,color:levelTestPassed?"#22c55e":"#ef4444"}}>{levelTestScore}/{levelTestQuestions.length}</div>
+            <div style={S.scorePercent}>{Math.round(levelTestScore/levelTestQuestions.length*100)}% · Need 80%</div>
+            <div style={levelTestPassed?S.passMsg:S.failMsg}>
+              {levelTestPassed
+                ? LEVELS.indexOf(levelTestLevel)+1 < LEVELS.length
+                  ? `${levelTestLevel} complete! ${LEVELS[LEVELS.indexOf(levelTestLevel)+1]} is now unlocked. Keep going!`
+                  : "You passed N1! You've mastered all JLPT levels. 素晴らしい！"
+                : "Keep studying the flashcards then try again. You can do it!"}
+            </div>
+            <div style={S.doneActions}>
+              {!levelTestPassed && <button style={{...S.primaryBtn,background:LEVEL_COLORS[levelTestLevel]}} onClick={() => startStudy(levelTestLevel,'vocab')}>Study {levelTestLevel} Vocab</button>}
+              <button style={{...S.primaryBtn,background:LEVEL_COLORS[levelTestLevel],opacity:0.8}} onClick={() => startLevelTest(levelTestLevel)}>Retry Test</button>
+              <button style={S.secondaryBtn} onClick={() => setScreen("home")}>Back to Home</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SESSION DONE ── */}
+      {screen === "done" && (
+        <div style={{...S.doneWrap,background:T.bg}}>
+          <div style={{...S.doneCard,background:T.bg2,border:`1px solid ${T.border}`}}>
+            <div style={S.doneEmoji}>🎌</div>
+            <h2 style={{...S.doneTitle,color:T.text}}>Session Complete!</h2>
+            <div style={S.doneStats}>
+              <div style={S.doneStat}><span style={S.doneStatNum}>{sessionStats.total}</span><span style={S.doneStatLabel}>Reviewed</span></div>
+              <div style={S.doneStat}><span style={{...S.doneStatNum,color:"#22c55e"}}>{sessionStats.correct}</span><span style={S.doneStatLabel}>Correct</span></div>
+              <div style={S.doneStat}><span style={{...S.doneStatNum,color:"#e11d48"}}>{sessionStats.total>0?Math.round(sessionStats.correct/sessionStats.total*100):0}%</span><span style={S.doneStatLabel}>Accuracy</span></div>
+            </div>
+            <div style={S.doneActions}>
+              <button
+                style={{...S.primaryBtn,background:activeCategory==="katakana_words"?"#0891b2":LEVEL_COLORS[activeLevel]||"#555"}}
+                onClick={() => activeCategory==="katakana_words" ? startKatakanaWords() : startStudy(activeLevel,activeCategory)}>
+                Study Again
+              </button>
+              <button style={S.secondaryBtn} onClick={() => setScreen("home")}>Back to Home</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// STYLES
+// ─────────────────────────────────────────────────────────────
+const S = {
+  root:{minHeight:"100vh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Georgia','Times New Roman',serif",display:"flex",flexDirection:"column"},
+  home:{maxWidth:680,margin:"0 auto",padding:"40px 20px 80px",width:"100%"},
+  header:{textAlign:"center",marginBottom:24},
+  logo:{display:"flex",flexDirection:"column",alignItems:"center",gap:4,marginBottom:10},
+  logoJp:{fontSize:48,fontWeight:400,letterSpacing:8,color:"#f0ede8",lineHeight:1},
+  logoEn:{fontSize:11,letterSpacing:6,color:"#8a8070",fontStyle:"italic"},
+  tagline:{color:"#8a8070",fontSize:14,letterSpacing:1,marginBottom:10},
+  gateBanner:{display:"flex",alignItems:"flex-start",gap:12,background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"14px 16px",marginBottom:18},
+  gateIcon:{fontSize:20,marginTop:2},gateTitle:{fontSize:13,color:"#f0ede8",marginBottom:3,fontWeight:600},gateSub:{fontSize:12,color:"#8a8070"},
+  sectionLabel:{fontSize:11,color:"#3a3a48",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginBottom:8},
+  grid2:{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:4},
+  sectionCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"18px 16px",width:"100%",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4,position:"relative",transition:"all 0.2s",textAlign:"left",cursor:"pointer"},
+  sectionIcon:{fontSize:28,lineHeight:1,marginBottom:4},
+  sectionName:{fontSize:14,fontWeight:600,color:"#f0ede8"},
+  sectionCount:{fontSize:12,color:"#8a8070"},
+  duePill:{borderRadius:10,padding:"2px 8px",fontSize:11,color:"#fff",fontFamily:"monospace"},
+  passedBadge:{position:"absolute",bottom:10,right:10,fontSize:10,color:"#22c55e",fontFamily:"monospace"},
+  testBtn:{width:"100%",background:"transparent",border:"1px solid",borderRadius:8,padding:"9px",fontSize:12,fontFamily:"Georgia,serif",cursor:"pointer",letterSpacing:0.5,transition:"all 0.15s"},
+  submenuCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:14,padding:"20px 18px",display:"flex",alignItems:"center",gap:16,cursor:"pointer",transition:"all 0.2s",textAlign:"left",width:"100%"},
+  levelCard:{background:"#13131a",borderRadius:14,padding:"16px",marginBottom:10},
+  levelBadge:{fontSize:12,fontWeight:700,color:"#fff",borderRadius:6,padding:"3px 8px",fontFamily:"monospace"},
+  catBtn:{background:"#0d0d14",border:"1px solid #1e1e2a",borderRadius:10,padding:"10px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",transition:"all 0.15s"},
+  settingsBox:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"16px",marginTop:20},
+  settingsTitle:{fontSize:12,color:"#8a8070",letterSpacing:1},
+  limitBtn:{border:"1px solid",borderRadius:8,padding:"6px 12px",fontSize:12,cursor:"pointer",fontFamily:"monospace",transition:"all 0.15s"},
+  studyWrap:{maxWidth:560,margin:"0 auto",padding:"24px 20px",width:"100%",minHeight:"100vh",display:"flex",flexDirection:"column"},
+  studyHeader:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12},
+  backBtn:{background:"none",border:"none",color:"#8a8070",cursor:"pointer",fontSize:14,padding:0},
+  sectionPill:{borderRadius:20,padding:"4px 12px",fontSize:12,color:"#fff",letterSpacing:0.5},
+  progressLabel:{fontSize:13,color:"#8a8070",fontFamily:"monospace"},
+  progressBarWrap:{height:3,background:"#1e1e2a",borderRadius:2,marginBottom:28,overflow:"hidden"},
+  progressBarFill:{height:"100%",borderRadius:2,transition:"width 0.4s ease"},
+  cardArea:{flex:1,display:"flex",alignItems:"center",justifyContent:"center"},
+  card:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"36px 28px",width:"100%",minHeight:280,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,position:"relative",transition:"transform 0.15s",userSelect:"none"},
+  cardHint:{position:"absolute",top:14,left:18,fontSize:10,color:"#3a3a48",letterSpacing:1,fontFamily:"monospace",textTransform:"uppercase"},
+  newBadge:{position:"absolute",top:12,right:14,background:"rgba(34,197,94,0.15)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"#22c55e",fontFamily:"monospace"},
+  cardFront:{fontSize:60,lineHeight:1,textAlign:"center",color:"#f0ede8"},
+  cardBack:{display:"flex",flexDirection:"column",alignItems:"center",gap:12,width:"100%"},
+  divider:{width:40,height:1,background:"#1e1e2a"},
+  cardAnswer:{fontSize:20,color:"#c8c0b0",textAlign:"center",lineHeight:1.4},
+  tapHint:{fontSize:11,color:"#3a3a48",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginTop:8},
+  scriptMnemonic:{fontSize:12,color:"#8a7060",fontStyle:"italic",textAlign:"center",lineHeight:1.5,padding:"0 8px"},
+  exampleBox:{width:"100%",background:"#0d0d14",border:"1px solid #1e1e2a",borderRadius:10,padding:"12px 14px",display:"flex",flexDirection:"column",gap:4},
+  exampleLabel:{fontSize:10,color:"#065f46",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:4},
+  toggleBtn:{background:"transparent",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 6px",fontSize:12,color:"#8a8070",cursor:"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"},
+  formalActive:{background:"rgba(59,130,246,0.12)",borderColor:"#3b82f6",color:"#93c5fd"},
+  informalActive:{background:"rgba(249,115,22,0.12)",borderColor:"#f97316",color:"#fed7aa"},
+  ratingRow:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginTop:20,paddingBottom:20},
+  ratingBtn:{background:"transparent",border:"1px solid",borderRadius:10,padding:"12px 6px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,transition:"all 0.15s"},
+  ratingLabel:{fontSize:13,fontWeight:600},ratingDesc:{fontSize:10,opacity:0.7,fontFamily:"monospace"},
+  quizCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"32px 22px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:16},
+  quizPromptLabel:{fontSize:12,color:"#8a8070",letterSpacing:1,textTransform:"uppercase",fontFamily:"monospace"},
+  quizChar:{fontSize:72,lineHeight:1,color:"#f0ede8"},
+  quizOptions:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,width:"100%"},
+  quizOpt:{border:"1px solid",borderRadius:10,padding:"14px",fontSize:18,cursor:"pointer",transition:"all 0.15s",fontFamily:"monospace",letterSpacing:1},
+  confirmBtn:{border:"none",borderRadius:10,padding:"12px 36px",fontSize:14,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5,marginTop:4},
+  doneWrap:{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:24,minHeight:"100vh"},
+  doneCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"44px 28px",maxWidth:420,width:"100%",textAlign:"center"},
+  doneEmoji:{fontSize:52,marginBottom:12},doneTitle:{fontSize:26,fontWeight:400,marginBottom:20,color:"#f0ede8"},
+  scoreBig:{fontSize:52,fontWeight:700,lineHeight:1,marginBottom:6},
+  scorePercent:{fontSize:13,color:"#8a8070",fontFamily:"monospace",marginBottom:18},
+  passMsg:{fontSize:13,color:"#c8c0b0",lineHeight:1.7,marginBottom:24,padding:"0 4px"},
+  failMsg:{fontSize:13,color:"#8a8070",lineHeight:1.7,marginBottom:24},
+  wrongSummary:{background:"#0d0d14",border:"1px solid #2a1a1a",borderRadius:12,padding:"12px 14px",marginBottom:14,textAlign:"left"},
+  wrongSummaryTitle:{fontSize:11,color:"#ef4444",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8},
+  wrongChars:{display:"flex",flexWrap:"wrap",gap:8},
+  wrongCharPill:{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,padding:"4px 10px",fontSize:18,color:"#f0ede8"},
+  reviewCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"28px 22px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:18},
+  reviewTop:{display:"flex",alignItems:"center",justifyContent:"center",gap:20},
+  reviewChar:{fontSize:72,lineHeight:1,color:"#f0ede8"},reviewArrow:{fontSize:24,color:"#3a3a48"},
+  reviewAnswer:{fontSize:26,color:"#22c55e",fontFamily:"monospace",fontWeight:700},
+  reviewDivider:{width:"100%",height:1,background:"#1e1e2a"},
+  mnemonicSection:{width:"100%",display:"flex",flexDirection:"column",gap:8},
+  mnemonicLabel:{fontSize:11,color:"#7c3aed",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"},
+  mnemonicText:{fontSize:14,color:"#c8c0b0",lineHeight:1.7,fontStyle:"italic"},
+  mnemonicLoading:{fontSize:13,color:"#8a8070",fontFamily:"monospace"},
+  reviewMistake:{width:"100%",background:"#0d0d14",borderRadius:10,padding:"10px 14px"},
+  reviewWrong:{fontSize:12,color:"#8a8070",fontFamily:"monospace"},
+  reviewNav:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:16,paddingBottom:20},
+  navBtn:{background:"transparent",border:"1px solid #1e1e2a",borderRadius:10,padding:"12px",fontSize:14,color:"#8a8070",cursor:"pointer",fontFamily:"Georgia,serif"},
+  navBtnPrimary:{border:"none",borderRadius:10,padding:"12px",fontSize:14,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif"},
+  doneStats:{display:"flex",justifyContent:"space-around",marginBottom:24,gap:16},
+  doneStat:{display:"flex",flexDirection:"column",gap:4},
+  doneStatNum:{fontSize:32,fontWeight:700,color:"#f0ede8"},
+  doneStatLabel:{fontSize:11,color:"#8a8070",letterSpacing:1,textTransform:"uppercase"},
+  doneActions:{display:"flex",flexDirection:"column",gap:10},
+  primaryBtn:{background:"#e11d48",color:"#fff",border:"none",borderRadius:10,padding:"14px",fontSize:15,cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5},
+  secondaryBtn:{background:"transparent",color:"#8a8070",border:"1px solid #1e1e2a",borderRadius:10,padding:"14px",fontSize:15,cursor:"pointer",fontFamily:"Georgia,serif"},
+};
+
+const CSS = `
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#0a0a0f; }
+  .section-card:hover { border-color:var(--accent) !important; transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+  .cat-btn:hover { border-color:var(--accent) !important; transform:translateY(-1px); }
+  .test-btn:hover { background:rgba(255,255,255,0.04) !important; transform:translateY(-1px); }
+  .flashcard { animation:cardIn 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+  .flashcard:active { transform:scale(0.98); }
+  .flipping { transform:rotateY(90deg); opacity:0; transition:transform 0.15s,opacity 0.15s; }
+  .card-back-reveal { animation:fadeUp 0.25s ease; }
+  .rating-reveal { animation:fadeUp 0.3s ease; }
+  .rating-btn:hover { background:rgba(255,255,255,0.04) !important; transform:translateY(-2px); }
+  .loading-dots::after { content:''; animation:dots 1.2s steps(4,end) infinite; }
+  @keyframes dots { 0%,20%{content:'.'} 40%{content:'..'} 60%{content:'...'} 80%,100%{content:''} }
+  @keyframes cardIn { from{opacity:0;transform:scale(0.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+`;
