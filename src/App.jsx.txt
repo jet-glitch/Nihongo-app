@@ -1,0 +1,1585 @@
+import { useState, useCallback, useEffect } from "react";
+import { HIRAGANA, KATAKANA, JLPT, PARTICLES, SENTENCES, KATAKANA_WORDS, MNEMONICS, LEVELS, LEVEL_COLORS, CATEGORIES, CAT_META, PASS_THRESHOLD, RATINGS } from "./data.js";
+function loadState(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+}
+function saveState(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+
+// ─────────────────────────────────────────────────────────────
+// EXPANSION BOX (formal/informal/on-yomi/kun-yomi)
+// ─────────────────────────────────────────────────────────────
+function ExpansionBox({ mode, card }) {
+  if (!mode || !card) return null;
+  const raw = mode === 'formal' ? card.formal : card.informal;
+  if (!raw) return null;
+  const [jpPart, ...rest] = raw.split(' — ');
+  const enPart = rest.join(' — ');
+  const colors = { formal:{bg:"rgba(59,130,246,0.07)",border:"rgba(59,130,246,0.2)"}, informal:{bg:"rgba(249,115,22,0.07)",border:"rgba(249,115,22,0.2)"} };
+  const c = colors[mode];
+  return (
+    <div style={{padding:"12px 14px",background:c.bg,border:`1px solid ${c.border}`,borderRadius:10,display:"flex",flexDirection:"column",gap:4}} className="card-back-reveal">
+      <div style={{fontSize:17,color:"#f0ede8",lineHeight:1.4}}>{jpPart}</div>
+      {enPart && <div style={{fontSize:12,color:"#8a8070",fontFamily:"monospace"}}>{enPart}</div>}
+    </div>
+  );
+}
+
+function CardToggles({ card, section, mode, setMode }) {
+  if (!card) return null;
+  const isKanji = section === 'kanji';
+  const hasF = !!card.formal, hasI = !!card.informal;
+  if (!hasF && !hasI) return null;
+  const toggle = val => setMode(mode === val ? null : val);
+  return (
+    <div style={{width:"100%",display:"flex",flexDirection:"column",gap:10,marginTop:4}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        {hasF && <button style={{...S.toggleBtn,...(mode==='formal'?S.formalActive:{})}} onClick={e=>{e.stopPropagation();toggle('formal');}}>
+          {isKanji?"音 On'yomi":"丁寧 Formal"}</button>}
+        {hasI && <button style={{...S.toggleBtn,...(mode==='informal'?S.informalActive:{})}} onClick={e=>{e.stopPropagation();toggle('informal');}}>
+          {isKanji?"訓 Kun'yomi":"普通 Casual"}</button>}
+      </div>
+      <ExpansionBox mode={mode} card={card} />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// APP
+// ─────────────────────────────────────────────────────────────
+export default function App() {
+  // ── Persistent state ──
+  const [scriptUnlocked, setScriptUnlocked] = useState(() => loadState("nh_scripts", {hiragana:false,katakana:false}));
+  const [levelProgress, setLevelProgress] = useState(() => loadState("nh_levelProgress", {current:"N5", passed:{}}));
+  const [cardProgress, setCardProgress] = useState(() => loadState("nh_cardProg", {}));
+  const [dailyLimit, setDailyLimit] = useState(() => loadState("nh_dailyLimit", 10));
+  const [dailyIntroduced, setDailyIntroduced] = useState(() => {
+    const saved = loadState("nh_daily", {date:"",count:0});
+    const today = new Date().toDateString();
+    return saved.date === today ? saved.count : 0;
+  });
+
+  // ── UI state ──
+  const [screen, setScreen] = useState("home");
+  const [activeLevel, setActiveLevel] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [theme, setTheme] = useState(() => loadState("nh_theme", "dark"));
+  const [katakanaWordsProg, setKatakanaWordsProg] = useState(() =>
+    loadState("nh_kwProg", KATAKANA_WORDS.map(() => freshProg()))
+  );
+
+  const isDark = theme === "dark";
+  const T = {
+    bg:        isDark ? "#0a0a0f" : "#f5f5f0",
+    bg2:       isDark ? "#13131a" : "#ffffff",
+    bg3:       isDark ? "#0d0d14" : "#f0ede8",
+    border:    isDark ? "#1e1e2a" : "#e0ddd8",
+    border2:   isDark ? "#2a2a38" : "#d0cdc8",
+    text:      isDark ? "#f0ede8" : "#1a1a22",
+    textSub:   isDark ? "#c8c0b0" : "#4a4a5a",
+    textMuted: isDark ? "#8a8070" : "#9090a0",
+    textFaint: isDark ? "#3a3a48" : "#c0c0cc",
+  };
+
+  const saveTheme = (v) => { saveState("nh_theme", v); setTheme(v); };
+
+  // Study
+  const [queue, setQueue] = useState([]);
+  const [queueIndex, setQueueIndex] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [animKey, setAnimKey] = useState(0);
+  const [toggleMode, setToggleMode] = useState(null);
+  const [sessionStats, setSessionStats] = useState({correct:0,total:0});
+
+  // Daily mistakes log
+  const [dailyMistakes, setDailyMistakes] = useState(() => {
+    const saved = loadState("nh_mistakes", {date:"",mistakes:[]});
+    const today = new Date().toDateString();
+    return saved.date === today ? saved.mistakes : [];
+  });
+  const [mistakeReviewIndex, setMistakeReviewIndex] = useState(0);
+  const [mistakeExplanation, setMistakeExplanation] = useState("");
+  const [mistakeExplLoading, setMistakeExplLoading] = useState(false);
+
+  const saveMistake = (card, level, cat) => {
+    const today = new Date().toDateString();
+    const entry = {
+      front: card.f || card.front,
+      back:  card.b || card.back,
+      hint:  card.hint || cat,
+      level, cat,
+      formal:   card.formal   || null,
+      informal: card.informal || null,
+      example:  card.example  || null,
+      time: Date.now(),
+    };
+    setDailyMistakes(prev => {
+      // avoid exact duplicates
+      const deduped = prev.filter(m => m.front !== entry.front);
+      const next = [...deduped, entry];
+      saveState("nh_mistakes", {date: today, mistakes: next});
+      return next;
+    });
+  };
+
+  // Script quiz
+  const [quizDeck, setQuizDeck] = useState("hiragana");
+  const [quizQuestions, setQuizQuestions] = useState([]);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [quizAnswers, setQuizAnswers] = useState([]);
+  const [quizSelected, setQuizSelected] = useState(null);
+  const [quizConfirmed, setQuizConfirmed] = useState(false);
+  const [wrongAnswers, setWrongAnswers] = useState([]);
+
+  // Review
+  const [reviewIndex, setReviewIndex] = useState(0);
+  const [aiMnemonic, setAiMnemonic] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+
+  // JLPT level test
+  const [levelTestLevel, setLevelTestLevel] = useState(null);
+  const [levelTestQuestions, setLevelTestQuestions] = useState([]);
+  const [levelTestIndex, setLevelTestIndex] = useState(0);
+  const [levelTestAnswers, setLevelTestAnswers] = useState([]);
+  const [levelTestSelected, setLevelTestSelected] = useState(null);
+  const [levelTestConfirmed, setLevelTestConfirmed] = useState(false);
+
+  // Particle exercise
+  const [particleIndex, setParticleIndex] = useState(0);
+  const [particleSelected, setParticleSelected] = useState(null);
+  const [particleConfirmed, setParticleConfirmed] = useState(false);
+  const [particleScore, setParticleScore] = useState({correct:0,total:0});
+  const [particleOrder, setParticleOrder] = useState(() => [...Array(PARTICLES.length).keys()].sort(()=>Math.random()-0.5));
+  const [particlePassed, setParticlePassed] = useState(() => loadState("nh_particlePassed", false));
+
+  // Sentence builder
+  const [sentenceLevel, setSentenceLevel] = useState(null);
+  const [sentenceIndex, setSentenceIndex] = useState(0);
+  const [sentenceOrder, setSentenceOrder] = useState(() => ({}));
+  const [placed, setPlaced] = useState([]); // words placed in the answer area
+  const [remaining, setRemaining] = useState([]); // words not yet placed
+  const [sentenceChecked, setSentenceChecked] = useState(false);
+  const [sentenceCorrect, setSentenceCorrect] = useState(false);
+  const [sentenceScore, setSentenceScore] = useState({correct:0,total:0});
+
+  const scriptsPassed = scriptUnlocked.hiragana && scriptUnlocked.katakana;
+  const currentLevel = levelProgress.current;
+
+  // Save helpers
+  const saveScripts = v => { saveState("nh_scripts", v); setScriptUnlocked(v); };
+  const saveLevelProgress = v => { saveState("nh_levelProgress", v); setLevelProgress(v); };
+  const saveCardProgress = v => { saveState("nh_cardProg", v); setCardProgress(v); };
+  const saveDailyLimit = v => { saveState("nh_dailyLimit", v); setDailyLimit(v); };
+
+  const bumpDaily = (n=1) => {
+    const today = new Date().toDateString();
+    const next = dailyIntroduced + n;
+    saveState("nh_daily", {date:today,count:next});
+    setDailyIntroduced(next);
+    return next;
+  };
+
+  // ── Card key ──
+  const cardKey = (level, cat, idx) => `${level}_${cat}_${idx}`;
+  const getProgFor = (level, cat, idx) => cardProgress[cardKey(level,cat,idx)] || freshProg();
+
+  // ── Build today's study queue for a level+category ──
+  const buildStudyQueue = useCallback((level, cat) => {
+    const cards = JLPT[level][cat];
+    const today = new Date().toDateString();
+    const introduced = cards.reduce((a,_,i) => {
+      const p = cardProgress[cardKey(level,cat,i)];
+      return a + (p && p.introduced ? 1 : 0);
+    }, 0);
+
+    // Due reviews first
+    const due = cards.map((card,i) => {
+      const p = getProgFor(level,cat,i);
+      return {card,i,prog:p};
+    }).filter(({prog}) => prog.introduced && prog.due <= Date.now())
+      .sort((a,b) => a.prog.due - b.prog.due);
+
+    // New cards (up to daily limit remaining)
+    const todayCount = loadState("nh_daily",{date:"",count:0});
+    const usedToday = todayCount.date === today ? todayCount.count : 0;
+    const remaining = Math.max(0, dailyLimit - usedToday);
+    const newCards = cards.map((card,i) => ({card,i,prog:getProgFor(level,cat,i)}))
+      .filter(({prog}) => !prog.introduced)
+      .slice(0, remaining);
+
+    return [...due, ...newCards];
+  }, [cardProgress, dailyLimit]);
+
+  const startStudy = (level, cat) => {
+    const q = buildStudyQueue(level, cat);
+    if (q.length === 0) { alert("No cards due! Come back tomorrow or lower your daily limit."); return; }
+    setActiveLevel(level); setActiveCategory(cat);
+    setQueue(q); setQueueIndex(0); setFlipped(false); setToggleMode(null);
+    setSessionStats({correct:0,total:0}); setAnimKey(k=>k+1);
+    setScreen("study");
+  };
+
+  // Script flashcard study (hiragana/katakana — separate from JLPT)
+  const startScriptStudy = (scriptKey) => {
+    const deck = scriptKey === "hiragana" ? HIRAGANA : KATAKANA;
+    const progKey = `nh_scriptProg_${scriptKey}`;
+    const savedProg = loadState(progKey, deck.map(() => freshProg()));
+    const due = deck.map((card, i) => ({card:{f:card.f,b:card.b,front:card.f,back:card.b}, i, prog:savedProg[i]}))
+      .filter(({prog}) => prog.introduced && prog.due <= Date.now());
+    const newCards = deck.map((card, i) => ({card:{f:card.f,b:card.b,front:card.f,back:card.b}, i, prog:savedProg[i]}))
+      .filter(({prog}) => !prog.introduced)
+      .slice(0, dailyLimit);
+    const q = due.length > 0 ? due : newCards.length > 0 ? newCards : deck.map((card, i) => ({card:{f:card.f,b:card.b,front:card.f,back:card.b}, i, prog:savedProg[i]}));
+    setActiveLevel(scriptKey); setActiveCategory(scriptKey);
+    setQueue(q); setQueueIndex(0); setFlipped(false); setToggleMode(null);
+    setSessionStats({correct:0,total:0}); setAnimKey(k=>k+1);
+    setScreen("study");
+  };
+
+  const startKatakanaWords = () => {
+    const today = new Date().toDateString();
+    const todaySaved = loadState("nh_daily", {date:"",count:0});
+    const usedToday = todaySaved.date === today ? todaySaved.count : 0;
+    const remaining = Math.max(0, dailyLimit - usedToday);
+    const due = KATAKANA_WORDS
+      .map((card, i) => ({ card, i, prog: katakanaWordsProg[i] }))
+      .filter(({prog}) => prog.introduced && prog.due <= Date.now());
+    const newCards = KATAKANA_WORDS
+      .map((card, i) => ({ card, i, prog: katakanaWordsProg[i] }))
+      .filter(({prog}) => !prog.introduced)
+      .slice(0, remaining);
+    const q = [...due, ...newCards];
+    if (q.length === 0) { alert("No katakana words due! Come back tomorrow."); return; }
+    setActiveLevel("KW"); setActiveCategory("katakana_words");
+    setQueue(q); setQueueIndex(0); setFlipped(false); setToggleMode(null);
+    setSessionStats({correct:0,total:0}); setAnimKey(k=>k+1);
+    setScreen("study");
+  };
+
+  const handleFlip = () => {
+    if (flipped) return;
+    setIsFlipping(true);
+    setTimeout(() => { setFlipped(true); setIsFlipping(false); }, 150);
+  };
+
+  const handleRate = (rating) => {
+    const {i, prog} = queue[queueIndex];
+    const wasNew = !prog.introduced;
+    const newProg = { ...applyRating(prog, rating), introduced: true };
+    if (activeCategory === "katakana_words") {
+      const updated = [...katakanaWordsProg];
+      updated[i] = newProg;
+      saveState("nh_kwProg", updated);
+      setKatakanaWordsProg(updated);
+    } else if (activeCategory === "hiragana" || activeCategory === "katakana") {
+      const progKey = `nh_scriptProg_${activeCategory}`;
+      const deck = activeCategory === "hiragana" ? HIRAGANA : KATAKANA;
+      const saved = loadState(progKey, deck.map(() => freshProg()));
+      saved[i] = newProg;
+      saveState(progKey, saved);
+    } else {
+      const updated = { ...cardProgress, [cardKey(activeLevel,activeCategory,i)]: newProg };
+      saveCardProgress(updated);
+    }
+    if (wasNew) bumpDaily(1);
+    if (rating <= 2) saveMistake(queue[queueIndex].card, activeLevel, activeCategory);
+    setSessionStats(s => ({correct: s.correct + (rating >= 3 ? 1 : 0), total: s.total + 1}));
+    if (queueIndex + 1 >= queue.length) setScreen("done");
+    else { setFlipped(false); setToggleMode(null); setAnimKey(k=>k+1); setQueueIndex(c=>c+1); }
+  };
+
+  // ── Script quiz ──
+  const startScriptQuiz = (deck) => {
+    setQuizDeck(deck);
+    setQuizQuestions(buildQuiz(deck === "hiragana" ? HIRAGANA : KATAKANA));
+    setQuizIndex(0); setQuizAnswers([]); setWrongAnswers([]);
+    setQuizSelected(null); setQuizConfirmed(false);
+    setScreen("scriptQuiz");
+  };
+
+  const handleScriptSelect = opt => { if (!quizConfirmed) setQuizSelected(opt); };
+  const handleScriptConfirm = () => {
+    if (!quizSelected) return;
+    const q = quizQuestions[quizIndex];
+    const correct = quizSelected === q.answer;
+    const newAnswers = [...quizAnswers, {selected:quizSelected,correct}];
+    setQuizAnswers(newAnswers);
+    if (!correct) setWrongAnswers(w => [...w, {...q,chosen:quizSelected}]);
+    setQuizConfirmed(true);
+    setTimeout(() => {
+      if (quizIndex + 1 >= quizQuestions.length) {
+        const score = newAnswers.filter(a=>a.correct).length / quizQuestions.length;
+        if (score >= PASS_THRESHOLD) saveScripts({...scriptUnlocked,[quizDeck]:true});
+        setScreen("scriptQuizResult");
+      } else {
+        setQuizIndex(i=>i+1); setQuizSelected(null); setQuizConfirmed(false);
+      }
+    }, 700);
+  };
+
+  // ── Missed card review ──
+  const startReview = () => { setReviewIndex(0); setAiMnemonic(""); loadMnemonic(wrongAnswers[0]); setScreen("review"); };
+
+  const loadMistakeExplanation = async (mistake) => {
+    if (!mistake) return;
+    setMistakeExplLoading(true);
+    setMistakeExplanation("");
+    try {
+      const contextParts = [];
+      if (mistake.example) contextParts.push(`Example: ${mistake.example.replace(/\n/g, " / ")}`);
+      if (mistake.formal)  contextParts.push(`Formal: ${mistake.formal}`);
+      if (mistake.informal) contextParts.push(`Casual: ${mistake.informal}`);
+      const context = contextParts.length ? `\nExtra context: ${contextParts.join(" | ")}` : "";
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514", max_tokens: 1000,
+          messages: [{
+            role: "user",
+            content: `You are a friendly Japanese tutor helping a beginner. The student got this card wrong:
+Card: "${mistake.front}" → "${mistake.back}" (${mistake.hint})${context}
+
+Write a short beginner-friendly explanation (3-5 sentences) covering:
+1. What this word/pattern/character means and how to use it
+2. A simple memory tip or trick to remember it
+3. One natural example sentence with English translation
+
+Keep it warm, encouraging, and simple. No jargon. Reply with just the explanation, no headings.`
+          }]
+        })
+      });
+      const data = await res.json();
+      setMistakeExplanation(data.content?.[0]?.text || "Keep practicing — every mistake is a step forward!");
+    } catch {
+      setMistakeExplanation("Keep practicing — every mistake is a step forward! Try making a sentence with this word today.");
+    }
+    setMistakeExplLoading(false);
+  };
+  const loadMnemonic = async (q) => {
+    if (!q) return;
+    const builtin = MNEMONICS[q.question];
+    if (builtin) { setAiMnemonic(builtin); return; }
+    setAiLoading(true); setAiMnemonic("");
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,
+          messages:[{role:"user",content:`Give a single short vivid mnemonic (1-2 sentences) to help an English speaker remember that "${q.question}" means "${q.answer}" in Japanese. Reply with only the mnemonic.`}]
+        })
+      });
+      const data = await res.json();
+      setAiMnemonic(data.content?.[0]?.text || "Connect the shape or sound to a vivid image!");
+    } catch { setAiMnemonic("Try connecting the word to a vivid mental image!"); }
+    setAiLoading(false);
+  };
+  const goToReview = idx => { setReviewIndex(idx); setAiMnemonic(""); loadMnemonic(wrongAnswers[idx]); };
+
+  // ── JLPT level test ──
+  const startLevelTest = (level) => {
+    // Build a 20-question test from vocab across all categories
+    const allCards = [...JLPT[level].vocab, ...JLPT[level].kanji].sort(() => Math.random() - 0.5).slice(0,20);
+    const allPool = [...JLPT[level].vocab, ...JLPT[level].kanji];
+    const questions = allCards.map(card => {
+      const wrong = allPool.filter(c=>c.b!==card.b).sort(()=>Math.random()-0.5).slice(0,3).map(c=>c.b);
+      const options = [...wrong,card.b].sort(()=>Math.random()-0.5);
+      return {question:card.f, answer:card.b, options};
+    });
+    setLevelTestLevel(level); setLevelTestQuestions(questions);
+    setLevelTestIndex(0); setLevelTestAnswers([]);
+    setLevelTestSelected(null); setLevelTestConfirmed(false);
+    setScreen("levelTest");
+  };
+
+  const handleLevelTestSelect = opt => { if (!levelTestConfirmed) setLevelTestSelected(opt); };
+  const handleLevelTestConfirm = () => {
+    if (!levelTestSelected) return;
+    const correct = levelTestSelected === levelTestQuestions[levelTestIndex].answer;
+    const newAnswers = [...levelTestAnswers, {selected:levelTestSelected,correct}];
+    setLevelTestAnswers(newAnswers);
+    setLevelTestConfirmed(true);
+    setTimeout(() => {
+      if (levelTestIndex + 1 >= levelTestQuestions.length) {
+        const score = newAnswers.filter(a=>a.correct).length / levelTestQuestions.length;
+        if (score >= PASS_THRESHOLD) {
+          const nextIdx = LEVELS.indexOf(levelTestLevel) + 1;
+          const nextLevel = LEVELS[nextIdx] || levelTestLevel;
+          const newPassed = {...levelProgress.passed, [levelTestLevel]:true};
+          saveLevelProgress({current: nextIdx < LEVELS.length ? nextLevel : levelTestLevel, passed: newPassed});
+        }
+        setScreen("levelTestResult");
+      } else {
+        setLevelTestIndex(i=>i+1); setLevelTestSelected(null); setLevelTestConfirmed(false);
+      }
+    }, 700);
+  };
+
+  const levelTestScore = levelTestAnswers.filter(a=>a.correct).length;
+  const levelTestPassed = levelTestScore / (levelTestQuestions.length||1) >= PASS_THRESHOLD;
+  const scriptQuizScore = quizAnswers.filter(a=>a.correct).length;
+  const scriptQuizPassed = scriptQuizScore / (quizQuestions.length||1) >= PASS_THRESHOLD;
+
+  // ── Particle exercise ──
+  const startParticles = () => {
+    setParticleIndex(0);
+    setParticleSelected(null);
+    setParticleConfirmed(false);
+    setParticleScore({correct:0,total:0});
+    setParticleOrder([...Array(PARTICLES.length).keys()].sort(()=>Math.random()-0.5));
+    setScreen("particles");
+  };
+
+  const handleParticleSelect = (opt) => { if (!particleConfirmed) setParticleSelected(opt); };
+
+  const handleParticleConfirm = () => {
+    if (!particleSelected) return;
+    const q = PARTICLES[particleOrder[particleIndex]];
+    const correct = particleSelected === q.answer;
+    const newScore = {correct: particleScore.correct+(correct?1:0), total: particleScore.total+1};
+    setParticleScore(newScore);
+    setParticleConfirmed(true);
+    // Check if passed (80% after all questions)
+    if (particleIndex + 1 >= PARTICLES.length) {
+      const pct = newScore.correct / PARTICLES.length;
+      if (pct >= PASS_THRESHOLD && !particlePassed) {
+        saveState("nh_particlePassed", true);
+        setParticlePassed(true);
+      }
+    }
+  };
+
+  const nextParticle = () => {
+    if (particleIndex + 1 >= PARTICLES.length) { setScreen("particlesResult"); return; }
+    setParticleIndex(i => i+1);
+    setParticleSelected(null);
+    setParticleConfirmed(false);
+  };
+
+  // ── Sentence builder ──
+  const startSentenceBuilder = (level) => {
+    const shuffled = [...Array(SENTENCES[level].length).keys()].sort(()=>Math.random()-0.5);
+    setSentenceLevel(level);
+    setSentenceIndex(0);
+    setSentenceOrder(prev => ({...prev, [level]: shuffled}));
+    const firstIdx = shuffled[0];
+    const words = [...SENTENCES[level][firstIdx].words].sort(()=>Math.random()-0.5);
+    setRemaining(words.map((w,i)=>({w,id:i})));
+    setPlaced([]);
+    setSentenceChecked(false);
+    setSentenceCorrect(false);
+    setSentenceScore({correct:0,total:0});
+    setScreen("sentenceBuilder");
+  };
+
+  const placeWord = (item) => {
+    if (sentenceChecked) return;
+    setRemaining(r => r.filter(x => x.id !== item.id));
+    setPlaced(p => [...p, item]);
+  };
+
+  const removeWord = (item) => {
+    if (sentenceChecked) return;
+    setPlaced(p => p.filter(x => x.id !== item.id));
+    setRemaining(r => [...r, item]);
+  };
+
+  const checkSentence = () => {
+    if (placed.length === 0) return;
+    const level = sentenceLevel;
+    const idx = sentenceOrder[level]?.[sentenceIndex] ?? sentenceIndex;
+    const correct = placed.map(x=>x.w).join("") === SENTENCES[level][idx].answer.join("");
+    setSentenceCorrect(correct);
+    setSentenceChecked(true);
+    setSentenceScore(s => ({correct: s.correct+(correct?1:0), total: s.total+1}));
+    if (!correct) saveMistake({f: SENTENCES[level][idx].english, b: SENTENCES[level][idx].answer.join(" "), hint:`${level} Sentence`}, level, "reading");
+  };
+
+  const nextSentence = () => {
+    const level = sentenceLevel;
+    const total = SENTENCES[level].length;
+    if (sentenceIndex + 1 >= total) { setScreen("sentenceResult"); return; }
+    const nextIdx = sentenceIndex + 1;
+    const dataIdx = sentenceOrder[level]?.[nextIdx] ?? nextIdx;
+    const words = [...SENTENCES[level][dataIdx].words].sort(()=>Math.random()-0.5);
+    setSentenceIndex(nextIdx);
+    setRemaining(words.map((w,i)=>({w,id:i})));
+    setPlaced([]);
+    setSentenceChecked(false);
+    setSentenceCorrect(false);
+  };
+
+  // ── Due counts ──
+  const getDueCount = (level, cat) => {
+    if (!JLPT[level] || !JLPT[level][cat]) return 0;
+    return JLPT[level][cat].filter((_,i) => {
+      const p = cardProgress[cardKey(level,cat,i)];
+      return p && p.introduced && p.due <= Date.now();
+    }).length;
+  };
+  const getNewCount = (level, cat) => {
+    if (!JLPT[level] || !JLPT[level][cat]) return 0;
+    return JLPT[level][cat].filter((_,i) => {
+      const p = cardProgress[cardKey(level,cat,i)];
+      return !p || !p.introduced;
+    }).length;
+  };
+
+  const card = queue[queueIndex];
+  const isScript = screen === 'study' && (activeCategory === 'hiragana' || activeCategory === 'katakana');
+
+  return (
+    <div style={{...S.root, background: T.bg, color: T.text}}>
+      <style>{CSS}</style>
+
+      {/* ── HOME ── */}
+      {screen === "home" && (
+        <div style={S.home}>
+          {/* Settings gear button */}
+          <button
+            style={{position:"fixed",top:16,right:16,background:T.bg2,border:`1px solid ${T.border}`,borderRadius:10,width:40,height:40,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:99,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}
+            onClick={() => setScreen("settings")}
+            title="Settings"
+          >⚙</button>
+
+          {/* Daily review button */}
+          {dailyMistakes.length > 0 && (
+            <button
+              style={{position:"fixed",top:16,right:64,background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.4)",borderRadius:10,padding:"0 12px",height:40,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:6,zIndex:99,color:"#ef4444",fontFamily:"Georgia,serif"}}
+              onClick={() => { setMistakeReviewIndex(0); setMistakeExplanation(""); loadMistakeExplanation(dailyMistakes[0]); setScreen("dailyReview"); }}>
+              📝 {dailyMistakes.length}
+            </button>
+          )}
+
+          <div style={S.header}>
+            <div style={S.logo}><span style={{...S.logoJp,color:T.text}}>日本語</span><span style={{...S.logoEn,color:T.textMuted}}>NIHONGO</span></div>
+            <p style={{...S.tagline,color:T.textMuted}}>N5 to N1 — Learn Japanese the right way</p>
+          </div>
+
+          {/* Script gates */}
+          {(!scriptUnlocked.hiragana || !scriptUnlocked.katakana) && (
+            <div style={{...S.gateBanner,background:T.bg2,border:`1px solid ${T.border}`}}>
+              <span style={S.gateIcon}>🔒</span>
+              <div><div style={{...S.gateTitle,color:T.text}}>Pass both script tests to unlock JLPT study</div>
+              <div style={{...S.gateSub,color:T.textMuted}}>Study → Take Test → 80% to pass each</div></div>
+            </div>
+          )}
+
+          {/* Script cards */}
+          <div style={S.sectionLabel}>Scripts</div>
+          <div style={S.grid2}>
+            {[{key:"hiragana",deck:HIRAGANA,color:"#e11d48",icon:"あ",label:"Hiragana"},
+              {key:"katakana",deck:KATAKANA,color:"#7c3aed",icon:"ア",label:"Katakana"}].map(sc => (
+              <div key={sc.key} style={{display:"flex",flexDirection:"column",gap:6}}>
+                <button style={{...S.sectionCard,"--accent":sc.color}} className="section-card"
+                  onClick={() => startScriptStudy(sc.key)}>
+                  <span style={{...S.sectionIcon,color:sc.color}}>{sc.icon}</span>
+                  <span style={S.sectionName}>{sc.label}</span>
+                  <span style={S.sectionCount}>{sc.deck.length} cards</span>
+                  {scriptUnlocked[sc.key] && <span style={S.passedBadge}>✓ passed</span>}
+                </button>
+                <button style={{...S.testBtn,borderColor:scriptUnlocked[sc.key]?"#22c55e":sc.color,color:scriptUnlocked[sc.key]?"#22c55e":sc.color}}
+                  className="test-btn" onClick={() => startScriptQuiz(sc.key)}>
+                  {scriptUnlocked[sc.key] ? "✓ Retake Test" : "Take Test →"}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* JLPT levels */}
+          <div style={{...S.sectionLabel,marginTop:24}}>JLPT Levels</div>
+          {LEVELS.map(level => {
+            const locked = !scriptsPassed || (LEVELS.indexOf(level) > 0 && !levelProgress.passed[LEVELS[LEVELS.indexOf(level)-1]]);
+            const isActive = level === currentLevel && !locked;
+            const passed = levelProgress.passed[level];
+            const totalDue = CATEGORIES.reduce((s,c) => s + getDueCount(level,c), 0);
+            const totalNew = CATEGORIES.reduce((s,c) => s + getNewCount(level,c), 0);
+            return (
+              <div key={level} style={{...S.levelCard, opacity:locked?0.4:1, border:`1px solid ${locked?"#1e1e2a":LEVEL_COLORS[level]}22`}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <span style={{...S.levelBadge,background:locked?"#2a2a38":LEVEL_COLORS[level]}}>{level}</span>
+                    <span style={{fontSize:13,color:locked?"#555":"#f0ede8",fontWeight:600}}>
+                      {passed ? "Complete ✓" : isActive ? "In Progress" : locked ? "Locked 🔒" : "Available"}
+                    </span>
+                  </div>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    {totalDue > 0 && <span style={{...S.duePill,background:LEVEL_COLORS[level]}}>{totalDue} due</span>}
+                    {!locked && !passed && (
+                      <button style={{...S.testBtn,borderColor:LEVEL_COLORS[level],color:LEVEL_COLORS[level],padding:"4px 12px",fontSize:11}}
+                        onClick={() => startLevelTest(level)}>
+                        Take {level} Test →
+                      </button>
+                    )}
+                    {passed && (
+                      <button style={{...S.testBtn,borderColor:"#22c55e",color:"#22c55e",padding:"4px 12px",fontSize:11}}
+                        onClick={() => startLevelTest(level)}>
+                        Retake
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {!locked && (
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6}}>
+                    {CATEGORIES.map(cat => {
+                      const due = getDueCount(level,cat);
+                      const newC = getNewCount(level,cat);
+                      const total = JLPT[level][cat].length;
+                      const introduced = total - newC;
+                      return (
+                        <button key={cat} style={{...S.catBtn,"--accent":LEVEL_COLORS[level]}} className="cat-btn"
+                          onClick={() => !locked && startStudy(level, cat)}>
+                          <span style={{fontSize:20,color:LEVEL_COLORS[level]}}>{CAT_META[cat].icon}</span>
+                          <span style={{fontSize:11,color:"#f0ede8"}}>{CAT_META[cat].label}</span>
+                          <span style={{fontSize:10,color:"#8a8070"}}>{introduced}/{total}</span>
+                          {due > 0 && <span style={{fontSize:10,color:LEVEL_COLORS[level],fontFamily:"monospace"}}>{due} due</span>}
+                          {due === 0 && newC > 0 && <span style={{fontSize:10,color:"#8a8070"}}>{Math.min(dailyLimit,newC)} new</span>}
+                          {due === 0 && newC === 0 && <span style={{fontSize:10,color:"#22c55e"}}>✓ done</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+
+          {/* Katakana Words + Sentences — side by side */}
+          {/* Practice section — always visible */}
+          <div style={{marginTop:10}}>
+            <div style={{...S.sectionLabel,marginTop:0}}>Practice</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                {/* Katakana Words */}
+                <button
+                  style={{...S.sectionCard,"--accent":"#0891b2",flexDirection:"column",alignItems:"flex-start"}}
+                  className="section-card"
+                  onClick={startKatakanaWords}>
+                  <span style={{fontSize:28,color:"#0891b2",marginBottom:4}}>カ</span>
+                  <span style={{fontSize:13,fontWeight:600,color:T.text}}>Katakana Words</span>
+                  <span style={{fontSize:11,color:T.textMuted}}>{KATAKANA_WORDS.length} loanwords</span>
+                  {(() => {
+                    const kDue = katakanaWordsProg.filter(p=>p.introduced&&p.due<=Date.now()).length;
+                    const kNew = katakanaWordsProg.filter(p=>!p.introduced).length;
+                    if (kDue>0) return <span style={{...S.duePill,background:"#0891b2",position:"absolute",top:10,right:10}}>{kDue} due</span>;
+                    if (kNew>0) return <span style={{fontSize:10,color:T.textMuted,fontFamily:"monospace"}}>{Math.min(dailyLimit,kNew)} new</span>;
+                    return <span style={{fontSize:10,color:"#22c55e",fontFamily:"monospace"}}>✓ done</span>;
+                  })()}
+                </button>
+
+                {/* Sentences */}
+                <button
+                  style={{...S.sectionCard,"--accent":"#7c3aed",flexDirection:"column",alignItems:"flex-start"}}
+                  className="section-card"
+                  onClick={() => setScreen("sentencesMenu")}>
+                  <span style={{fontSize:28,color:"#7c3aed",marginBottom:4}}>文</span>
+                  <span style={{fontSize:13,fontWeight:600,color:T.text}}>Sentences</span>
+                  <span style={{fontSize:11,color:T.textMuted}}>Particles & builders</span>
+                  <span style={{fontSize:10,color:"#7c3aed",fontFamily:"monospace",marginTop:2}}>
+                    {particlePassed ? "✓ particles passed" : "Start with particles"}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+        </div>
+      )}
+
+      {/* ── SENTENCES MENU ── */}
+      {screen === "sentencesMenu" && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={{...S.backBtn,color:T.textMuted}} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill,background:"#7c3aed"}}>文 Sentences</span>
+            <span style={{width:40}}/>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:10,paddingTop:8}}>
+            <div style={{fontSize:12,color:T.textMuted,marginBottom:4}}>Pass Particles first to unlock sentence levels.</div>
+
+            {/* Particles */}
+            <button
+              style={{...S.submenuCard,"--accent":"#0891b2",border:`1px solid ${T.border}`,background:T.bg2}}
+              className="section-card"
+              onClick={startParticles}>
+              <span style={{fontSize:36,color:"#0891b2"}}>助</span>
+              <div style={{flex:1,textAlign:"left"}}>
+                <div style={{fontSize:15,fontWeight:600,color:T.text}}>Particles</div>
+                <div style={{fontSize:12,color:T.textMuted,marginTop:2}}>Fill in the blank — は、が、を、に、で · {PARTICLES.length} exercises</div>
+                {particlePassed
+                  ? <div style={{fontSize:11,color:"#22c55e",marginTop:4,fontFamily:"monospace"}}>✓ passed</div>
+                  : <div style={{fontSize:11,color:"#0891b2",marginTop:4,fontFamily:"monospace"}}>Pass 80% to unlock sentences →</div>}
+              </div>
+            </button>
+
+            {/* Sentence builder levels */}
+            {LEVELS.map(lv => {
+              const idx = LEVELS.indexOf(lv);
+              const locked = !particlePassed || (idx > 0 && !levelProgress.passed[LEVELS[idx-1]]);
+              const color = LEVEL_COLORS[lv];
+              return (
+                <button key={lv}
+                  style={{...S.submenuCard,"--accent":color,border:`1px solid ${locked?T.border:color+"44"}`,background:T.bg2,opacity:locked?0.45:1,cursor:locked?"not-allowed":"pointer"}}
+                  className={locked?"":"section-card"}
+                  onClick={() => !locked && startSentenceBuilder(lv)}>
+                  <span style={{fontSize:28,fontWeight:700,color:locked?"#555":color}}>{locked?"🔒":lv}</span>
+                  <div style={{flex:1,textAlign:"left"}}>
+                    <div style={{fontSize:15,fontWeight:600,color:T.text}}>{lv} Sentences</div>
+                    <div style={{fontSize:12,color:T.textMuted,marginTop:2}}>
+                      Arrange words into the correct order · {SENTENCES[lv].length} sentences
+                    </div>
+                    {locked && <div style={{fontSize:11,color:T.textFaint,marginTop:4,fontFamily:"monospace"}}>
+                      {!particlePassed ? "Pass Particles first" : `Pass ${LEVELS[idx-1]} level test first`}
+                    </div>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── PARTICLES ── */}
+      {screen === "particles" && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={{...S.backBtn,color:T.textMuted}} onClick={() => setScreen("sentencesMenu")}>← Back</button>
+            <span style={{...S.sectionPill,background:"#0891b2"}}>助 Particles</span>
+            <span style={{...S.progressLabel,color:T.textMuted}}>{particleIndex+1}/{PARTICLES.length}</span>
+          </div>
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${((particleIndex)/PARTICLES.length)*100}%`,background:"#0891b2"}}/>
+          </div>
+          {(() => {
+            const q = PARTICLES[particleOrder[particleIndex]];
+            return (
+              <div style={S.cardArea}>
+                <div style={{...S.quizCard,background:T.bg2,border:`1px solid ${T.border}`,gap:20}} className="flashcard">
+                  <div style={{fontSize:11,color:"#0891b2",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>{q.hint}</div>
+
+                  {/* Sentence with blank */}
+                  <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",justifyContent:"center",gap:6,fontSize:22,lineHeight:2}}>
+                    {q.sentence.map((part,i) => (
+                      part === "___" ? (
+                        <span key={i} style={{
+                          display:"inline-block",minWidth:48,height:36,borderBottom:`2px solid ${particleConfirmed?(particleSelected===q.answer?"#22c55e":"#ef4444"):"#0891b2"}`,
+                          textAlign:"center",color:particleConfirmed?( particleSelected===q.answer?"#22c55e":"#ef4444"):T.text,
+                          fontWeight:700,fontSize:20,lineHeight:"36px"
+                        }}>{particleConfirmed ? particleSelected : ""}</span>
+                      ) : (
+                        <span key={i} style={{color:T.text}}>{part}</span>
+                      )
+                    ))}
+                  </div>
+
+                  {/* Options */}
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,width:"100%"}}>
+                    {q.options.map(opt => {
+                      const isSelected = particleSelected === opt;
+                      const isCorrect = opt === q.answer;
+                      let bg=T.bg3, border=T.border2, color=T.text;
+                      if (particleConfirmed) {
+                        if (isCorrect) { bg="rgba(34,197,94,0.15)"; border="#22c55e"; color="#22c55e"; }
+                        else if (isSelected) { bg="rgba(239,68,68,0.15)"; border="#ef4444"; color="#ef4444"; }
+                      } else if (isSelected) { border="#0891b2"; bg="rgba(8,145,178,0.1)"; }
+                      return (
+                        <button key={opt} style={{border:`1px solid ${border}`,borderRadius:10,padding:"14px 6px",fontSize:20,cursor:"pointer",background:bg,color,transition:"all 0.15s",fontFamily:"Georgia,serif"}}
+                          onClick={() => handleParticleSelect(opt)}>{opt}</button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Confirm / explanation */}
+                  {!particleConfirmed && particleSelected && (
+                    <button style={{...S.confirmBtn,background:"#0891b2"}} onClick={handleParticleConfirm}>Confirm</button>
+                  )}
+                  {particleConfirmed && (
+                    <div style={{width:"100%",display:"flex",flexDirection:"column",gap:10}} className="card-back-reveal">
+                      <div style={{background:particleSelected===q.answer?"rgba(34,197,94,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${particleSelected===q.answer?"rgba(34,197,94,0.3)":"rgba(239,68,68,0.3)"}`,borderRadius:10,padding:"12px 14px"}}>
+                        <div style={{fontSize:12,fontWeight:700,color:particleSelected===q.answer?"#22c55e":"#ef4444",marginBottom:6}}>
+                          {particleSelected===q.answer?"✓ Correct!":"✗ The answer is "+q.answer}
+                        </div>
+                        <div style={{fontSize:13,color:T.textSub,lineHeight:1.7}}>{q.explanation}</div>
+                      </div>
+                      <button style={{...S.primaryBtn,background:"#0891b2"}} onClick={nextParticle}>
+                        {particleIndex+1 >= PARTICLES.length ? "See Results" : "Next →"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* ── PARTICLES RESULT ── */}
+      {screen === "particlesResult" && (
+        <div style={{...S.doneWrap,background:T.bg}}>
+          <div style={{...S.doneCard,background:T.bg2,border:`1px solid ${T.border}`}}>
+            <div style={S.doneEmoji}>{particleScore.correct/PARTICLES.length>=PASS_THRESHOLD?"🎉":"📚"}</div>
+            <h2 style={{...S.doneTitle,color:T.text}}>
+              {particleScore.correct/PARTICLES.length>=PASS_THRESHOLD?"Particles Passed!":"Keep Practicing"}
+            </h2>
+            <div style={{...S.scoreBig,color:particleScore.correct/PARTICLES.length>=PASS_THRESHOLD?"#22c55e":"#ef4444"}}>
+              {particleScore.correct}/{PARTICLES.length}
+            </div>
+            <div style={{...S.scorePercent,color:T.textMuted}}>
+              {Math.round(particleScore.correct/PARTICLES.length*100)}% · Need 80% to unlock sentences
+            </div>
+            <div style={{fontSize:13,color:T.textMuted,lineHeight:1.7,marginBottom:24,textAlign:"center"}}>
+              {particleScore.correct/PARTICLES.length>=PASS_THRESHOLD
+                ? "Great work! N5 sentences are now unlocked. Particles are the glue of Japanese — keep them sharp!"
+                : "Particles can be tricky — review the explanations and try again. Each one has a clear rule!"}
+            </div>
+            <div style={S.doneActions}>
+              <button style={{...S.primaryBtn,background:"#0891b2"}} onClick={startParticles}>Try Again</button>
+              <button style={{...S.secondaryBtn,color:T.textMuted,border:`1px solid ${T.border}`}} onClick={() => setScreen("sentencesMenu")}>Back to Sentences</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SENTENCE BUILDER ── */}
+      {screen === "sentenceBuilder" && sentenceLevel && (() => {
+        const idx = sentenceOrder[sentenceLevel]?.[sentenceIndex] ?? sentenceIndex;
+        const q = SENTENCES[sentenceLevel][idx];
+        const color = LEVEL_COLORS[sentenceLevel];
+        return (
+          <div style={{...S.studyWrap,background:T.bg}}>
+            <div style={S.studyHeader}>
+              <button style={{...S.backBtn,color:T.textMuted}} onClick={() => setScreen("home")}>← Back</button>
+              <span style={{...S.sectionPill,background:color}}>{sentenceLevel} Sentences</span>
+              <span style={{...S.progressLabel,color:T.textMuted}}>{sentenceIndex+1}/{SENTENCES[sentenceLevel].length}</span>
+            </div>
+            <div style={S.progressBarWrap}>
+              <div style={{...S.progressBarFill,width:`${(sentenceIndex/SENTENCES[sentenceLevel].length)*100}%`,background:color}}/>
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:14,paddingBottom:20}}>
+              {/* English prompt */}
+              <div style={{background:T.bg2,border:`1px solid ${T.border}`,borderRadius:14,padding:"16px 18px"}}>
+                <div style={{fontSize:10,color:T.textFaint,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>English</div>
+                <div style={{fontSize:16,color:T.text,lineHeight:1.5,fontStyle:"italic"}}>{q.english}</div>
+              </div>
+
+              {/* Answer area — placed words */}
+              <div>
+                <div style={{fontSize:10,color:color,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Your sentence — tap to remove</div>
+                <div style={{
+                  minHeight:60,background:T.bg2,border:`2px dashed ${sentenceChecked?(sentenceCorrect?"#22c55e":"#ef4444"):T.border}`,
+                  borderRadius:14,padding:"12px 14px",display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"
+                }}>
+                  {placed.length === 0 && (
+                    <span style={{fontSize:13,color:T.textFaint,fontStyle:"italic"}}>Tap words below to build your sentence…</span>
+                  )}
+                  {placed.map((item) => (
+                    <button key={item.id}
+                      style={{background:sentenceChecked?(sentenceCorrect?"rgba(34,197,94,0.15)":"rgba(239,68,68,0.15)"):"rgba(8,145,178,0.12)",border:`1px solid ${sentenceChecked?(sentenceCorrect?"#22c55e":"#ef4444"):"#0891b2"}`,borderRadius:8,padding:"8px 12px",fontSize:16,color:sentenceChecked?(sentenceCorrect?"#22c55e":"#ef4444"):T.text,cursor:sentenceChecked?"default":"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"}}
+                      onClick={() => removeWord(item)}>
+                      {item.w}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Word bank — remaining words */}
+              <div>
+                <div style={{fontSize:10,color:T.textFaint,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Word bank — tap to place</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                  {remaining.map((item) => (
+                    <button key={item.id}
+                      style={{background:T.bg2,border:`1px solid ${T.border2}`,borderRadius:8,padding:"8px 12px",fontSize:16,color:T.text,cursor:"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"}}
+                      className="rating-btn"
+                      onClick={() => placeWord(item)}>
+                      {item.w}
+                    </button>
+                  ))}
+                  {remaining.length === 0 && !sentenceChecked && (
+                    <span style={{fontSize:13,color:T.textFaint,fontStyle:"italic"}}>All words placed!</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Check / result */}
+              {!sentenceChecked && placed.length > 0 && (
+                <button style={{...S.primaryBtn,background:color}} onClick={checkSentence}>Check Answer</button>
+              )}
+
+              {sentenceChecked && (
+                <div style={{display:"flex",flexDirection:"column",gap:10}} className="card-back-reveal">
+                  {/* Correct answer if wrong */}
+                  {!sentenceCorrect && (
+                    <div style={{background:T.bg2,border:`1px solid ${T.border}`,borderRadius:12,padding:"14px 16px"}}>
+                      <div style={{fontSize:10,color:"#22c55e",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Correct order</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                        {q.answer.map((w,i) => (
+                          <span key={i} style={{background:"rgba(34,197,94,0.12)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:8,padding:"6px 10px",fontSize:16,color:"#22c55e"}}>{w}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Explanation */}
+                  <div style={{background:sentenceCorrect?"rgba(34,197,94,0.07)":"rgba(239,68,68,0.07)",border:`1px solid ${sentenceCorrect?"rgba(34,197,94,0.2)":"rgba(239,68,68,0.2)"}`,borderRadius:12,padding:"14px 16px"}}>
+                    <div style={{fontSize:12,fontWeight:700,color:sentenceCorrect?"#22c55e":"#ef4444",marginBottom:8}}>
+                      {sentenceCorrect?"✓ Correct! Here's why:":"✗ Not quite — here's what to know:"}
+                    </div>
+                    <div style={{fontSize:13,color:T.textSub,lineHeight:1.8}}>{q.explanation}</div>
+                  </div>
+                  <button style={{...S.primaryBtn,background:color}} onClick={nextSentence}>
+                    {sentenceIndex+1 >= SENTENCES[sentenceLevel].length ? "See Results" : "Next →"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── SENTENCE RESULT ── */}
+      {screen === "sentenceResult" && sentenceLevel && (
+        <div style={{...S.doneWrap,background:T.bg}}>
+          <div style={{...S.doneCard,background:T.bg2,border:`1px solid ${T.border}`}}>
+            <div style={S.doneEmoji}>{sentenceScore.correct/SENTENCES[sentenceLevel].length>=0.6?"🎌":"📖"}</div>
+            <h2 style={{...S.doneTitle,color:T.text}}>{sentenceLevel} Sentences Done!</h2>
+            <div style={{...S.scoreBig,color:sentenceScore.correct/SENTENCES[sentenceLevel].length>=0.6?"#22c55e":"#f97316"}}>
+              {sentenceScore.correct}/{SENTENCES[sentenceLevel].length}
+            </div>
+            <div style={{...S.scorePercent,color:T.textMuted}}>{Math.round(sentenceScore.correct/SENTENCES[sentenceLevel].length*100)}% correct</div>
+            <div style={{fontSize:13,color:T.textMuted,lineHeight:1.7,marginBottom:24,textAlign:"center"}}>
+              {sentenceScore.correct/SENTENCES[sentenceLevel].length>=0.8
+                ? "Excellent! Japanese word order is clicking. Keep it up!"
+                : sentenceScore.correct/SENTENCES[sentenceLevel].length>=0.5
+                ? "Good effort! Review the explanations for the ones you missed."
+                : "Word order takes time — read the explanations carefully and try again!"}
+            </div>
+            <div style={S.doneActions}>
+              <button style={{...S.primaryBtn,background:LEVEL_COLORS[sentenceLevel]}} onClick={() => startSentenceBuilder(sentenceLevel)}>Try Again</button>
+              <button style={{...S.secondaryBtn,color:T.textMuted,border:`1px solid ${T.border}`}} onClick={() => setScreen("sentencesMenu")}>Back to Sentences</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SETTINGS ── */}
+      {screen === "settings" && (
+        <div style={{...S.studyWrap, background: T.bg}}>          <div style={S.studyHeader}>
+            <button style={{...S.backBtn, color: T.textMuted}} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill, background:"#555"}}>⚙ Settings</span>
+            <span style={{width:40}}/>
+          </div>
+
+          {/* Daily cards */}
+          <div style={{...S.settingsBox, background:T.bg2, border:`1px solid ${T.border}`, marginTop:24}}>
+            <div style={{...S.settingsTitle, color:T.textMuted}}>📚 New cards per day</div>
+            <div style={{fontSize:12,color:T.textMuted,marginTop:4,marginBottom:12}}>
+              How many new cards to introduce each day across all sections.
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8}}>
+              {[5,10,15,20,30].map(n => (
+                <button key={n}
+                  style={{
+                    border:`1px solid ${dailyLimit===n?"#22c55e":T.border2}`,
+                    borderRadius:10,padding:"14px 6px",fontSize:14,fontFamily:"monospace",fontWeight:600,
+                    color:dailyLimit===n?"#22c55e":T.textMuted,
+                    background:dailyLimit===n?"rgba(34,197,94,0.08)":T.bg3,
+                    cursor:"pointer",transition:"all 0.15s",display:"flex",flexDirection:"column",alignItems:"center",gap:3
+                  }}
+                  onClick={() => saveDailyLimit(n)}>
+                  {n}
+                  <span style={{fontSize:10,opacity:0.7}}>cards</span>
+                </button>
+              ))}
+            </div>
+            <div style={{fontSize:11,color:T.textFaint,marginTop:10}}>Introduced today: {dailyIntroduced} / {dailyLimit}</div>
+          </div>
+
+          {/* Theme */}
+          <div style={{...S.settingsBox, background:T.bg2, border:`1px solid ${T.border}`, marginTop:14}}>
+            <div style={{...S.settingsTitle, color:T.textMuted}}>🎨 App theme</div>
+            <div style={{fontSize:12,color:T.textMuted,marginTop:4,marginBottom:12}}>
+              Choose between dark mode and light mode.
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <button
+                style={{border:`2px solid ${theme==="dark"?"#22c55e":"#2a2a38"}`,borderRadius:12,padding:"16px",cursor:"pointer",background:theme==="dark"?"rgba(34,197,94,0.08)":"#13131a",transition:"all 0.15s",display:"flex",flexDirection:"column",alignItems:"center",gap:8}}
+                onClick={() => saveTheme("dark")}>
+                <span style={{fontSize:28}}>🌙</span>
+                <span style={{fontSize:13,color:theme==="dark"?"#22c55e":"#f0ede8",fontFamily:"Georgia,serif"}}>Dark</span>
+                {theme==="dark" && <span style={{fontSize:10,color:"#22c55e",fontFamily:"monospace"}}>✓ active</span>}
+              </button>
+              <button
+                style={{border:`2px solid ${theme==="light"?"#22c55e":"#e0ddd8"}`,borderRadius:12,padding:"16px",cursor:"pointer",background:theme==="light"?"rgba(34,197,94,0.08)":"#ffffff",transition:"all 0.15s",display:"flex",flexDirection:"column",alignItems:"center",gap:8}}
+                onClick={() => saveTheme("light")}>
+                <span style={{fontSize:28}}>☀️</span>
+                <span style={{fontSize:13,color:theme==="light"?"#22c55e":"#1a1a22",fontFamily:"Georgia,serif"}}>Light</span>
+                {theme==="light" && <span style={{fontSize:10,color:"#22c55e",fontFamily:"monospace"}}>✓ active</span>}
+              </button>
+            </div>
+          </div>
+
+          {/* Daily review */}
+          {dailyMistakes.length > 0 && (
+            <button
+              style={{width:"100%",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:12,padding:"16px",cursor:"pointer",display:"flex",alignItems:"center",gap:14,marginTop:14,textAlign:"left"}}
+              onClick={() => { setMistakeReviewIndex(0); setMistakeExplanation(""); loadMistakeExplanation(dailyMistakes[0]); setScreen("dailyReview"); }}>
+              <span style={{fontSize:28}}>📝</span>
+              <div>
+                <div style={{fontSize:14,fontWeight:600,color:"#ef4444"}}>Review Today's Mistakes</div>
+                <div style={{fontSize:12,color:T.textMuted}}>{dailyMistakes.length} card{dailyMistakes.length>1?"s":""} marked Again or Hard today</div>
+              </div>
+            </button>
+          )}
+          {dailyMistakes.length === 0 && (
+            <div style={{...S.settingsBox,background:T.bg2,border:`1px solid ${T.border}`,marginTop:14,textAlign:"center",padding:"20px"}}>
+              <div style={{fontSize:24,marginBottom:8}}>🎉</div>
+              <div style={{fontSize:13,color:T.textMuted}}>No mistakes logged today yet!</div>
+              <div style={{fontSize:11,color:T.textFaint,marginTop:4}}>Cards rated Again or Hard will appear here</div>
+            </div>
+          )}
+          <div style={{...S.settingsBox, background:T.bg2, border:`1px solid ${T.border}`, marginTop:14}}>
+            <div style={{...S.settingsTitle, color:T.textMuted}}>📊 Progress</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:10}}>
+              {LEVELS.map(lv => {
+                const total = CATEGORIES.reduce((s,c) => s + JLPT[lv][c].length, 0);
+                const done = CATEGORIES.reduce((s,c) => s + JLPT[lv][c].filter((_,i) => {
+                  const p = cardProgress[cardKey(lv,c,i)]; return p && p.introduced;
+                }).length, 0);
+                return (
+                  <div key={lv} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 12px"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                      <span style={{fontSize:12,fontWeight:700,color:LEVEL_COLORS[lv]}}>{lv}</span>
+                      <span style={{fontSize:11,color:T.textMuted,fontFamily:"monospace"}}>{done}/{total}</span>
+                    </div>
+                    <div style={{height:4,background:T.border,borderRadius:2,overflow:"hidden"}}>
+                      <div style={{height:"100%",width:`${total>0?(done/total)*100:0}%`,background:LEVEL_COLORS[lv],borderRadius:2}}/>
+                    </div>
+                    {levelProgress.passed[lv] && <div style={{fontSize:10,color:"#22c55e",marginTop:4,fontFamily:"monospace"}}>✓ passed</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── STUDY ── */}
+      {/* ── DAILY REVIEW ── */}
+      {screen === "dailyReview" && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={{...S.backBtn,color:T.textMuted}} onClick={() => setScreen("settings")}>← Back</button>
+            <span style={{...S.sectionPill,background:"#ef4444"}}>📝 Daily Review</span>
+            <span style={{...S.progressLabel,color:T.textMuted}}>{mistakeReviewIndex+1}/{dailyMistakes.length}</span>
+          </div>
+
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${((mistakeReviewIndex+1)/dailyMistakes.length)*100}%`,background:"#ef4444"}}/>
+          </div>
+
+          {dailyMistakes.length === 0 ? (
+            <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,textAlign:"center"}}>
+              <div style={{fontSize:52}}>🎉</div>
+              <div style={{fontSize:20,color:T.text,fontWeight:400}}>No mistakes today!</div>
+              <div style={{fontSize:13,color:T.textMuted}}>Cards rated Again or Hard will appear here for review.</div>
+              <button style={{...S.secondaryBtn,marginTop:8,color:T.textMuted,border:`1px solid ${T.border}`}} onClick={() => setScreen("settings")}>Back to Settings</button>
+            </div>
+          ) : (
+            <>
+              <div style={S.cardArea}>
+                <div style={{...S.reviewCard,background:T.bg2,border:`1px solid ${T.border}`,gap:16}} className="flashcard">
+
+                  {/* Card header */}
+                  <div style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                    <span style={{fontSize:11,color:"#ef4444",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>
+                      {dailyMistakes[mistakeReviewIndex].hint}
+                    </span>
+                    <span style={{fontSize:10,color:T.textFaint,fontFamily:"monospace"}}>
+                      {new Date(dailyMistakes[mistakeReviewIndex].time).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}
+                    </span>
+                  </div>
+
+                  {/* Front → Back */}
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:16,flexWrap:"wrap"}}>
+                    <div style={{fontSize:44,color:T.text,lineHeight:1,textAlign:"center"}}>
+                      {dailyMistakes[mistakeReviewIndex].front}
+                    </div>
+                    <div style={{fontSize:20,color:T.textFaint}}>→</div>
+                    <div style={{fontSize:22,color:"#22c55e",fontFamily:"monospace",fontWeight:700,textAlign:"center"}}>
+                      {dailyMistakes[mistakeReviewIndex].back}
+                    </div>
+                  </div>
+
+                  <div style={{width:"100%",height:1,background:T.border}}/>
+
+                  {/* AI Explanation */}
+                  <div style={{width:"100%",display:"flex",flexDirection:"column",gap:10}}>
+                    <div style={{fontSize:11,color:"#7c3aed",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>
+                      💡 Tutor Explanation
+                    </div>
+                    {mistakeExplLoading ? (
+                      <div style={{fontSize:13,color:T.textMuted,fontFamily:"monospace"}}>
+                        <span className="loading-dots">Generating explanation</span>
+                      </div>
+                    ) : (
+                      <div style={{fontSize:14,color:T.textSub,lineHeight:1.8}} className="card-back-reveal">
+                        {mistakeExplanation || "—"}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Formal / Informal / Example extras */}
+                  {(dailyMistakes[mistakeReviewIndex].formal || dailyMistakes[mistakeReviewIndex].informal || dailyMistakes[mistakeReviewIndex].example) && (
+                    <div style={{width:"100%",display:"flex",flexDirection:"column",gap:8}}>
+                      {dailyMistakes[mistakeReviewIndex].example && (
+                        <div style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 12px"}}>
+                          <div style={{fontSize:10,color:"#065f46",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>例文 Example</div>
+                          {dailyMistakes[mistakeReviewIndex].example.split('\n').map((line,i) => (
+                            <div key={i} style={{fontSize:13,color:i%2===0?T.text:T.textMuted,lineHeight:1.6}}>{line}</div>
+                          ))}
+                        </div>
+                      )}
+                      {(dailyMistakes[mistakeReviewIndex].formal || dailyMistakes[mistakeReviewIndex].informal) && (
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                          {dailyMistakes[mistakeReviewIndex].formal && (
+                            <div style={{background:"rgba(59,130,246,0.07)",border:"1px solid rgba(59,130,246,0.2)",borderRadius:10,padding:"10px 12px"}}>
+                              <div style={{fontSize:10,color:"#3b82f6",fontFamily:"monospace",letterSpacing:1,marginBottom:4}}>
+                                {dailyMistakes[mistakeReviewIndex].cat==="kanji" ? "音 ON'YOMI" : "丁寧 FORMAL"}
+                              </div>
+                              <div style={{fontSize:13,color:T.text,lineHeight:1.5}}>{dailyMistakes[mistakeReviewIndex].formal.split(" — ")[0]}</div>
+                              <div style={{fontSize:11,color:T.textMuted,marginTop:3}}>{dailyMistakes[mistakeReviewIndex].formal.split(" — ")[1]}</div>
+                            </div>
+                          )}
+                          {dailyMistakes[mistakeReviewIndex].informal && (
+                            <div style={{background:"rgba(249,115,22,0.07)",border:"1px solid rgba(249,115,22,0.2)",borderRadius:10,padding:"10px 12px"}}>
+                              <div style={{fontSize:10,color:"#f97316",fontFamily:"monospace",letterSpacing:1,marginBottom:4}}>
+                                {dailyMistakes[mistakeReviewIndex].cat==="kanji" ? "訓 KUN'YOMI" : "普通 CASUAL"}
+                              </div>
+                              <div style={{fontSize:13,color:T.text,lineHeight:1.5}}>{dailyMistakes[mistakeReviewIndex].informal.split(" — ")[0]}</div>
+                              <div style={{fontSize:11,color:T.textMuted,marginTop:3}}>{dailyMistakes[mistakeReviewIndex].informal.split(" — ")[1]}</div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Navigation */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,paddingBottom:20,marginTop:12}}>
+                <button
+                  style={{...S.navBtn,background:T.bg2,border:`1px solid ${T.border}`,color:T.textMuted,opacity:mistakeReviewIndex===0?0.3:1}}
+                  disabled={mistakeReviewIndex===0}
+                  onClick={() => {
+                    const idx = mistakeReviewIndex - 1;
+                    setMistakeReviewIndex(idx);
+                    setMistakeExplanation("");
+                    loadMistakeExplanation(dailyMistakes[idx]);
+                  }}>← Prev</button>
+                {mistakeReviewIndex < dailyMistakes.length - 1 ? (
+                  <button
+                    style={{...S.navBtnPrimary,background:"#ef4444"}}
+                    onClick={() => {
+                      const idx = mistakeReviewIndex + 1;
+                      setMistakeReviewIndex(idx);
+                      setMistakeExplanation("");
+                      loadMistakeExplanation(dailyMistakes[idx]);
+                    }}>Next →</button>
+                ) : (
+                  <button style={{...S.navBtnPrimary,background:"#22c55e"}} onClick={() => setScreen("settings")}>
+                    Done ✓
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── READING SUBMENU ── */}
+      {screen === "readingSubmenu" && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={S.backBtn} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill,background:"#0891b2"}}>カ Katakana Words</span>
+            <span style={{width:40}}/>
+          </div>
+          <div style={{flex:1,display:"flex",flexDirection:"column",justifyContent:"center",gap:14}}>
+            <div style={{textAlign:"center",marginBottom:4}}>
+              <div style={{fontSize:13,color:"#8a8070",letterSpacing:1}}>Loanwords & foreign terms in katakana</div>
+            </div>
+            <button style={{...S.submenuCard,"--accent":"#0891b2"}} className="section-card"
+              onClick={startKatakanaWords}>
+              <span style={{fontSize:40,color:"#0891b2"}}>カ</span>
+              <div style={{display:"flex",flexDirection:"column",gap:4,textAlign:"left",flex:1}}>
+                <span style={{fontSize:16,fontWeight:600,color:"#f0ede8"}}>Katakana Words</span>
+                <span style={{fontSize:12,color:"#8a8070"}}>{KATAKANA_WORDS.length} loanwords — food, tech, countries & more</span>
+                {(() => {
+                  const kDue = katakanaWordsProg.filter(p => p.introduced && p.due <= Date.now()).length;
+                  const kNew = katakanaWordsProg.filter(p => !p.introduced).length;
+                  if (kDue > 0) return <span style={{fontSize:12,color:"#0891b2",fontFamily:"monospace"}}>{kDue} due for review</span>;
+                  if (kNew > 0) return <span style={{fontSize:12,color:"#8a8070",fontFamily:"monospace"}}>{Math.min(dailyLimit,kNew)} new today</span>;
+                  return <span style={{fontSize:12,color:"#22c55e"}}>✓ all caught up</span>;
+                })()}
+              </div>
+            </button>
+            <div style={{background:"#0d0d14",border:"1px solid #1e1e2a",borderRadius:12,padding:"14px 16px"}}>
+              <div style={{fontSize:11,color:"#3a3a48",letterSpacing:1,textTransform:"uppercase",fontFamily:"monospace",marginBottom:8}}>Level reading</div>
+              <div style={{fontSize:12,color:"#8a8070",lineHeight:1.6}}>To study kanji sentences, tap the <span style={{color:"#f0ede8"}}>読 Reading</span> button inside any JLPT level card on the home screen.</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {screen === "study" && queue.length > 0 && card && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={S.backBtn} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill,background:activeLevel && LEVEL_COLORS[activeLevel] ? LEVEL_COLORS[activeLevel] : "#0891b2"}}>
+              {activeCategory === "katakana_words" ? "カ Katakana Words" : `${activeLevel} · ${CAT_META[activeCategory]?.label || activeCategory}`}
+            </span>
+            <span style={S.progressLabel}>{queueIndex+1}/{queue.length}</span>
+          </div>
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${(queueIndex/queue.length)*100}%`,background:activeCategory==="katakana_words"?"#0891b2":LEVEL_COLORS[activeLevel]||"#555"}} />
+          </div>
+          <div style={S.cardArea}>
+            <div key={animKey} className={`flashcard${isFlipping?" flipping":""}`} style={{...S.card, background:T.bg2, border:`1px solid ${T.border}`}} onClick={!flipped?handleFlip:undefined}>
+              <div style={{...S.cardHint,color:T.textFaint}}>{card.card.hint || (activeCategory === "katakana_words" ? "Katakana Word" : `${activeLevel} · ${activeCategory}`)}</div>
+              {!card.prog.introduced && <div style={S.newBadge}>NEW</div>}
+              <div style={{...S.cardFront,fontSize:activeCategory==='reading'?20:activeCategory==='grammar'?24:60,lineHeight:1.4,color:T.text}}>
+                {card.card.f || card.card.front}
+              </div>
+              {flipped && (
+                <div style={S.cardBack} className="card-back-reveal">
+                  <div style={{...S.divider,background:T.border}}/>
+                  <div style={{...S.cardAnswer,color:T.textSub}}>{card.card.b || card.card.back}</div>
+                  {(isScript || activeCategory==='hiragana'||activeCategory==='katakana') && MNEMONICS[card.card.f] && (
+                    <div style={S.scriptMnemonic}>💡 {MNEMONICS[card.card.f]}</div>
+                  )}
+                  {card.card.example && (
+                    <div style={S.exampleBox} className="card-back-reveal">
+                      <div style={S.exampleLabel}>例文 Example</div>
+                      {card.card.example.split('\n').map((line,i) => (
+                        <div key={i} style={{fontSize:13,color:i%2===0?"#f0ede8":"#8a8070",lineHeight:1.6}}>{line}</div>
+                      ))}
+                    </div>
+                  )}
+                  <CardToggles card={card.card} section={activeCategory} mode={toggleMode} setMode={setToggleMode}/>
+                </div>
+              )}
+              {!flipped && <div style={S.tapHint}>tap to reveal</div>}
+            </div>
+          </div>
+          {flipped && (
+            <div style={S.ratingRow} className="rating-reveal">
+              {RATINGS.map(r => (
+                <button key={r.value} style={{...S.ratingBtn,borderColor:r.color,color:r.color}} className="rating-btn" onClick={() => handleRate(r.value)}>
+                  <span style={S.ratingLabel}>{r.label}</span><span style={S.ratingDesc}>{r.desc}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── SCRIPT QUIZ ── */}
+      {screen === "scriptQuiz" && quizQuestions.length > 0 && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={S.backBtn} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill,background:quizDeck==="hiragana"?"#e11d48":"#7c3aed"}}>
+              {quizDeck === "hiragana" ? "あ Hiragana" : "ア Katakana"} Test
+            </span>
+            <span style={S.progressLabel}>{quizIndex+1}/{quizQuestions.length}</span>
+          </div>
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${(quizIndex/quizQuestions.length)*100}%`,background:quizDeck==="hiragana"?"#e11d48":"#7c3aed"}} />
+          </div>
+          <div style={S.cardArea}>
+            <div style={{...S.quizCard,background:T.bg2,border:`1px solid ${T.border}`}} className="flashcard">
+              <div style={{...S.quizPromptLabel,color:T.textMuted}}>What is the reading for</div>
+              <div style={{...S.quizChar,color:T.text}}>{quizQuestions[quizIndex].question}</div>
+              <div style={S.quizOptions}>
+                {quizQuestions[quizIndex].options.map(opt => {
+                  const isSel = quizSelected === opt, isCorr = opt === quizQuestions[quizIndex].answer;
+                  let bg="#0d0d14",border="#1e1e2a",color="#f0ede8";
+                  if (quizConfirmed) {
+                    if (isCorr) {bg="rgba(34,197,94,0.15)";border="#22c55e";color="#22c55e";}
+                    else if (isSel) {bg="rgba(239,68,68,0.15)";border="#ef4444";color="#ef4444";}
+                  } else if (isSel) {border=quizDeck==="hiragana"?"#e11d48":"#7c3aed";bg="rgba(255,255,255,0.05)";}
+                  return <button key={opt} style={{...S.quizOpt,background:bg,borderColor:border,color}} onClick={() => handleScriptSelect(opt)}>{opt}</button>;
+                })}
+              </div>
+              {quizSelected && !quizConfirmed && (
+                <button style={{...S.confirmBtn,background:quizDeck==="hiragana"?"#e11d48":"#7c3aed"}} onClick={handleScriptConfirm}>Confirm</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SCRIPT QUIZ RESULT ── */}
+      {screen === "scriptQuizResult" && (
+        <div style={{...S.doneWrap,background:T.bg}}>
+          <div style={{...S.doneCard,maxWidth:440}}>
+            <div style={S.doneEmoji}>{scriptQuizPassed?"🎉":"😤"}</div>
+            <h2 style={S.doneTitle}>{scriptQuizPassed?"Test Passed!":"Not Quite"}</h2>
+            <div style={{...S.scoreBig,color:scriptQuizPassed?"#22c55e":"#ef4444"}}>{scriptQuizScore}/{quizQuestions.length}</div>
+            <div style={S.scorePercent}>{Math.round(scriptQuizScore/quizQuestions.length*100)}% · Need 80%</div>
+            {wrongAnswers.length > 0 && (
+              <div style={S.wrongSummary}>
+                <div style={S.wrongSummaryTitle}>Missed {wrongAnswers.length} characters</div>
+                <div style={S.wrongChars}>{wrongAnswers.map((q,i) => (
+                  <span key={i} style={S.wrongCharPill}>{q.question} <span style={{color:"#8a8070",fontSize:11}}>{q.answer}</span></span>
+                ))}</div>
+              </div>
+            )}
+            <div style={scriptQuizPassed?S.passMsg:S.failMsg}>
+              {scriptQuizPassed
+                ? scriptUnlocked.hiragana && scriptUnlocked.katakana
+                  ? "Both scripts passed! JLPT study is now unlocked. 頑張って！"
+                  : `${quizDeck === "hiragana" ? "Hiragana" : "Katakana"} passed! Now pass the other script test.`
+                : "Keep studying and try again!"}
+            </div>
+            <div style={S.doneActions}>
+              {wrongAnswers.length > 0 && <button style={{...S.primaryBtn,background:"#7c3aed"}} onClick={startReview}>📖 Review Missed</button>}
+              <button style={{...S.primaryBtn,background:quizDeck==="hiragana"?"#e11d48":"#7c3aed",opacity:0.8}} onClick={() => startScriptQuiz(quizDeck)}>Retry Test</button>
+              <button style={S.secondaryBtn} onClick={() => setScreen("home")}>Back to Home</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── REVIEW (missed cards) ── */}
+      {screen === "review" && wrongAnswers.length > 0 && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={S.backBtn} onClick={() => setScreen("scriptQuizResult")}>← Results</button>
+            <span style={{...S.sectionPill,background:"#7c3aed"}}>📖 Review</span>
+            <span style={S.progressLabel}>{reviewIndex+1}/{wrongAnswers.length}</span>
+          </div>
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${((reviewIndex+1)/wrongAnswers.length)*100}%`,background:"#7c3aed"}} />
+          </div>
+          <div style={S.cardArea}>
+            <div style={S.reviewCard} className="flashcard">
+              <div style={S.reviewTop}>
+                <div style={S.reviewChar}>{wrongAnswers[reviewIndex].question}</div>
+                <div style={S.reviewArrow}>→</div>
+                <div style={S.reviewAnswer}>{wrongAnswers[reviewIndex].answer}</div>
+              </div>
+              <div style={S.reviewDivider}/>
+              <div style={S.mnemonicSection}>
+                <div style={S.mnemonicLabel}>💡 Memory tip</div>
+                {aiLoading ? <div style={S.mnemonicLoading}><span className="loading-dots">Generating</span></div>
+                  : <div style={S.mnemonicText} className="card-back-reveal">{aiMnemonic||"—"}</div>}
+              </div>
+              <div style={S.reviewMistake}>
+                <span style={S.reviewWrong}>You chose: <strong style={{color:"#ef4444"}}>{wrongAnswers[reviewIndex].chosen}</strong> · Correct: <strong style={{color:"#22c55e"}}>{wrongAnswers[reviewIndex].answer}</strong></span>
+              </div>
+            </div>
+          </div>
+          <div style={S.reviewNav}>
+            <button style={{...S.navBtn,opacity:reviewIndex===0?0.3:1}} disabled={reviewIndex===0} onClick={() => goToReview(reviewIndex-1)}>← Prev</button>
+            {reviewIndex < wrongAnswers.length-1
+              ? <button style={{...S.navBtnPrimary,background:"#7c3aed"}} onClick={() => goToReview(reviewIndex+1)}>Next →</button>
+              : <button style={{...S.navBtnPrimary,background:"#7c3aed"}} onClick={() => startScriptQuiz(quizDeck)}>Retry Test →</button>}
+          </div>
+        </div>
+      )}
+
+      {/* ── JLPT LEVEL TEST ── */}
+      {screen === "levelTest" && levelTestQuestions.length > 0 && (
+        <div style={{...S.studyWrap,background:T.bg}}>
+          <div style={S.studyHeader}>
+            <button style={S.backBtn} onClick={() => setScreen("home")}>← Back</button>
+            <span style={{...S.sectionPill,background:LEVEL_COLORS[levelTestLevel]}}>{levelTestLevel} Test</span>
+            <span style={S.progressLabel}>{levelTestIndex+1}/{levelTestQuestions.length}</span>
+          </div>
+          <div style={S.progressBarWrap}>
+            <div style={{...S.progressBarFill,width:`${(levelTestIndex/levelTestQuestions.length)*100}%`,background:LEVEL_COLORS[levelTestLevel]}} />
+          </div>
+          <div style={S.cardArea}>
+            <div style={S.quizCard} className="flashcard">
+              <div style={S.quizPromptLabel}>What does this mean?</div>
+              <div style={{...S.quizChar,fontSize:32}}>{levelTestQuestions[levelTestIndex].question}</div>
+              <div style={{...S.quizOptions,gridTemplateColumns:"1fr"}}>
+                {levelTestQuestions[levelTestIndex].options.map(opt => {
+                  const isSel = levelTestSelected === opt, isCorr = opt === levelTestQuestions[levelTestIndex].answer;
+                  let bg="#0d0d14",border="#1e1e2a",color="#f0ede8";
+                  if (levelTestConfirmed) {
+                    if (isCorr) {bg="rgba(34,197,94,0.15)";border="#22c55e";color="#22c55e";}
+                    else if (isSel) {bg="rgba(239,68,68,0.15)";border="#ef4444";color="#ef4444";}
+                  } else if (isSel) {border=LEVEL_COLORS[levelTestLevel];bg="rgba(255,255,255,0.05)";}
+                  return <button key={opt} style={{...S.quizOpt,background:bg,borderColor:border,color,fontSize:14,textAlign:"left",padding:"12px 16px"}} onClick={() => handleLevelTestSelect(opt)}>{opt}</button>;
+                })}
+              </div>
+              {levelTestSelected && !levelTestConfirmed && (
+                <button style={{...S.confirmBtn,background:LEVEL_COLORS[levelTestLevel]}} onClick={handleLevelTestConfirm}>Confirm</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── JLPT LEVEL TEST RESULT ── */}
+      {screen === "levelTestResult" && (
+        <div style={{...S.doneWrap,background:T.bg}}>
+          <div style={S.doneCard}>
+            <div style={S.doneEmoji}>{levelTestPassed?"🎌":"📚"}</div>
+            <h2 style={S.doneTitle}>{levelTestPassed?`${levelTestLevel} Passed!`:"Keep Studying"}</h2>
+            <div style={{...S.scoreBig,color:levelTestPassed?"#22c55e":"#ef4444"}}>{levelTestScore}/{levelTestQuestions.length}</div>
+            <div style={S.scorePercent}>{Math.round(levelTestScore/levelTestQuestions.length*100)}% · Need 80%</div>
+            <div style={levelTestPassed?S.passMsg:S.failMsg}>
+              {levelTestPassed
+                ? LEVELS.indexOf(levelTestLevel)+1 < LEVELS.length
+                  ? `${levelTestLevel} complete! ${LEVELS[LEVELS.indexOf(levelTestLevel)+1]} is now unlocked. Keep going!`
+                  : "You passed N1! You've mastered all JLPT levels. 素晴らしい！"
+                : "Keep studying the flashcards then try again. You can do it!"}
+            </div>
+            <div style={S.doneActions}>
+              {!levelTestPassed && <button style={{...S.primaryBtn,background:LEVEL_COLORS[levelTestLevel]}} onClick={() => startStudy(levelTestLevel,'vocab')}>Study {levelTestLevel} Vocab</button>}
+              <button style={{...S.primaryBtn,background:LEVEL_COLORS[levelTestLevel],opacity:0.8}} onClick={() => startLevelTest(levelTestLevel)}>Retry Test</button>
+              <button style={S.secondaryBtn} onClick={() => setScreen("home")}>Back to Home</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SESSION DONE ── */}
+      {screen === "done" && (
+        <div style={{...S.doneWrap,background:T.bg}}>
+          <div style={{...S.doneCard,background:T.bg2,border:`1px solid ${T.border}`}}>
+            <div style={S.doneEmoji}>🎌</div>
+            <h2 style={{...S.doneTitle,color:T.text}}>Session Complete!</h2>
+            <div style={S.doneStats}>
+              <div style={S.doneStat}><span style={S.doneStatNum}>{sessionStats.total}</span><span style={S.doneStatLabel}>Reviewed</span></div>
+              <div style={S.doneStat}><span style={{...S.doneStatNum,color:"#22c55e"}}>{sessionStats.correct}</span><span style={S.doneStatLabel}>Correct</span></div>
+              <div style={S.doneStat}><span style={{...S.doneStatNum,color:"#e11d48"}}>{sessionStats.total>0?Math.round(sessionStats.correct/sessionStats.total*100):0}%</span><span style={S.doneStatLabel}>Accuracy</span></div>
+            </div>
+            <div style={S.doneActions}>
+              <button
+                style={{...S.primaryBtn,background:activeCategory==="katakana_words"?"#0891b2":LEVEL_COLORS[activeLevel]||"#555"}}
+                onClick={() => activeCategory==="katakana_words" ? startKatakanaWords() : startStudy(activeLevel,activeCategory)}>
+                Study Again
+              </button>
+              <button style={S.secondaryBtn} onClick={() => setScreen("home")}>Back to Home</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// STYLES
+// ─────────────────────────────────────────────────────────────
+const S = {
+  root:{minHeight:"100vh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Georgia','Times New Roman',serif",display:"flex",flexDirection:"column"},
+  home:{maxWidth:680,margin:"0 auto",padding:"40px 20px 80px",width:"100%"},
+  header:{textAlign:"center",marginBottom:24},
+  logo:{display:"flex",flexDirection:"column",alignItems:"center",gap:4,marginBottom:10},
+  logoJp:{fontSize:48,fontWeight:400,letterSpacing:8,color:"#f0ede8",lineHeight:1},
+  logoEn:{fontSize:11,letterSpacing:6,color:"#8a8070",fontStyle:"italic"},
+  tagline:{color:"#8a8070",fontSize:14,letterSpacing:1,marginBottom:10},
+  gateBanner:{display:"flex",alignItems:"flex-start",gap:12,background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"14px 16px",marginBottom:18},
+  gateIcon:{fontSize:20,marginTop:2},gateTitle:{fontSize:13,color:"#f0ede8",marginBottom:3,fontWeight:600},gateSub:{fontSize:12,color:"#8a8070"},
+  sectionLabel:{fontSize:11,color:"#3a3a48",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginBottom:8},
+  grid2:{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:4},
+  sectionCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"18px 16px",width:"100%",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4,position:"relative",transition:"all 0.2s",textAlign:"left",cursor:"pointer"},
+  sectionIcon:{fontSize:28,lineHeight:1,marginBottom:4},
+  sectionName:{fontSize:14,fontWeight:600,color:"#f0ede8"},
+  sectionCount:{fontSize:12,color:"#8a8070"},
+  duePill:{borderRadius:10,padding:"2px 8px",fontSize:11,color:"#fff",fontFamily:"monospace"},
+  passedBadge:{position:"absolute",bottom:10,right:10,fontSize:10,color:"#22c55e",fontFamily:"monospace"},
+  testBtn:{width:"100%",background:"transparent",border:"1px solid",borderRadius:8,padding:"9px",fontSize:12,fontFamily:"Georgia,serif",cursor:"pointer",letterSpacing:0.5,transition:"all 0.15s"},
+  submenuCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:14,padding:"20px 18px",display:"flex",alignItems:"center",gap:16,cursor:"pointer",transition:"all 0.2s",textAlign:"left",width:"100%"},
+  levelCard:{background:"#13131a",borderRadius:14,padding:"16px",marginBottom:10},
+  levelBadge:{fontSize:12,fontWeight:700,color:"#fff",borderRadius:6,padding:"3px 8px",fontFamily:"monospace"},
+  catBtn:{background:"#0d0d14",border:"1px solid #1e1e2a",borderRadius:10,padding:"10px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",transition:"all 0.15s"},
+  settingsBox:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"16px",marginTop:20},
+  settingsTitle:{fontSize:12,color:"#8a8070",letterSpacing:1},
+  limitBtn:{border:"1px solid",borderRadius:8,padding:"6px 12px",fontSize:12,cursor:"pointer",fontFamily:"monospace",transition:"all 0.15s"},
+  studyWrap:{maxWidth:560,margin:"0 auto",padding:"24px 20px",width:"100%",minHeight:"100vh",display:"flex",flexDirection:"column"},
+  studyHeader:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12},
+  backBtn:{background:"none",border:"none",color:"#8a8070",cursor:"pointer",fontSize:14,padding:0},
+  sectionPill:{borderRadius:20,padding:"4px 12px",fontSize:12,color:"#fff",letterSpacing:0.5},
+  progressLabel:{fontSize:13,color:"#8a8070",fontFamily:"monospace"},
+  progressBarWrap:{height:3,background:"#1e1e2a",borderRadius:2,marginBottom:28,overflow:"hidden"},
+  progressBarFill:{height:"100%",borderRadius:2,transition:"width 0.4s ease"},
+  cardArea:{flex:1,display:"flex",alignItems:"center",justifyContent:"center"},
+  card:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"36px 28px",width:"100%",minHeight:280,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,position:"relative",transition:"transform 0.15s",userSelect:"none"},
+  cardHint:{position:"absolute",top:14,left:18,fontSize:10,color:"#3a3a48",letterSpacing:1,fontFamily:"monospace",textTransform:"uppercase"},
+  newBadge:{position:"absolute",top:12,right:14,background:"rgba(34,197,94,0.15)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"#22c55e",fontFamily:"monospace"},
+  cardFront:{fontSize:60,lineHeight:1,textAlign:"center",color:"#f0ede8"},
+  cardBack:{display:"flex",flexDirection:"column",alignItems:"center",gap:12,width:"100%"},
+  divider:{width:40,height:1,background:"#1e1e2a"},
+  cardAnswer:{fontSize:20,color:"#c8c0b0",textAlign:"center",lineHeight:1.4},
+  tapHint:{fontSize:11,color:"#3a3a48",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginTop:8},
+  scriptMnemonic:{fontSize:12,color:"#8a7060",fontStyle:"italic",textAlign:"center",lineHeight:1.5,padding:"0 8px"},
+  exampleBox:{width:"100%",background:"#0d0d14",border:"1px solid #1e1e2a",borderRadius:10,padding:"12px 14px",display:"flex",flexDirection:"column",gap:4},
+  exampleLabel:{fontSize:10,color:"#065f46",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:4},
+  toggleBtn:{background:"transparent",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 6px",fontSize:12,color:"#8a8070",cursor:"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"},
+  formalActive:{background:"rgba(59,130,246,0.12)",borderColor:"#3b82f6",color:"#93c5fd"},
+  informalActive:{background:"rgba(249,115,22,0.12)",borderColor:"#f97316",color:"#fed7aa"},
+  ratingRow:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginTop:20,paddingBottom:20},
+  ratingBtn:{background:"transparent",border:"1px solid",borderRadius:10,padding:"12px 6px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,transition:"all 0.15s"},
+  ratingLabel:{fontSize:13,fontWeight:600},ratingDesc:{fontSize:10,opacity:0.7,fontFamily:"monospace"},
+  quizCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"32px 22px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:16},
+  quizPromptLabel:{fontSize:12,color:"#8a8070",letterSpacing:1,textTransform:"uppercase",fontFamily:"monospace"},
+  quizChar:{fontSize:72,lineHeight:1,color:"#f0ede8"},
+  quizOptions:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,width:"100%"},
+  quizOpt:{border:"1px solid",borderRadius:10,padding:"14px",fontSize:18,cursor:"pointer",transition:"all 0.15s",fontFamily:"monospace",letterSpacing:1},
+  confirmBtn:{border:"none",borderRadius:10,padding:"12px 36px",fontSize:14,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5,marginTop:4},
+  doneWrap:{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:24,minHeight:"100vh"},
+  doneCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"44px 28px",maxWidth:420,width:"100%",textAlign:"center"},
+  doneEmoji:{fontSize:52,marginBottom:12},doneTitle:{fontSize:26,fontWeight:400,marginBottom:20,color:"#f0ede8"},
+  scoreBig:{fontSize:52,fontWeight:700,lineHeight:1,marginBottom:6},
+  scorePercent:{fontSize:13,color:"#8a8070",fontFamily:"monospace",marginBottom:18},
+  passMsg:{fontSize:13,color:"#c8c0b0",lineHeight:1.7,marginBottom:24,padding:"0 4px"},
+  failMsg:{fontSize:13,color:"#8a8070",lineHeight:1.7,marginBottom:24},
+  wrongSummary:{background:"#0d0d14",border:"1px solid #2a1a1a",borderRadius:12,padding:"12px 14px",marginBottom:14,textAlign:"left"},
+  wrongSummaryTitle:{fontSize:11,color:"#ef4444",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8},
+  wrongChars:{display:"flex",flexWrap:"wrap",gap:8},
+  wrongCharPill:{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,padding:"4px 10px",fontSize:18,color:"#f0ede8"},
+  reviewCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"28px 22px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:18},
+  reviewTop:{display:"flex",alignItems:"center",justifyContent:"center",gap:20},
+  reviewChar:{fontSize:72,lineHeight:1,color:"#f0ede8"},reviewArrow:{fontSize:24,color:"#3a3a48"},
+  reviewAnswer:{fontSize:26,color:"#22c55e",fontFamily:"monospace",fontWeight:700},
+  reviewDivider:{width:"100%",height:1,background:"#1e1e2a"},
+  mnemonicSection:{width:"100%",display:"flex",flexDirection:"column",gap:8},
+  mnemonicLabel:{fontSize:11,color:"#7c3aed",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"},
+  mnemonicText:{fontSize:14,color:"#c8c0b0",lineHeight:1.7,fontStyle:"italic"},
+  mnemonicLoading:{fontSize:13,color:"#8a8070",fontFamily:"monospace"},
+  reviewMistake:{width:"100%",background:"#0d0d14",borderRadius:10,padding:"10px 14px"},
+  reviewWrong:{fontSize:12,color:"#8a8070",fontFamily:"monospace"},
+  reviewNav:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:16,paddingBottom:20},
+  navBtn:{background:"transparent",border:"1px solid #1e1e2a",borderRadius:10,padding:"12px",fontSize:14,color:"#8a8070",cursor:"pointer",fontFamily:"Georgia,serif"},
+  navBtnPrimary:{border:"none",borderRadius:10,padding:"12px",fontSize:14,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif"},
+  doneStats:{display:"flex",justifyContent:"space-around",marginBottom:24,gap:16},
+  doneStat:{display:"flex",flexDirection:"column",gap:4},
+  doneStatNum:{fontSize:32,fontWeight:700,color:"#f0ede8"},
+  doneStatLabel:{fontSize:11,color:"#8a8070",letterSpacing:1,textTransform:"uppercase"},
+  doneActions:{display:"flex",flexDirection:"column",gap:10},
+  primaryBtn:{background:"#e11d48",color:"#fff",border:"none",borderRadius:10,padding:"14px",fontSize:15,cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5},
+  secondaryBtn:{background:"transparent",color:"#8a8070",border:"1px solid #1e1e2a",borderRadius:10,padding:"14px",fontSize:15,cursor:"pointer",fontFamily:"Georgia,serif"},
+};
+
+const CSS = `
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#0a0a0f; }
+  .section-card:hover { border-color:var(--accent) !important; transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+  .cat-btn:hover { border-color:var(--accent) !important; transform:translateY(-1px); }
+  .test-btn:hover { background:rgba(255,255,255,0.04) !important; transform:translateY(-1px); }
+  .flashcard { animation:cardIn 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+  .flashcard:active { transform:scale(0.98); }
+  .flipping { transform:rotateY(90deg); opacity:0; transition:transform 0.15s,opacity 0.15s; }
+  .card-back-reveal { animation:fadeUp 0.25s ease; }
+  .rating-reveal { animation:fadeUp 0.3s ease; }
+  .rating-btn:hover { background:rgba(255,255,255,0.04) !important; transform:translateY(-2px); }
+  .loading-dots::after { content:''; animation:dots 1.2s steps(4,end) infinite; }
+  @keyframes dots { 0%,20%{content:'.'} 40%{content:'..'} 60%{content:'...'} 80%,100%{content:''} }
+  @keyframes cardIn { from{opacity:0;transform:scale(0.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+`;
