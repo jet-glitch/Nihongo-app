@@ -1548,8 +1548,8 @@ function ExpansionBox({ mode, card }) {
   const c = colors[mode];
   return (
     <div style={{padding:"12px 14px",background:c.bg,border:`1px solid ${c.border}`,borderRadius:10,display:"flex",flexDirection:"column",gap:4}} className="card-back-reveal">
-      <div style={{fontSize:17,color:"#f0ede8",lineHeight:1.4}}>{jpPart}</div>
-      {enPart && <div style={{fontSize:12,color:"#8a8070",fontFamily:"monospace"}}>{enPart}</div>}
+      <div style={{fontSize:21,color:"#f0ede8",lineHeight:1.4}}>{jpPart}</div>
+      {enPart && <div style={{fontSize:16,color:"#8a8070",fontFamily:"monospace"}}>{enPart}</div>}
     </div>
   );
 }
@@ -2066,7 +2066,7 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
         <div style={S.home}>
           {/* Settings gear button */}
           <button
-            style={{position:"fixed",top:16,right:16,background:T.bg2,border:`1px solid ${T.border}`,borderRadius:10,width:40,height:40,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:99,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}
+            style={{position:"fixed",top:16,right:16,background:T.bg2,border:`1px solid ${T.border}`,borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:99,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}
             onClick={() => setScreen("settings")}
             title="Settings"
           >⚙</button>
@@ -2074,7 +2074,7 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
           {/* Daily review button */}
           {dailyMistakes.length > 0 && (
             <button
-              style={{position:"fixed",top:16,right:64,background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.4)",borderRadius:10,padding:"0 12px",height:40,fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:6,zIndex:99,color:"#ef4444",fontFamily:"Georgia,serif"}}
+              style={{position:"fixed",top:16,right:64,background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.4)",borderRadius:10,padding:"0 12px",height:40,fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",gap:6,zIndex:99,color:"#ef4444",fontFamily:"Georgia,serif"}}
               onClick={() => { setMistakeReviewIndex(0); setMistakeExplanation(""); loadMistakeExplanation(dailyMistakes[0]); setScreen("dailyReview"); }}>
               📝 {dailyMistakes.length}
             </button>
@@ -2128,20 +2128,20 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <span style={{...S.levelBadge,background:locked?"#2a2a38":LEVEL_COLORS[level]}}>{level}</span>
-                    <span style={{fontSize:13,color:locked?"#555":"#f0ede8",fontWeight:600}}>
+                    <span style={{fontSize:17,color:locked?"#555":"#f0ede8",fontWeight:600}}>
                       {passed ? "Complete ✓" : isActive ? "In Progress" : locked ? "Locked 🔒" : "Available"}
                     </span>
                   </div>
                   <div style={{display:"flex",gap:8,alignItems:"center"}}>
                     {totalDue > 0 && <span style={{...S.duePill,background:LEVEL_COLORS[level]}}>{totalDue} due</span>}
                     {!locked && !passed && (
-                      <button style={{...S.testBtn,borderColor:LEVEL_COLORS[level],color:LEVEL_COLORS[level],padding:"4px 12px",fontSize:11}}
+                      <button style={{...S.testBtn,borderColor:LEVEL_COLORS[level],color:LEVEL_COLORS[level],padding:"4px 12px",fontSize:16}}
                         onClick={() => startLevelTest(level)}>
                         Take {level} Test →
                       </button>
                     )}
                     {passed && (
-                      <button style={{...S.testBtn,borderColor:"#22c55e",color:"#22c55e",padding:"4px 12px",fontSize:11}}
+                      <button style={{...S.testBtn,borderColor:"#22c55e",color:"#22c55e",padding:"4px 12px",fontSize:16}}
                         onClick={() => startLevelTest(level)}>
                         Retake
                       </button>
@@ -2158,12 +2158,12 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                       return (
                         <button key={cat} style={{...S.catBtn,"--accent":LEVEL_COLORS[level]}} className="cat-btn"
                           onClick={() => !locked && startStudy(level, cat)}>
-                          <span style={{fontSize:20,color:LEVEL_COLORS[level]}}>{CAT_META[cat].icon}</span>
-                          <span style={{fontSize:11,color:"#f0ede8"}}>{CAT_META[cat].label}</span>
-                          <span style={{fontSize:10,color:"#8a8070"}}>{introduced}/{total}</span>
-                          {due > 0 && <span style={{fontSize:10,color:LEVEL_COLORS[level],fontFamily:"monospace"}}>{due} due</span>}
-                          {due === 0 && newC > 0 && <span style={{fontSize:10,color:"#8a8070"}}>{Math.min(dailyLimit,newC)} new</span>}
-                          {due === 0 && newC === 0 && <span style={{fontSize:10,color:"#22c55e"}}>✓ done</span>}
+                          <span style={{fontSize:24,color:LEVEL_COLORS[level]}}>{CAT_META[cat].icon}</span>
+                          <span style={{fontSize:16,color:"#f0ede8"}}>{CAT_META[cat].label}</span>
+                          <span style={{fontSize:16,color:"#8a8070"}}>{introduced}/{total}</span>
+                          {due > 0 && <span style={{fontSize:16,color:LEVEL_COLORS[level],fontFamily:"monospace"}}>{due} due</span>}
+                          {due === 0 && newC > 0 && <span style={{fontSize:16,color:"#8a8070"}}>{Math.min(dailyLimit,newC)} new</span>}
+                          {due === 0 && newC === 0 && <span style={{fontSize:16,color:"#22c55e"}}>✓ done</span>}
                         </button>
                       );
                     })}
@@ -2184,15 +2184,15 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                   style={{...S.sectionCard,"--accent":"#0891b2",flexDirection:"column",alignItems:"flex-start"}}
                   className="section-card"
                   onClick={startKatakanaWords}>
-                  <span style={{fontSize:28,color:"#0891b2",marginBottom:4}}>カ</span>
-                  <span style={{fontSize:13,fontWeight:600,color:T.text}}>Katakana Words</span>
-                  <span style={{fontSize:11,color:T.textMuted}}>{KATAKANA_WORDS.length} loanwords</span>
+                  <span style={{fontSize:32,color:"#0891b2",marginBottom:4}}>カ</span>
+                  <span style={{fontSize:17,fontWeight:600,color:T.text}}>Katakana Words</span>
+                  <span style={{fontSize:16,color:T.textMuted}}>{KATAKANA_WORDS.length} loanwords</span>
                   {(() => {
                     const kDue = katakanaWordsProg.filter(p=>p.introduced&&p.due<=Date.now()).length;
                     const kNew = katakanaWordsProg.filter(p=>!p.introduced).length;
                     if (kDue>0) return <span style={{...S.duePill,background:"#0891b2",position:"absolute",top:10,right:10}}>{kDue} due</span>;
-                    if (kNew>0) return <span style={{fontSize:10,color:T.textMuted,fontFamily:"monospace"}}>{Math.min(dailyLimit,kNew)} new</span>;
-                    return <span style={{fontSize:10,color:"#22c55e",fontFamily:"monospace"}}>✓ done</span>;
+                    if (kNew>0) return <span style={{fontSize:16,color:T.textMuted,fontFamily:"monospace"}}>{Math.min(dailyLimit,kNew)} new</span>;
+                    return <span style={{fontSize:16,color:"#22c55e",fontFamily:"monospace"}}>✓ done</span>;
                   })()}
                 </button>
 
@@ -2201,10 +2201,10 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                   style={{...S.sectionCard,"--accent":"#7c3aed",flexDirection:"column",alignItems:"flex-start"}}
                   className="section-card"
                   onClick={() => setScreen("sentencesMenu")}>
-                  <span style={{fontSize:28,color:"#7c3aed",marginBottom:4}}>文</span>
-                  <span style={{fontSize:13,fontWeight:600,color:T.text}}>Sentences</span>
-                  <span style={{fontSize:11,color:T.textMuted}}>Particles & builders</span>
-                  <span style={{fontSize:10,color:"#7c3aed",fontFamily:"monospace",marginTop:2}}>
+                  <span style={{fontSize:32,color:"#7c3aed",marginBottom:4}}>文</span>
+                  <span style={{fontSize:17,fontWeight:600,color:T.text}}>Sentences</span>
+                  <span style={{fontSize:16,color:T.textMuted}}>Particles & builders</span>
+                  <span style={{fontSize:16,color:"#7c3aed",fontFamily:"monospace",marginTop:2}}>
                     {particlePassed ? "✓ particles passed" : "Start with particles"}
                   </span>
                 </button>
@@ -2223,20 +2223,20 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
             <span style={{width:40}}/>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10,paddingTop:8}}>
-            <div style={{fontSize:12,color:T.textMuted,marginBottom:4}}>Pass Particles first to unlock sentence levels.</div>
+            <div style={{fontSize:16,color:T.textMuted,marginBottom:4}}>Pass Particles first to unlock sentence levels.</div>
 
             {/* Particles */}
             <button
               style={{...S.submenuCard,"--accent":"#0891b2",border:`1px solid ${T.border}`,background:T.bg2}}
               className="section-card"
               onClick={startParticles}>
-              <span style={{fontSize:36,color:"#0891b2"}}>助</span>
+              <span style={{fontSize:40,color:"#0891b2"}}>助</span>
               <div style={{flex:1,textAlign:"left"}}>
-                <div style={{fontSize:15,fontWeight:600,color:T.text}}>Particles</div>
-                <div style={{fontSize:12,color:T.textMuted,marginTop:2}}>Fill in the blank — は、が、を、に、で · {PARTICLES.length} exercises</div>
+                <div style={{fontSize:19,fontWeight:600,color:T.text}}>Particles</div>
+                <div style={{fontSize:16,color:T.textMuted,marginTop:2}}>Fill in the blank — は、が、を、に、で · {PARTICLES.length} exercises</div>
                 {particlePassed
-                  ? <div style={{fontSize:11,color:"#22c55e",marginTop:4,fontFamily:"monospace"}}>✓ passed</div>
-                  : <div style={{fontSize:11,color:"#0891b2",marginTop:4,fontFamily:"monospace"}}>Pass 80% to unlock sentences →</div>}
+                  ? <div style={{fontSize:16,color:"#22c55e",marginTop:4,fontFamily:"monospace"}}>✓ passed</div>
+                  : <div style={{fontSize:16,color:"#0891b2",marginTop:4,fontFamily:"monospace"}}>Pass 80% to unlock sentences →</div>}
               </div>
             </button>
 
@@ -2250,13 +2250,13 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                   style={{...S.submenuCard,"--accent":color,border:`1px solid ${locked?T.border:color+"44"}`,background:T.bg2,opacity:locked?0.45:1,cursor:locked?"not-allowed":"pointer"}}
                   className={locked?"":"section-card"}
                   onClick={() => !locked && startSentenceBuilder(lv)}>
-                  <span style={{fontSize:28,fontWeight:700,color:locked?"#555":color}}>{locked?"🔒":lv}</span>
+                  <span style={{fontSize:32,fontWeight:700,color:locked?"#555":color}}>{locked?"🔒":lv}</span>
                   <div style={{flex:1,textAlign:"left"}}>
-                    <div style={{fontSize:15,fontWeight:600,color:T.text}}>{lv} Sentences</div>
-                    <div style={{fontSize:12,color:T.textMuted,marginTop:2}}>
+                    <div style={{fontSize:19,fontWeight:600,color:T.text}}>{lv} Sentences</div>
+                    <div style={{fontSize:16,color:T.textMuted,marginTop:2}}>
                       Arrange words into the correct order · {SENTENCES[lv].length} sentences
                     </div>
-                    {locked && <div style={{fontSize:11,color:T.textFaint,marginTop:4,fontFamily:"monospace"}}>
+                    {locked && <div style={{fontSize:16,color:T.textFaint,marginTop:4,fontFamily:"monospace"}}>
                       {!particlePassed ? "Pass Particles first" : `Pass ${LEVELS[idx-1]} level test first`}
                     </div>}
                   </div>
@@ -2283,16 +2283,16 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
             return (
               <div style={S.cardArea}>
                 <div style={{...S.quizCard,background:T.bg2,border:`1px solid ${T.border}`,gap:20}} className="flashcard">
-                  <div style={{fontSize:11,color:"#0891b2",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>{q.hint}</div>
+                  <div style={{fontSize:16,color:"#0891b2",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>{q.hint}</div>
 
                   {/* Sentence with blank */}
-                  <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",justifyContent:"center",gap:6,fontSize:22,lineHeight:2}}>
+                  <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",justifyContent:"center",gap:6,fontSize:26,lineHeight:2}}>
                     {q.sentence.map((part,i) => (
                       part === "___" ? (
                         <span key={i} style={{
                           display:"inline-block",minWidth:48,height:36,borderBottom:`2px solid ${particleConfirmed?(particleSelected===q.answer?"#22c55e":"#ef4444"):"#0891b2"}`,
                           textAlign:"center",color:particleConfirmed?( particleSelected===q.answer?"#22c55e":"#ef4444"):T.text,
-                          fontWeight:700,fontSize:20,lineHeight:"36px"
+                          fontWeight:700,fontSize:24,lineHeight:"36px"
                         }}>{particleConfirmed ? particleSelected : ""}</span>
                       ) : (
                         <span key={i} style={{color:T.text}}>{part}</span>
@@ -2311,7 +2311,7 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                         else if (isSelected) { bg="rgba(239,68,68,0.15)"; border="#ef4444"; color="#ef4444"; }
                       } else if (isSelected) { border="#0891b2"; bg="rgba(8,145,178,0.1)"; }
                       return (
-                        <button key={opt} style={{border:`1px solid ${border}`,borderRadius:10,padding:"14px 6px",fontSize:20,cursor:"pointer",background:bg,color,transition:"all 0.15s",fontFamily:"Georgia,serif"}}
+                        <button key={opt} style={{border:`1px solid ${border}`,borderRadius:10,padding:"14px 6px",fontSize:24,cursor:"pointer",background:bg,color,transition:"all 0.15s",fontFamily:"Georgia,serif"}}
                           onClick={() => handleParticleSelect(opt)}>{opt}</button>
                       );
                     })}
@@ -2324,10 +2324,10 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                   {particleConfirmed && (
                     <div style={{width:"100%",display:"flex",flexDirection:"column",gap:10}} className="card-back-reveal">
                       <div style={{background:particleSelected===q.answer?"rgba(34,197,94,0.08)":"rgba(239,68,68,0.08)",border:`1px solid ${particleSelected===q.answer?"rgba(34,197,94,0.3)":"rgba(239,68,68,0.3)"}`,borderRadius:10,padding:"12px 14px"}}>
-                        <div style={{fontSize:12,fontWeight:700,color:particleSelected===q.answer?"#22c55e":"#ef4444",marginBottom:6}}>
+                        <div style={{fontSize:16,fontWeight:700,color:particleSelected===q.answer?"#22c55e":"#ef4444",marginBottom:6}}>
                           {particleSelected===q.answer?"✓ Correct!":"✗ The answer is "+q.answer}
                         </div>
-                        <div style={{fontSize:13,color:T.textSub,lineHeight:1.7}}>{q.explanation}</div>
+                        <div style={{fontSize:17,color:T.textSub,lineHeight:1.7}}>{q.explanation}</div>
                       </div>
                       <button style={{...S.primaryBtn,background:"#0891b2"}} onClick={nextParticle}>
                         {particleIndex+1 >= PARTICLES.length ? "See Results" : "Next →"}
@@ -2355,7 +2355,7 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
             <div style={{...S.scorePercent,color:T.textMuted}}>
               {Math.round(particleScore.correct/PARTICLES.length*100)}% · Need 80% to unlock sentences
             </div>
-            <div style={{fontSize:13,color:T.textMuted,lineHeight:1.7,marginBottom:24,textAlign:"center"}}>
+            <div style={{fontSize:17,color:T.textMuted,lineHeight:1.7,marginBottom:24,textAlign:"center"}}>
               {particleScore.correct/PARTICLES.length>=PASS_THRESHOLD
                 ? "Great work! N5 sentences are now unlocked. Particles are the glue of Japanese — keep them sharp!"
                 : "Particles can be tricky — review the explanations and try again. Each one has a clear rule!"}
@@ -2387,23 +2387,23 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
             <div style={{display:"flex",flexDirection:"column",gap:14,paddingBottom:20}}>
               {/* English prompt */}
               <div style={{background:T.bg2,border:`1px solid ${T.border}`,borderRadius:14,padding:"16px 18px"}}>
-                <div style={{fontSize:10,color:T.textFaint,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>English</div>
-                <div style={{fontSize:16,color:T.text,lineHeight:1.5,fontStyle:"italic"}}>{q.english}</div>
+                <div style={{fontSize:16,color:T.textFaint,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>English</div>
+                <div style={{fontSize:20,color:T.text,lineHeight:1.5,fontStyle:"italic"}}>{q.english}</div>
               </div>
 
               {/* Answer area — placed words */}
               <div>
-                <div style={{fontSize:10,color:color,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Your sentence — tap to remove</div>
+                <div style={{fontSize:16,color:color,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Your sentence — tap to remove</div>
                 <div style={{
                   minHeight:60,background:T.bg2,border:`2px dashed ${sentenceChecked?(sentenceCorrect?"#22c55e":"#ef4444"):T.border}`,
                   borderRadius:14,padding:"12px 14px",display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"
                 }}>
                   {placed.length === 0 && (
-                    <span style={{fontSize:13,color:T.textFaint,fontStyle:"italic"}}>Tap words below to build your sentence…</span>
+                    <span style={{fontSize:17,color:T.textFaint,fontStyle:"italic"}}>Tap words below to build your sentence…</span>
                   )}
                   {placed.map((item) => (
                     <button key={item.id}
-                      style={{background:sentenceChecked?(sentenceCorrect?"rgba(34,197,94,0.15)":"rgba(239,68,68,0.15)"):"rgba(8,145,178,0.12)",border:`1px solid ${sentenceChecked?(sentenceCorrect?"#22c55e":"#ef4444"):"#0891b2"}`,borderRadius:8,padding:"8px 12px",fontSize:16,color:sentenceChecked?(sentenceCorrect?"#22c55e":"#ef4444"):T.text,cursor:sentenceChecked?"default":"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"}}
+                      style={{background:sentenceChecked?(sentenceCorrect?"rgba(34,197,94,0.15)":"rgba(239,68,68,0.15)"):"rgba(8,145,178,0.12)",border:`1px solid ${sentenceChecked?(sentenceCorrect?"#22c55e":"#ef4444"):"#0891b2"}`,borderRadius:8,padding:"8px 12px",fontSize:20,color:sentenceChecked?(sentenceCorrect?"#22c55e":"#ef4444"):T.text,cursor:sentenceChecked?"default":"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"}}
                       onClick={() => removeWord(item)}>
                       {item.w}
                     </button>
@@ -2413,18 +2413,18 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
 
               {/* Word bank — remaining words */}
               <div>
-                <div style={{fontSize:10,color:T.textFaint,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Word bank — tap to place</div>
+                <div style={{fontSize:16,color:T.textFaint,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Word bank — tap to place</div>
                 <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                   {remaining.map((item) => (
                     <button key={item.id}
-                      style={{background:T.bg2,border:`1px solid ${T.border2}`,borderRadius:8,padding:"8px 12px",fontSize:16,color:T.text,cursor:"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"}}
+                      style={{background:T.bg2,border:`1px solid ${T.border2}`,borderRadius:8,padding:"8px 12px",fontSize:20,color:T.text,cursor:"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"}}
                       className="rating-btn"
                       onClick={() => placeWord(item)}>
                       {item.w}
                     </button>
                   ))}
                   {remaining.length === 0 && !sentenceChecked && (
-                    <span style={{fontSize:13,color:T.textFaint,fontStyle:"italic"}}>All words placed!</span>
+                    <span style={{fontSize:17,color:T.textFaint,fontStyle:"italic"}}>All words placed!</span>
                   )}
                 </div>
               </div>
@@ -2439,20 +2439,20 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                   {/* Correct answer if wrong */}
                   {!sentenceCorrect && (
                     <div style={{background:T.bg2,border:`1px solid ${T.border}`,borderRadius:12,padding:"14px 16px"}}>
-                      <div style={{fontSize:10,color:"#22c55e",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Correct order</div>
+                      <div style={{fontSize:16,color:"#22c55e",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Correct order</div>
                       <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                         {q.answer.map((w,i) => (
-                          <span key={i} style={{background:"rgba(34,197,94,0.12)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:8,padding:"6px 10px",fontSize:16,color:"#22c55e"}}>{w}</span>
+                          <span key={i} style={{background:"rgba(34,197,94,0.12)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:8,padding:"6px 10px",fontSize:20,color:"#22c55e"}}>{w}</span>
                         ))}
                       </div>
                     </div>
                   )}
                   {/* Explanation */}
                   <div style={{background:sentenceCorrect?"rgba(34,197,94,0.07)":"rgba(239,68,68,0.07)",border:`1px solid ${sentenceCorrect?"rgba(34,197,94,0.2)":"rgba(239,68,68,0.2)"}`,borderRadius:12,padding:"14px 16px"}}>
-                    <div style={{fontSize:12,fontWeight:700,color:sentenceCorrect?"#22c55e":"#ef4444",marginBottom:8}}>
+                    <div style={{fontSize:16,fontWeight:700,color:sentenceCorrect?"#22c55e":"#ef4444",marginBottom:8}}>
                       {sentenceCorrect?"✓ Correct! Here's why:":"✗ Not quite — here's what to know:"}
                     </div>
-                    <div style={{fontSize:13,color:T.textSub,lineHeight:1.8}}>{q.explanation}</div>
+                    <div style={{fontSize:17,color:T.textSub,lineHeight:1.8}}>{q.explanation}</div>
                   </div>
                   <button style={{...S.primaryBtn,background:color}} onClick={nextSentence}>
                     {sentenceIndex+1 >= SENTENCES[sentenceLevel].length ? "See Results" : "Next →"}
@@ -2474,7 +2474,7 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
               {sentenceScore.correct}/{SENTENCES[sentenceLevel].length}
             </div>
             <div style={{...S.scorePercent,color:T.textMuted}}>{Math.round(sentenceScore.correct/SENTENCES[sentenceLevel].length*100)}% correct</div>
-            <div style={{fontSize:13,color:T.textMuted,lineHeight:1.7,marginBottom:24,textAlign:"center"}}>
+            <div style={{fontSize:17,color:T.textMuted,lineHeight:1.7,marginBottom:24,textAlign:"center"}}>
               {sentenceScore.correct/SENTENCES[sentenceLevel].length>=0.8
                 ? "Excellent! Japanese word order is clicking. Keep it up!"
                 : sentenceScore.correct/SENTENCES[sentenceLevel].length>=0.5
@@ -2500,7 +2500,7 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
           {/* Daily cards */}
           <div style={{...S.settingsBox, background:T.bg2, border:`1px solid ${T.border}`, marginTop:24}}>
             <div style={{...S.settingsTitle, color:T.textMuted}}>📚 New cards per day</div>
-            <div style={{fontSize:12,color:T.textMuted,marginTop:4,marginBottom:12}}>
+            <div style={{fontSize:16,color:T.textMuted,marginTop:4,marginBottom:12}}>
               How many new cards to introduce each day across all sections.
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8}}>
@@ -2508,40 +2508,40 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                 <button key={n}
                   style={{
                     border:`1px solid ${dailyLimit===n?"#22c55e":T.border2}`,
-                    borderRadius:10,padding:"14px 6px",fontSize:14,fontFamily:"monospace",fontWeight:600,
+                    borderRadius:10,padding:"14px 6px",fontSize:18,fontFamily:"monospace",fontWeight:600,
                     color:dailyLimit===n?"#22c55e":T.textMuted,
                     background:dailyLimit===n?"rgba(34,197,94,0.08)":T.bg3,
                     cursor:"pointer",transition:"all 0.15s",display:"flex",flexDirection:"column",alignItems:"center",gap:3
                   }}
                   onClick={() => saveDailyLimit(n)}>
                   {n}
-                  <span style={{fontSize:10,opacity:0.7}}>cards</span>
+                  <span style={{fontSize:16,opacity:0.7}}>cards</span>
                 </button>
               ))}
             </div>
-            <div style={{fontSize:11,color:T.textFaint,marginTop:10}}>Introduced today: {dailyIntroduced} / {dailyLimit}</div>
+            <div style={{fontSize:16,color:T.textFaint,marginTop:10}}>Introduced today: {dailyIntroduced} / {dailyLimit}</div>
           </div>
 
           {/* Theme */}
           <div style={{...S.settingsBox, background:T.bg2, border:`1px solid ${T.border}`, marginTop:14}}>
             <div style={{...S.settingsTitle, color:T.textMuted}}>🎨 App theme</div>
-            <div style={{fontSize:12,color:T.textMuted,marginTop:4,marginBottom:12}}>
+            <div style={{fontSize:16,color:T.textMuted,marginTop:4,marginBottom:12}}>
               Choose between dark mode and light mode.
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
               <button
                 style={{border:`2px solid ${theme==="dark"?"#22c55e":"#2a2a38"}`,borderRadius:12,padding:"16px",cursor:"pointer",background:theme==="dark"?"rgba(34,197,94,0.08)":"#13131a",transition:"all 0.15s",display:"flex",flexDirection:"column",alignItems:"center",gap:8}}
                 onClick={() => saveTheme("dark")}>
-                <span style={{fontSize:28}}>🌙</span>
-                <span style={{fontSize:13,color:theme==="dark"?"#22c55e":"#f0ede8",fontFamily:"Georgia,serif"}}>Dark</span>
-                {theme==="dark" && <span style={{fontSize:10,color:"#22c55e",fontFamily:"monospace"}}>✓ active</span>}
+                <span style={{fontSize:32}}>🌙</span>
+                <span style={{fontSize:17,color:theme==="dark"?"#22c55e":"#f0ede8",fontFamily:"Georgia,serif"}}>Dark</span>
+                {theme==="dark" && <span style={{fontSize:16,color:"#22c55e",fontFamily:"monospace"}}>✓ active</span>}
               </button>
               <button
                 style={{border:`2px solid ${theme==="light"?"#22c55e":"#e0ddd8"}`,borderRadius:12,padding:"16px",cursor:"pointer",background:theme==="light"?"rgba(34,197,94,0.08)":"#ffffff",transition:"all 0.15s",display:"flex",flexDirection:"column",alignItems:"center",gap:8}}
                 onClick={() => saveTheme("light")}>
-                <span style={{fontSize:28}}>☀️</span>
-                <span style={{fontSize:13,color:theme==="light"?"#22c55e":"#1a1a22",fontFamily:"Georgia,serif"}}>Light</span>
-                {theme==="light" && <span style={{fontSize:10,color:"#22c55e",fontFamily:"monospace"}}>✓ active</span>}
+                <span style={{fontSize:32}}>☀️</span>
+                <span style={{fontSize:17,color:theme==="light"?"#22c55e":"#1a1a22",fontFamily:"Georgia,serif"}}>Light</span>
+                {theme==="light" && <span style={{fontSize:16,color:"#22c55e",fontFamily:"monospace"}}>✓ active</span>}
               </button>
             </div>
           </div>
@@ -2551,18 +2551,18 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
             <button
               style={{width:"100%",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:12,padding:"16px",cursor:"pointer",display:"flex",alignItems:"center",gap:14,marginTop:14,textAlign:"left"}}
               onClick={() => { setMistakeReviewIndex(0); setMistakeExplanation(""); loadMistakeExplanation(dailyMistakes[0]); setScreen("dailyReview"); }}>
-              <span style={{fontSize:28}}>📝</span>
+              <span style={{fontSize:32}}>📝</span>
               <div>
-                <div style={{fontSize:14,fontWeight:600,color:"#ef4444"}}>Review Today's Mistakes</div>
-                <div style={{fontSize:12,color:T.textMuted}}>{dailyMistakes.length} card{dailyMistakes.length>1?"s":""} marked Again or Hard today</div>
+                <div style={{fontSize:18,fontWeight:600,color:"#ef4444"}}>Review Today's Mistakes</div>
+                <div style={{fontSize:16,color:T.textMuted}}>{dailyMistakes.length} card{dailyMistakes.length>1?"s":""} marked Again or Hard today</div>
               </div>
             </button>
           )}
           {dailyMistakes.length === 0 && (
             <div style={{...S.settingsBox,background:T.bg2,border:`1px solid ${T.border}`,marginTop:14,textAlign:"center",padding:"20px"}}>
-              <div style={{fontSize:24,marginBottom:8}}>🎉</div>
-              <div style={{fontSize:13,color:T.textMuted}}>No mistakes logged today yet!</div>
-              <div style={{fontSize:11,color:T.textFaint,marginTop:4}}>Cards rated Again or Hard will appear here</div>
+              <div style={{fontSize:28,marginBottom:8}}>🎉</div>
+              <div style={{fontSize:17,color:T.textMuted}}>No mistakes logged today yet!</div>
+              <div style={{fontSize:16,color:T.textFaint,marginTop:4}}>Cards rated Again or Hard will appear here</div>
             </div>
           )}
           <div style={{...S.settingsBox, background:T.bg2, border:`1px solid ${T.border}`, marginTop:14}}>
@@ -2576,13 +2576,13 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                 return (
                   <div key={lv} style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 12px"}}>
                     <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-                      <span style={{fontSize:12,fontWeight:700,color:LEVEL_COLORS[lv]}}>{lv}</span>
-                      <span style={{fontSize:11,color:T.textMuted,fontFamily:"monospace"}}>{done}/{total}</span>
+                      <span style={{fontSize:16,fontWeight:700,color:LEVEL_COLORS[lv]}}>{lv}</span>
+                      <span style={{fontSize:16,color:T.textMuted,fontFamily:"monospace"}}>{done}/{total}</span>
                     </div>
                     <div style={{height:4,background:T.border,borderRadius:2,overflow:"hidden"}}>
                       <div style={{height:"100%",width:`${total>0?(done/total)*100:0}%`,background:LEVEL_COLORS[lv],borderRadius:2}}/>
                     </div>
-                    {levelProgress.passed[lv] && <div style={{fontSize:10,color:"#22c55e",marginTop:4,fontFamily:"monospace"}}>✓ passed</div>}
+                    {levelProgress.passed[lv] && <div style={{fontSize:16,color:"#22c55e",marginTop:4,fontFamily:"monospace"}}>✓ passed</div>}
                   </div>
                 );
               })}
@@ -2607,9 +2607,9 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
 
           {dailyMistakes.length === 0 ? (
             <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16,textAlign:"center"}}>
-              <div style={{fontSize:52}}>🎉</div>
-              <div style={{fontSize:20,color:T.text,fontWeight:400}}>No mistakes today!</div>
-              <div style={{fontSize:13,color:T.textMuted}}>Cards rated Again or Hard will appear here for review.</div>
+              <div style={{fontSize:56}}>🎉</div>
+              <div style={{fontSize:24,color:T.text,fontWeight:400}}>No mistakes today!</div>
+              <div style={{fontSize:17,color:T.textMuted}}>Cards rated Again or Hard will appear here for review.</div>
               <button style={{...S.secondaryBtn,marginTop:8,color:T.textMuted,border:`1px solid ${T.border}`}} onClick={() => setScreen("settings")}>Back to Settings</button>
             </div>
           ) : (
@@ -2619,21 +2619,21 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
 
                   {/* Card header */}
                   <div style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                    <span style={{fontSize:11,color:"#ef4444",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>
+                    <span style={{fontSize:16,color:"#ef4444",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>
                       {dailyMistakes[mistakeReviewIndex].hint}
                     </span>
-                    <span style={{fontSize:10,color:T.textFaint,fontFamily:"monospace"}}>
+                    <span style={{fontSize:16,color:T.textFaint,fontFamily:"monospace"}}>
                       {new Date(dailyMistakes[mistakeReviewIndex].time).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}
                     </span>
                   </div>
 
                   {/* Front → Back */}
                   <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:16,flexWrap:"wrap"}}>
-                    <div style={{fontSize:44,color:T.text,lineHeight:1,textAlign:"center"}}>
+                    <div style={{fontSize:48,color:T.text,lineHeight:1,textAlign:"center"}}>
                       {dailyMistakes[mistakeReviewIndex].front}
                     </div>
-                    <div style={{fontSize:20,color:T.textFaint}}>→</div>
-                    <div style={{fontSize:22,color:"#22c55e",fontFamily:"monospace",fontWeight:700,textAlign:"center"}}>
+                    <div style={{fontSize:24,color:T.textFaint}}>→</div>
+                    <div style={{fontSize:26,color:"#22c55e",fontFamily:"monospace",fontWeight:700,textAlign:"center"}}>
                       {dailyMistakes[mistakeReviewIndex].back}
                     </div>
                   </div>
@@ -2642,15 +2642,15 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
 
                   {/* AI Explanation */}
                   <div style={{width:"100%",display:"flex",flexDirection:"column",gap:10}}>
-                    <div style={{fontSize:11,color:"#7c3aed",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>
+                    <div style={{fontSize:16,color:"#7c3aed",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"}}>
                       💡 Tutor Explanation
                     </div>
                     {mistakeExplLoading ? (
-                      <div style={{fontSize:13,color:T.textMuted,fontFamily:"monospace"}}>
+                      <div style={{fontSize:17,color:T.textMuted,fontFamily:"monospace"}}>
                         <span className="loading-dots">Generating explanation</span>
                       </div>
                     ) : (
-                      <div style={{fontSize:14,color:T.textSub,lineHeight:1.8}} className="card-back-reveal">
+                      <div style={{fontSize:18,color:T.textSub,lineHeight:1.8}} className="card-back-reveal">
                         {mistakeExplanation || "—"}
                       </div>
                     )}
@@ -2661,9 +2661,9 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                     <div style={{width:"100%",display:"flex",flexDirection:"column",gap:8}}>
                       {dailyMistakes[mistakeReviewIndex].example && (
                         <div style={{background:T.bg3,border:`1px solid ${T.border}`,borderRadius:10,padding:"10px 12px"}}>
-                          <div style={{fontSize:10,color:"#065f46",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>例文 Example</div>
+                          <div style={{fontSize:16,color:"#065f46",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>例文 Example</div>
                           {dailyMistakes[mistakeReviewIndex].example.split('\n').map((line,i) => (
-                            <div key={i} style={{fontSize:13,color:i%2===0?T.text:T.textMuted,lineHeight:1.6}}>{line}</div>
+                            <div key={i} style={{fontSize:17,color:i%2===0?T.text:T.textMuted,lineHeight:1.6}}>{line}</div>
                           ))}
                         </div>
                       )}
@@ -2671,20 +2671,20 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                           {dailyMistakes[mistakeReviewIndex].formal && (
                             <div style={{background:"rgba(59,130,246,0.07)",border:"1px solid rgba(59,130,246,0.2)",borderRadius:10,padding:"10px 12px"}}>
-                              <div style={{fontSize:10,color:"#3b82f6",fontFamily:"monospace",letterSpacing:1,marginBottom:4}}>
+                              <div style={{fontSize:16,color:"#3b82f6",fontFamily:"monospace",letterSpacing:1,marginBottom:4}}>
                                 {dailyMistakes[mistakeReviewIndex].cat==="kanji" ? "音 ON'YOMI" : "丁寧 FORMAL"}
                               </div>
-                              <div style={{fontSize:13,color:T.text,lineHeight:1.5}}>{dailyMistakes[mistakeReviewIndex].formal.split(" — ")[0]}</div>
-                              <div style={{fontSize:11,color:T.textMuted,marginTop:3}}>{dailyMistakes[mistakeReviewIndex].formal.split(" — ")[1]}</div>
+                              <div style={{fontSize:17,color:T.text,lineHeight:1.5}}>{dailyMistakes[mistakeReviewIndex].formal.split(" — ")[0]}</div>
+                              <div style={{fontSize:16,color:T.textMuted,marginTop:3}}>{dailyMistakes[mistakeReviewIndex].formal.split(" — ")[1]}</div>
                             </div>
                           )}
                           {dailyMistakes[mistakeReviewIndex].informal && (
                             <div style={{background:"rgba(249,115,22,0.07)",border:"1px solid rgba(249,115,22,0.2)",borderRadius:10,padding:"10px 12px"}}>
-                              <div style={{fontSize:10,color:"#f97316",fontFamily:"monospace",letterSpacing:1,marginBottom:4}}>
+                              <div style={{fontSize:16,color:"#f97316",fontFamily:"monospace",letterSpacing:1,marginBottom:4}}>
                                 {dailyMistakes[mistakeReviewIndex].cat==="kanji" ? "訓 KUN'YOMI" : "普通 CASUAL"}
                               </div>
-                              <div style={{fontSize:13,color:T.text,lineHeight:1.5}}>{dailyMistakes[mistakeReviewIndex].informal.split(" — ")[0]}</div>
-                              <div style={{fontSize:11,color:T.textMuted,marginTop:3}}>{dailyMistakes[mistakeReviewIndex].informal.split(" — ")[1]}</div>
+                              <div style={{fontSize:17,color:T.text,lineHeight:1.5}}>{dailyMistakes[mistakeReviewIndex].informal.split(" — ")[0]}</div>
+                              <div style={{fontSize:16,color:T.textMuted,marginTop:3}}>{dailyMistakes[mistakeReviewIndex].informal.split(" — ")[1]}</div>
                             </div>
                           )}
                         </div>
@@ -2735,26 +2735,26 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
           </div>
           <div style={{flex:1,display:"flex",flexDirection:"column",justifyContent:"center",gap:14}}>
             <div style={{textAlign:"center",marginBottom:4}}>
-              <div style={{fontSize:13,color:"#8a8070",letterSpacing:1}}>Loanwords & foreign terms in katakana</div>
+              <div style={{fontSize:17,color:"#8a8070",letterSpacing:1}}>Loanwords & foreign terms in katakana</div>
             </div>
             <button style={{...S.submenuCard,"--accent":"#0891b2"}} className="section-card"
               onClick={startKatakanaWords}>
-              <span style={{fontSize:40,color:"#0891b2"}}>カ</span>
+              <span style={{fontSize:44,color:"#0891b2"}}>カ</span>
               <div style={{display:"flex",flexDirection:"column",gap:4,textAlign:"left",flex:1}}>
-                <span style={{fontSize:16,fontWeight:600,color:"#f0ede8"}}>Katakana Words</span>
-                <span style={{fontSize:12,color:"#8a8070"}}>{KATAKANA_WORDS.length} loanwords — food, tech, countries & more</span>
+                <span style={{fontSize:20,fontWeight:600,color:"#f0ede8"}}>Katakana Words</span>
+                <span style={{fontSize:16,color:"#8a8070"}}>{KATAKANA_WORDS.length} loanwords — food, tech, countries & more</span>
                 {(() => {
                   const kDue = katakanaWordsProg.filter(p => p.introduced && p.due <= Date.now()).length;
                   const kNew = katakanaWordsProg.filter(p => !p.introduced).length;
-                  if (kDue > 0) return <span style={{fontSize:12,color:"#0891b2",fontFamily:"monospace"}}>{kDue} due for review</span>;
-                  if (kNew > 0) return <span style={{fontSize:12,color:"#8a8070",fontFamily:"monospace"}}>{Math.min(dailyLimit,kNew)} new today</span>;
-                  return <span style={{fontSize:12,color:"#22c55e"}}>✓ all caught up</span>;
+                  if (kDue > 0) return <span style={{fontSize:16,color:"#0891b2",fontFamily:"monospace"}}>{kDue} due for review</span>;
+                  if (kNew > 0) return <span style={{fontSize:16,color:"#8a8070",fontFamily:"monospace"}}>{Math.min(dailyLimit,kNew)} new today</span>;
+                  return <span style={{fontSize:16,color:"#22c55e"}}>✓ all caught up</span>;
                 })()}
               </div>
             </button>
             <div style={{background:"#0d0d14",border:"1px solid #1e1e2a",borderRadius:12,padding:"14px 16px"}}>
-              <div style={{fontSize:11,color:"#3a3a48",letterSpacing:1,textTransform:"uppercase",fontFamily:"monospace",marginBottom:8}}>Level reading</div>
-              <div style={{fontSize:12,color:"#8a8070",lineHeight:1.6}}>To study kanji sentences, tap the <span style={{color:"#f0ede8"}}>読 Reading</span> button inside any JLPT level card on the home screen.</div>
+              <div style={{fontSize:16,color:"#3a3a48",letterSpacing:1,textTransform:"uppercase",fontFamily:"monospace",marginBottom:8}}>Level reading</div>
+              <div style={{fontSize:16,color:"#8a8070",lineHeight:1.6}}>To study kanji sentences, tap the <span style={{color:"#f0ede8"}}>読 Reading</span> button inside any JLPT level card on the home screen.</div>
             </div>
           </div>
         </div>
@@ -2790,7 +2790,7 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                     <div style={S.exampleBox} className="card-back-reveal">
                       <div style={S.exampleLabel}>例文 Example</div>
                       {card.card.example.split('\n').map((line,i) => (
-                        <div key={i} style={{fontSize:13,color:i%2===0?"#f0ede8":"#8a8070",lineHeight:1.6}}>{line}</div>
+                        <div key={i} style={{fontSize:17,color:i%2===0?"#f0ede8":"#8a8070",lineHeight:1.6}}>{line}</div>
                       ))}
                     </div>
                   )}
@@ -2860,7 +2860,7 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
               <div style={S.wrongSummary}>
                 <div style={S.wrongSummaryTitle}>Missed {wrongAnswers.length} characters</div>
                 <div style={S.wrongChars}>{wrongAnswers.map((q,i) => (
-                  <span key={i} style={S.wrongCharPill}>{q.question} <span style={{color:"#8a8070",fontSize:11}}>{q.answer}</span></span>
+                  <span key={i} style={S.wrongCharPill}>{q.question} <span style={{color:"#8a8070",fontSize:16}}>{q.answer}</span></span>
                 ))}</div>
               </div>
             )}
@@ -2932,7 +2932,7 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
           <div style={S.cardArea}>
             <div style={S.quizCard} className="flashcard">
               <div style={S.quizPromptLabel}>What does this mean?</div>
-              <div style={{...S.quizChar,fontSize:32}}>{levelTestQuestions[levelTestIndex].question}</div>
+              <div style={{...S.quizChar,fontSize:36}}>{levelTestQuestions[levelTestIndex].question}</div>
               <div style={{...S.quizOptions,gridTemplateColumns:"1fr"}}>
                 {levelTestQuestions[levelTestIndex].options.map(opt => {
                   const isSel = levelTestSelected === opt, isCorr = opt === levelTestQuestions[levelTestIndex].answer;
@@ -2941,7 +2941,7 @@ Keep it warm, encouraging, and simple. No jargon. Reply with just the explanatio
                     if (isCorr) {bg="rgba(34,197,94,0.15)";border="#22c55e";color="#22c55e";}
                     else if (isSel) {bg="rgba(239,68,68,0.15)";border="#ef4444";color="#ef4444";}
                   } else if (isSel) {border=LEVEL_COLORS[levelTestLevel];bg="rgba(255,255,255,0.05)";}
-                  return <button key={opt} style={{...S.quizOpt,background:bg,borderColor:border,color,fontSize:14,textAlign:"left",padding:"12px 16px"}} onClick={() => handleLevelTestSelect(opt)}>{opt}</button>;
+                  return <button key={opt} style={{...S.quizOpt,background:bg,borderColor:border,color,fontSize:18,textAlign:"left",padding:"12px 16px"}} onClick={() => handleLevelTestSelect(opt)}>{opt}</button>;
                 })}
               </div>
               {levelTestSelected && !levelTestConfirmed && (
@@ -3010,90 +3010,90 @@ const S = {
   home:{maxWidth:680,margin:"0 auto",padding:"40px 20px 80px",width:"100%"},
   header:{textAlign:"center",marginBottom:24},
   logo:{display:"flex",flexDirection:"column",alignItems:"center",gap:4,marginBottom:10},
-  logoJp:{fontSize:48,fontWeight:400,letterSpacing:8,color:"#f0ede8",lineHeight:1},
-  logoEn:{fontSize:11,letterSpacing:6,color:"#8a8070",fontStyle:"italic"},
-  tagline:{color:"#8a8070",fontSize:14,letterSpacing:1,marginBottom:10},
+  logoJp:{fontSize:52,fontWeight:400,letterSpacing:8,color:"#f0ede8",lineHeight:1},
+  logoEn:{fontSize:16,letterSpacing:6,color:"#8a8070",fontStyle:"italic"},
+  tagline:{color:"#8a8070",fontSize:18,letterSpacing:1,marginBottom:10},
   gateBanner:{display:"flex",alignItems:"flex-start",gap:12,background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"14px 16px",marginBottom:18},
-  gateIcon:{fontSize:20,marginTop:2},gateTitle:{fontSize:13,color:"#f0ede8",marginBottom:3,fontWeight:600},gateSub:{fontSize:12,color:"#8a8070"},
-  sectionLabel:{fontSize:11,color:"#3a3a48",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginBottom:8},
+  gateIcon:{fontSize:24,marginTop:2},gateTitle:{fontSize:17,color:"#f0ede8",marginBottom:3,fontWeight:600},gateSub:{fontSize:16,color:"#8a8070"},
+  sectionLabel:{fontSize:16,color:"#3a3a48",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginBottom:8},
   grid2:{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:4},
   sectionCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"18px 16px",width:"100%",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4,position:"relative",transition:"all 0.2s",textAlign:"left",cursor:"pointer"},
-  sectionIcon:{fontSize:28,lineHeight:1,marginBottom:4},
-  sectionName:{fontSize:14,fontWeight:600,color:"#f0ede8"},
-  sectionCount:{fontSize:12,color:"#8a8070"},
-  duePill:{borderRadius:10,padding:"2px 8px",fontSize:11,color:"#fff",fontFamily:"monospace"},
-  passedBadge:{position:"absolute",bottom:10,right:10,fontSize:10,color:"#22c55e",fontFamily:"monospace"},
-  testBtn:{width:"100%",background:"transparent",border:"1px solid",borderRadius:8,padding:"9px",fontSize:12,fontFamily:"Georgia,serif",cursor:"pointer",letterSpacing:0.5,transition:"all 0.15s"},
+  sectionIcon:{fontSize:32,lineHeight:1,marginBottom:4},
+  sectionName:{fontSize:18,fontWeight:600,color:"#f0ede8"},
+  sectionCount:{fontSize:16,color:"#8a8070"},
+  duePill:{borderRadius:10,padding:"2px 8px",fontSize:16,color:"#fff",fontFamily:"monospace"},
+  passedBadge:{position:"absolute",bottom:10,right:10,fontSize:16,color:"#22c55e",fontFamily:"monospace"},
+  testBtn:{width:"100%",background:"transparent",border:"1px solid",borderRadius:8,padding:"9px",fontSize:16,fontFamily:"Georgia,serif",cursor:"pointer",letterSpacing:0.5,transition:"all 0.15s"},
   submenuCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:14,padding:"20px 18px",display:"flex",alignItems:"center",gap:16,cursor:"pointer",transition:"all 0.2s",textAlign:"left",width:"100%"},
   levelCard:{background:"#13131a",borderRadius:14,padding:"16px",marginBottom:10},
-  levelBadge:{fontSize:12,fontWeight:700,color:"#fff",borderRadius:6,padding:"3px 8px",fontFamily:"monospace"},
+  levelBadge:{fontSize:16,fontWeight:700,color:"#fff",borderRadius:6,padding:"3px 8px",fontFamily:"monospace"},
   catBtn:{background:"#0d0d14",border:"1px solid #1e1e2a",borderRadius:10,padding:"10px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",transition:"all 0.15s"},
   settingsBox:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"16px",marginTop:20},
-  settingsTitle:{fontSize:12,color:"#8a8070",letterSpacing:1},
-  limitBtn:{border:"1px solid",borderRadius:8,padding:"6px 12px",fontSize:12,cursor:"pointer",fontFamily:"monospace",transition:"all 0.15s"},
+  settingsTitle:{fontSize:16,color:"#8a8070",letterSpacing:1},
+  limitBtn:{border:"1px solid",borderRadius:8,padding:"6px 12px",fontSize:16,cursor:"pointer",fontFamily:"monospace",transition:"all 0.15s"},
   studyWrap:{maxWidth:560,margin:"0 auto",padding:"24px 20px",width:"100%",minHeight:"100vh",display:"flex",flexDirection:"column"},
   studyHeader:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12},
-  backBtn:{background:"none",border:"none",color:"#8a8070",cursor:"pointer",fontSize:14,padding:0},
-  sectionPill:{borderRadius:20,padding:"4px 12px",fontSize:12,color:"#fff",letterSpacing:0.5},
-  progressLabel:{fontSize:13,color:"#8a8070",fontFamily:"monospace"},
+  backBtn:{background:"none",border:"none",color:"#8a8070",cursor:"pointer",fontSize:18,padding:0},
+  sectionPill:{borderRadius:20,padding:"4px 12px",fontSize:16,color:"#fff",letterSpacing:0.5},
+  progressLabel:{fontSize:17,color:"#8a8070",fontFamily:"monospace"},
   progressBarWrap:{height:3,background:"#1e1e2a",borderRadius:2,marginBottom:28,overflow:"hidden"},
   progressBarFill:{height:"100%",borderRadius:2,transition:"width 0.4s ease"},
   cardArea:{flex:1,display:"flex",alignItems:"center",justifyContent:"center"},
   card:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"36px 28px",width:"100%",minHeight:280,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,position:"relative",transition:"transform 0.15s",userSelect:"none"},
-  cardHint:{position:"absolute",top:14,left:18,fontSize:10,color:"#3a3a48",letterSpacing:1,fontFamily:"monospace",textTransform:"uppercase"},
-  newBadge:{position:"absolute",top:12,right:14,background:"rgba(34,197,94,0.15)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:6,padding:"2px 7px",fontSize:10,color:"#22c55e",fontFamily:"monospace"},
-  cardFront:{fontSize:60,lineHeight:1,textAlign:"center",color:"#f0ede8"},
+  cardHint:{position:"absolute",top:14,left:18,fontSize:16,color:"#3a3a48",letterSpacing:1,fontFamily:"monospace",textTransform:"uppercase"},
+  newBadge:{position:"absolute",top:12,right:14,background:"rgba(34,197,94,0.15)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:6,padding:"2px 7px",fontSize:16,color:"#22c55e",fontFamily:"monospace"},
+  cardFront:{fontSize:64,lineHeight:1,textAlign:"center",color:"#f0ede8"},
   cardBack:{display:"flex",flexDirection:"column",alignItems:"center",gap:12,width:"100%"},
   divider:{width:40,height:1,background:"#1e1e2a"},
-  cardAnswer:{fontSize:20,color:"#c8c0b0",textAlign:"center",lineHeight:1.4},
-  tapHint:{fontSize:11,color:"#3a3a48",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginTop:8},
-  scriptMnemonic:{fontSize:12,color:"#8a7060",fontStyle:"italic",textAlign:"center",lineHeight:1.5,padding:"0 8px"},
+  cardAnswer:{fontSize:24,color:"#c8c0b0",textAlign:"center",lineHeight:1.4},
+  tapHint:{fontSize:16,color:"#3a3a48",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginTop:8},
+  scriptMnemonic:{fontSize:16,color:"#8a7060",fontStyle:"italic",textAlign:"center",lineHeight:1.5,padding:"0 8px"},
   exampleBox:{width:"100%",background:"#0d0d14",border:"1px solid #1e1e2a",borderRadius:10,padding:"12px 14px",display:"flex",flexDirection:"column",gap:4},
-  exampleLabel:{fontSize:10,color:"#065f46",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:4},
-  toggleBtn:{background:"transparent",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 6px",fontSize:12,color:"#8a8070",cursor:"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"},
+  exampleLabel:{fontSize:16,color:"#065f46",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:4},
+  toggleBtn:{background:"transparent",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 6px",fontSize:16,color:"#8a8070",cursor:"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"},
   formalActive:{background:"rgba(59,130,246,0.12)",borderColor:"#3b82f6",color:"#93c5fd"},
   informalActive:{background:"rgba(249,115,22,0.12)",borderColor:"#f97316",color:"#fed7aa"},
   ratingRow:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginTop:20,paddingBottom:20},
   ratingBtn:{background:"transparent",border:"1px solid",borderRadius:10,padding:"12px 6px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,transition:"all 0.15s"},
-  ratingLabel:{fontSize:13,fontWeight:600},ratingDesc:{fontSize:10,opacity:0.7,fontFamily:"monospace"},
+  ratingLabel:{fontSize:17,fontWeight:600},ratingDesc:{fontSize:16,opacity:0.7,fontFamily:"monospace"},
   quizCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"32px 22px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:16},
-  quizPromptLabel:{fontSize:12,color:"#8a8070",letterSpacing:1,textTransform:"uppercase",fontFamily:"monospace"},
-  quizChar:{fontSize:72,lineHeight:1,color:"#f0ede8"},
+  quizPromptLabel:{fontSize:16,color:"#8a8070",letterSpacing:1,textTransform:"uppercase",fontFamily:"monospace"},
+  quizChar:{fontSize:76,lineHeight:1,color:"#f0ede8"},
   quizOptions:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,width:"100%"},
-  quizOpt:{border:"1px solid",borderRadius:10,padding:"14px",fontSize:18,cursor:"pointer",transition:"all 0.15s",fontFamily:"monospace",letterSpacing:1},
-  confirmBtn:{border:"none",borderRadius:10,padding:"12px 36px",fontSize:14,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5,marginTop:4},
+  quizOpt:{border:"1px solid",borderRadius:10,padding:"14px",fontSize:22,cursor:"pointer",transition:"all 0.15s",fontFamily:"monospace",letterSpacing:1},
+  confirmBtn:{border:"none",borderRadius:10,padding:"12px 36px",fontSize:18,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5,marginTop:4},
   doneWrap:{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:24,minHeight:"100vh"},
   doneCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"44px 28px",maxWidth:420,width:"100%",textAlign:"center"},
-  doneEmoji:{fontSize:52,marginBottom:12},doneTitle:{fontSize:26,fontWeight:400,marginBottom:20,color:"#f0ede8"},
-  scoreBig:{fontSize:52,fontWeight:700,lineHeight:1,marginBottom:6},
-  scorePercent:{fontSize:13,color:"#8a8070",fontFamily:"monospace",marginBottom:18},
-  passMsg:{fontSize:13,color:"#c8c0b0",lineHeight:1.7,marginBottom:24,padding:"0 4px"},
-  failMsg:{fontSize:13,color:"#8a8070",lineHeight:1.7,marginBottom:24},
+  doneEmoji:{fontSize:56,marginBottom:12},doneTitle:{fontSize:30,fontWeight:400,marginBottom:20,color:"#f0ede8"},
+  scoreBig:{fontSize:56,fontWeight:700,lineHeight:1,marginBottom:6},
+  scorePercent:{fontSize:17,color:"#8a8070",fontFamily:"monospace",marginBottom:18},
+  passMsg:{fontSize:17,color:"#c8c0b0",lineHeight:1.7,marginBottom:24,padding:"0 4px"},
+  failMsg:{fontSize:17,color:"#8a8070",lineHeight:1.7,marginBottom:24},
   wrongSummary:{background:"#0d0d14",border:"1px solid #2a1a1a",borderRadius:12,padding:"12px 14px",marginBottom:14,textAlign:"left"},
-  wrongSummaryTitle:{fontSize:11,color:"#ef4444",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8},
+  wrongSummaryTitle:{fontSize:16,color:"#ef4444",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8},
   wrongChars:{display:"flex",flexWrap:"wrap",gap:8},
-  wrongCharPill:{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,padding:"4px 10px",fontSize:18,color:"#f0ede8"},
+  wrongCharPill:{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,padding:"4px 10px",fontSize:22,color:"#f0ede8"},
   reviewCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"28px 22px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:18},
   reviewTop:{display:"flex",alignItems:"center",justifyContent:"center",gap:20},
-  reviewChar:{fontSize:72,lineHeight:1,color:"#f0ede8"},reviewArrow:{fontSize:24,color:"#3a3a48"},
-  reviewAnswer:{fontSize:26,color:"#22c55e",fontFamily:"monospace",fontWeight:700},
+  reviewChar:{fontSize:76,lineHeight:1,color:"#f0ede8"},reviewArrow:{fontSize:28,color:"#3a3a48"},
+  reviewAnswer:{fontSize:30,color:"#22c55e",fontFamily:"monospace",fontWeight:700},
   reviewDivider:{width:"100%",height:1,background:"#1e1e2a"},
   mnemonicSection:{width:"100%",display:"flex",flexDirection:"column",gap:8},
-  mnemonicLabel:{fontSize:11,color:"#7c3aed",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"},
-  mnemonicText:{fontSize:14,color:"#c8c0b0",lineHeight:1.7,fontStyle:"italic"},
-  mnemonicLoading:{fontSize:13,color:"#8a8070",fontFamily:"monospace"},
+  mnemonicLabel:{fontSize:16,color:"#7c3aed",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"},
+  mnemonicText:{fontSize:18,color:"#c8c0b0",lineHeight:1.7,fontStyle:"italic"},
+  mnemonicLoading:{fontSize:17,color:"#8a8070",fontFamily:"monospace"},
   reviewMistake:{width:"100%",background:"#0d0d14",borderRadius:10,padding:"10px 14px"},
-  reviewWrong:{fontSize:12,color:"#8a8070",fontFamily:"monospace"},
+  reviewWrong:{fontSize:16,color:"#8a8070",fontFamily:"monospace"},
   reviewNav:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:16,paddingBottom:20},
-  navBtn:{background:"transparent",border:"1px solid #1e1e2a",borderRadius:10,padding:"12px",fontSize:14,color:"#8a8070",cursor:"pointer",fontFamily:"Georgia,serif"},
-  navBtnPrimary:{border:"none",borderRadius:10,padding:"12px",fontSize:14,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif"},
+  navBtn:{background:"transparent",border:"1px solid #1e1e2a",borderRadius:10,padding:"12px",fontSize:18,color:"#8a8070",cursor:"pointer",fontFamily:"Georgia,serif"},
+  navBtnPrimary:{border:"none",borderRadius:10,padding:"12px",fontSize:18,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif"},
   doneStats:{display:"flex",justifyContent:"space-around",marginBottom:24,gap:16},
   doneStat:{display:"flex",flexDirection:"column",gap:4},
-  doneStatNum:{fontSize:32,fontWeight:700,color:"#f0ede8"},
-  doneStatLabel:{fontSize:11,color:"#8a8070",letterSpacing:1,textTransform:"uppercase"},
+  doneStatNum:{fontSize:36,fontWeight:700,color:"#f0ede8"},
+  doneStatLabel:{fontSize:16,color:"#8a8070",letterSpacing:1,textTransform:"uppercase"},
   doneActions:{display:"flex",flexDirection:"column",gap:10},
-  primaryBtn:{background:"#e11d48",color:"#fff",border:"none",borderRadius:10,padding:"14px",fontSize:15,cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5},
-  secondaryBtn:{background:"transparent",color:"#8a8070",border:"1px solid #1e1e2a",borderRadius:10,padding:"14px",fontSize:15,cursor:"pointer",fontFamily:"Georgia,serif"},
+  primaryBtn:{background:"#e11d48",color:"#fff",border:"none",borderRadius:10,padding:"14px",fontSize:19,cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5},
+  secondaryBtn:{background:"transparent",color:"#8a8070",border:"1px solid #1e1e2a",borderRadius:10,padding:"14px",fontSize:19,cursor:"pointer",fontFamily:"Georgia,serif"},
 };
 
 const CSS = `
