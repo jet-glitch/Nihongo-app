@@ -1732,7 +1732,7 @@ function App() {
         return {role: m.role, content: m.text};
       });
       const sys = "You are a friendly Japanese conversation partner. The student is at " + convLevel + " JLPT level practicing: " + TOPICS[convTopic] + ". Have a natural back-and-forth conversation. Respond in Japanese at their level. After your Japanese add an English translation in parentheses on a new line. Gently correct any mistakes. Keep responses short - 1 to 2 sentences so it feels like real conversation.";
-      fetch("https://api.anthropic.com/v1/messages", {
+      fetch("/api/chat", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:300,system:sys,messages:history})
@@ -1763,7 +1763,7 @@ function App() {
       return {role: m.role, content: m.text};
     });
     const sys = "You are a friendly Japanese tutor. The student is at " + convLevel + " JLPT level practicing: " + TOPICS[convTopic] + ". Respond in Japanese at their level. After each Japanese response add an English translation in parentheses. Gently correct mistakes. Keep responses to 2-3 sentences.";
-    fetch("https://api.anthropic.com/v1/messages", {
+    fetch("/api/chat", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
@@ -2025,7 +2025,7 @@ function App() {
     if (mistake.informal) parts.push("Casual: " + mistake.informal);
     const ctx = parts.length ? " Extra context: " + parts.join(" | ") : "";
     const prompt = "You are a friendly Japanese tutor. The student got this wrong: " + mistake.front + " means " + mistake.back + " (" + mistake.hint + ")." + ctx + " Write 3-5 sentences: what it means, a memory tip, and one example sentence with translation. Be warm and simple.";
-    fetch("https://api.anthropic.com/v1/messages", {
+    fetch("/api/chat", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})
@@ -2044,7 +2044,7 @@ function App() {
     if (builtin) { setAiMnemonic(builtin); return; }
     setAiLoading(true);
     setAiMnemonic("");
-    fetch("https://api.anthropic.com/v1/messages", {
+    fetch("/api/chat", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
@@ -2269,145 +2269,188 @@ function App() {
             , React.createElement('p', { style: {...S.tagline,color:T.textMuted},}, "N5 to N1 — Learn Japanese the right way"        )
           )
 
-          /* Script gates */
-          , (!scriptUnlocked.hiragana || !scriptUnlocked.katakana) && (
-            React.createElement('div', { style: {...S.gateBanner,background:T.bg2,border:`1px solid ${T.border}`},}
-              , React.createElement('span', { style: S.gateIcon,}, "🔒")
-              , React.createElement('div', null, React.createElement('div', { style: {...S.gateTitle,color:T.text},}, "Pass both script tests to unlock JLPT study"       )
-              , React.createElement('div', { style: {...S.gateSub,color:T.textMuted},}, "Study → Take Test → 80% to pass each"        ))
+          /* ── FIRST TIME: show welcome banner ── */
+          , !scriptUnlocked.hiragana && !scriptUnlocked.katakana && Object.keys(cardProgress).length === 0 && (
+            React.createElement('div', { style: {background:"linear-gradient(135deg,rgba(225,29,72,0.15),rgba(124,58,237,0.15))",border:"1px solid rgba(225,29,72,0.3)",borderRadius:16,padding:"20px 18px",marginBottom:4,textAlign:"center"},}
+              , React.createElement('div', { style: {fontSize:32,marginBottom:8},}, "👋 こんにちは！" )
+              , React.createElement('div', { style: {fontSize:21,fontWeight:700,color:T.text,marginBottom:6},}, "Welcome to Nihongo!"  )
+              , React.createElement('div', { style: {fontSize:18,color:T.textMuted,lineHeight:1.7,marginBottom:14},}, "You have zero Japanese experience? No problem! Follow the steps below in order and you will be reading, writing and speaking Japanese before you know it."
+
+              )
+              , React.createElement('div', { style: {fontSize:17,color:"#e11d48",fontFamily:"monospace"},}, "↓ Start with Step 1 below ↓"      )
             )
           )
 
-          /* Script cards */
-          , React.createElement('div', { style: S.sectionLabel,}, "Scripts")
-          , React.createElement('div', { style: S.grid2,}
-            , [{key:"hiragana",deck:HIRAGANA,color:"#e11d48",icon:"あ",label:"Hiragana"},
-              {key:"katakana",deck:KATAKANA,color:"#7c3aed",icon:"ア",label:"Katakana"}].map(sc => (
-              React.createElement('div', { key: sc.key, style: {display:"flex",flexDirection:"column",gap:6},}
-                , React.createElement('button', { style: {...S.sectionCard,"--accent":sc.color}, className: "section-card",
-                  onClick: () => startScriptStudy(sc.key),}
-                  , React.createElement('span', { style: {...S.sectionIcon,color:sc.color},}, sc.icon)
-                  , React.createElement('span', { style: S.sectionName,}, sc.label)
-                  , React.createElement('span', { style: S.sectionCount,}, sc.deck.length, " cards" )
-                  , scriptUnlocked[sc.key] && React.createElement('span', { style: S.passedBadge,}, "✓ passed" )
-                )
-                , React.createElement('button', { style: {...S.testBtn,borderColor:scriptUnlocked[sc.key]?"#22c55e":sc.color,color:scriptUnlocked[sc.key]?"#22c55e":sc.color},
-                  className: "test-btn", onClick: () => startScriptQuiz(sc.key),}
-                  , scriptUnlocked[sc.key] ? "✓ Retake Test" : "Take Test →"
-                )
+          /* ── STEP 1: Learn the Alphabet ── */
+          , React.createElement('div', { style: {marginTop:8},}
+            , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:10,marginBottom:10},}
+              , React.createElement('div', { style: {background:"#e11d48",borderRadius:"50%",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:700,color:"#fff",flexShrink:0},}, "1")
+              , React.createElement('div', null
+                , React.createElement('div', { style: {fontSize:19,fontWeight:700,color:T.text},}, "Learn the Alphabet"  )
+                , React.createElement('div', { style: {fontSize:16,color:T.textMuted},}, "Hiragana & Katakana — the foundation of Japanese"       )
               )
-            ))
-          )
-
-          /* JLPT levels */
-          , React.createElement('div', { style: {...S.sectionLabel,marginTop:24},}, "JLPT Levels" )
-          , LEVELS.map(level => {
-            const locked = !scriptsPassed || (LEVELS.indexOf(level) > 0 && !levelProgress.passed[LEVELS[LEVELS.indexOf(level)-1]]);
-            const isActive = level === currentLevel && !locked;
-            const passed = levelProgress.passed[level];
-            const totalDue = CATEGORIES.reduce((s,c) => s + getDueCount(level,c), 0);
-            const totalNew = CATEGORIES.reduce((s,c) => s + getNewCount(level,c), 0);
-            return (
-              React.createElement('div', { key: level, style: {...S.levelCard, opacity:locked?0.4:1, border:`1px solid ${locked?"#1e1e2a":LEVEL_COLORS[level]}22`},}
-                , React.createElement('div', { style: {display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10},}
-                  , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:10},}
-                    , React.createElement('span', { style: {...S.levelBadge,background:locked?"#2a2a38":LEVEL_COLORS[level]},}, level)
-                    , React.createElement('span', { style: {fontSize:17,color:locked?"#555":"#f0ede8",fontWeight:600},}
-                      , passed ? "Complete ✓" : isActive ? "In Progress" : locked ? "Locked 🔒" : "Available"
-                    )
-                  )
-                  , React.createElement('div', { style: {display:"flex",gap:8,alignItems:"center"},}
-                    , totalDue > 0 && React.createElement('span', { style: {...S.duePill,background:LEVEL_COLORS[level]},}, totalDue, " due" )
-                    , !locked && !passed && (
-                      React.createElement('button', { style: {...S.testBtn,borderColor:LEVEL_COLORS[level],color:LEVEL_COLORS[level],padding:"4px 12px",fontSize:16},
-                        onClick: () => startLevelTest(level),}, "Take "
-                         , level, " Test →"
-                      )
-                    )
-                    , passed && (
-                      React.createElement('button', { style: {...S.testBtn,borderColor:"#22c55e",color:"#22c55e",padding:"4px 12px",fontSize:16},
-                        onClick: () => startLevelTest(level),}, "Retake"
-
-                      )
-                    )
-                  )
-                )
-                , !locked && (
-                  React.createElement('div', { style: {display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6},}
-                    , CATEGORIES.map(cat => {
-                      const due = getDueCount(level,cat);
-                      const newC = getNewCount(level,cat);
-                      const total = JLPT[level][cat].length;
-                      const introduced = total - newC;
-                      return (
-                        React.createElement('button', { key: cat, style: {...S.catBtn,"--accent":LEVEL_COLORS[level]}, className: "cat-btn",
-                          onClick: () => !locked && startStudy(level, cat),}
-                          , React.createElement('span', { style: {fontSize:24,color:LEVEL_COLORS[level]},}, CAT_META[cat].icon)
-                          , React.createElement('span', { style: {fontSize:16,color:"#f0ede8"},}, CAT_META[cat].label)
-                          , React.createElement('span', { style: {fontSize:16,color:"#8a8070"},}, introduced, "/", total)
-                          , due > 0 && React.createElement('span', { style: {fontSize:16,color:LEVEL_COLORS[level],fontFamily:"monospace"},}, due, " due" )
-                          , due === 0 && newC > 0 && React.createElement('span', { style: {fontSize:16,color:"#8a8070"},}, Math.min(dailyLimit,newC), " new" )
-                          , (dailyByKey[level+"_"+cat]||0)>0 && React.createElement('span', { style: {fontSize:16,color:"#22c55e",fontFamily:"monospace"},}, "+", dailyByKey[level+"_"+cat], " today" )
-                          , due === 0 && newC === 0 && React.createElement('span', { style: {fontSize:16,color:"#22c55e"},}, "✓")
-                        )
-                      );
-                    })
-                  )
-                )
-              )
-            );
-          })
-
-
-          /* Katakana Words + Sentences — side by side */
-          /* Practice section — always visible */
-          , React.createElement('div', { style: {marginTop:10},}
-            , React.createElement('div', { style: {...S.sectionLabel,marginTop:0},}, "Practice")
+              , scriptUnlocked.hiragana && scriptUnlocked.katakana && React.createElement('span', { style: {marginLeft:"auto",fontSize:16,color:"#22c55e",fontFamily:"monospace"},}, "✓ Complete" )
+            )
             , React.createElement('div', { style: {display:"grid",gridTemplateColumns:"1fr 1fr",gap:10},}
-                /* Katakana Words */
-                , React.createElement('button', {
-                  style: {...S.sectionCard,"--accent":"#0891b2",flexDirection:"column",alignItems:"flex-start"},
-                  className: "section-card",
-                  onClick: startKatakanaWords,}
-                  , React.createElement('span', { style: {fontSize:32,color:"#0891b2",marginBottom:4},}, "カ")
-                  , React.createElement('span', { style: {fontSize:17,fontWeight:600,color:T.text},}, "Katakana Words" )
-                  , React.createElement('span', { style: {fontSize:16,color:T.textMuted},}, KATAKANA_WORDS.length, " loanwords" )
-                  , (() => {
-                    const kDue = katakanaWordsProg.filter(p=>p.introduced&&p.due<=Date.now()).length;
-                    const kNew = katakanaWordsProg.filter(p=>!p.introduced).length;
-                    if (kDue>0) return React.createElement('span', { style: {...S.duePill,background:"#0891b2",position:"absolute",top:10,right:10},}, kDue, " due" );
-                    if (kNew>0) return React.createElement('span', { style: {fontSize:16,color:T.textMuted,fontFamily:"monospace"},}, Math.min(dailyLimit,kNew), " new" );
-                    return React.createElement('span', { style: {fontSize:16,color:"#22c55e",fontFamily:"monospace"},}, "✓ done" );
-                  })()
-                )
-
-                /* Sentences */
-                , React.createElement('button', {
-                  style: {...S.sectionCard,"--accent":"#7c3aed",flexDirection:"column",alignItems:"flex-start"},
-                  className: "section-card",
-                  onClick: () => setScreen("sentencesMenu"),}
-                  , React.createElement('span', { style: {fontSize:32,color:"#7c3aed",marginBottom:4},}, "文")
-                  , React.createElement('span', { style: {fontSize:17,fontWeight:600,color:T.text},}, "Sentences")
-                  , React.createElement('span', { style: {fontSize:16,color:T.textMuted},}, "Particles & builders"  )
-                  , React.createElement('span', { style: {fontSize:16,color:"#7c3aed",fontFamily:"monospace",marginTop:2},}
-                    , particlePassed ? "✓ particles passed" : "Start with particles"
+              , [
+                {key:"hiragana",color:"#e11d48",icon:"あ",label:"Hiragana",sub:"46 basic characters",deck:HIRAGANA},
+                {key:"katakana",color:"#7c3aed",icon:"ア",label:"Katakana",sub:"46 foreign word chars",deck:KATAKANA}
+              ].map(function(sc) {
+                const passed = scriptUnlocked[sc.key];
+                return (
+                  React.createElement('div', { key: sc.key, style: {display:"flex",flexDirection:"column",gap:6},}
+                    , React.createElement('button', { style: {...S.sectionCard,"--accent":sc.color}, className: "section-card", onClick: function(){startScriptStudy(sc.key);},}
+                      , React.createElement('span', { style: {fontSize:36,color:sc.color},}, sc.icon)
+                      , React.createElement('span', { style: {fontSize:18,fontWeight:600,color:T.text},}, sc.label)
+                      , React.createElement('span', { style: {fontSize:16,color:T.textMuted},}, sc.sub)
+                      , passed && React.createElement('span', { style: {fontSize:16,color:"#22c55e",fontFamily:"monospace"},}, "✓ passed" )
+                      , !passed && React.createElement('span', { style: {fontSize:16,color:sc.color,fontFamily:"monospace"},}, "Study first →"  )
+                    )
+                    , React.createElement('button', {
+                      style: {...S.testBtn,borderColor:passed?"#22c55e":sc.color,color:passed?"#22c55e":sc.color},
+                      className: "test-btn",
+                      onClick: function(){startScriptQuiz(sc.key);},}
+                      , passed ? "✓ Retake Test" : "Take Test (need 80%)"
+                    )
                   )
-                )
+                );
+              })
+            )
+          )
+
+          /* ── STEP 2: Vocabulary & Grammar ── */
+          , React.createElement('div', { style: {marginTop:20,opacity:scriptsPassed?1:0.4},}
+            , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:10,marginBottom:10},}
+              , React.createElement('div', { style: {background:scriptsPassed?"#3b82f6":"#444",borderRadius:"50%",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:700,color:"#fff",flexShrink:0},}, "2")
+              , React.createElement('div', { style: {flex:1},}
+                , React.createElement('div', { style: {fontSize:19,fontWeight:700,color:T.text},}, "Vocabulary & Grammar"  )
+                , React.createElement('div', { style: {fontSize:16,color:T.textMuted},}, scriptsPassed?"Tap a level to study flashcards":"Finish Step 1 first to unlock")
               )
             )
+            , LEVELS.map(function(level) {
+              const idx = LEVELS.indexOf(level);
+              const locked = !scriptsPassed || (idx > 0 && !levelProgress.passed[LEVELS[idx-1]]);
+              const passed = levelProgress.passed[level];
+              const color = LEVEL_COLORS[level];
+              const totalCards = CATEGORIES.reduce(function(s,c){return s+JLPT[level][c].length;},0);
+              const doneCards = CATEGORIES.reduce(function(s,c){return s+JLPT[level][c].filter(function(_,i){var p=cardProgress[cardKey(level,c,i)];return p&&p.introduced;}).length;},0);
+              const pct = Math.round((doneCards/totalCards)*100);
+              const totalDue = CATEGORIES.reduce(function(s,c){return s+getDueCount(level,c);},0);
+              return (
+                React.createElement('div', { key: level, style: {background:T.bg2,border:"1px solid "+(locked?T.border:color+"44"),borderRadius:14,padding:"14px 16px",marginBottom:8,opacity:locked?0.5:1},}
+                  , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:10,marginBottom:locked?0:10},}
+                    , React.createElement('span', { style: {background:locked?"#333":color,borderRadius:8,padding:"4px 10px",fontSize:17,fontWeight:700,color:"#fff",fontFamily:"monospace"},}, level)
+                    , React.createElement('div', { style: {flex:1},}
+                      , React.createElement('div', { style: {fontSize:17,fontWeight:600,color:T.text},}
+                        , level==="N5"?"Beginner":level==="N4"?"Elementary":level==="N3"?"Intermediate":level==="N2"?"Upper Intermediate":"Advanced"
+                        , passed&&React.createElement('span', { style: {color:"#22c55e",marginLeft:8,fontSize:16},}, "✓ Passed" )
+                        , locked&&React.createElement('span', { style: {color:T.textFaint,marginLeft:8,fontSize:16},}, "🔒 Locked" )
+                        , totalDue>0&&!locked&&React.createElement('span', { style: {color:color,marginLeft:8,fontSize:16,fontFamily:"monospace"},}, totalDue, " due" )
+                      )
+                      , !locked&&React.createElement('div', { style: {fontSize:16,color:T.textMuted},}, doneCards, "/", totalCards, " cards introduced · "    , pct, "%")
+                    )
+                    , !locked&&!passed&&(
+                      React.createElement('button', { style: {...S.testBtn,borderColor:color,color:color,padding:"4px 12px",fontSize:16,width:"auto"}, onClick: function(){startLevelTest(level);},}, "Test →" )
+                    )
+                    , passed&&(
+                      React.createElement('button', { style: {...S.testBtn,borderColor:"#22c55e",color:"#22c55e",padding:"4px 12px",fontSize:16,width:"auto"}, onClick: function(){startLevelTest(level);},}, "Retake")
+                    )
+                  )
+                  , !locked&&(
+                    React.createElement(React.Fragment, null
+                      , !locked&&doneCards>0&&(
+                        React.createElement('div', { style: {height:4,background:T.border,borderRadius:2,marginBottom:10,overflow:"hidden"},}
+                          , React.createElement('div', { style: {height:"100%",width:pct+"%",background:color,borderRadius:2,transition:"width 0.4s"},})
+                        )
+                      )
+                      , React.createElement('div', { style: {display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6},}
+                        , CATEGORIES.map(function(cat) {
+                          const due = getDueCount(level,cat);
+                          const newC = getNewCount(level,cat);
+                          const tot = JLPT[level][cat].length;
+                          const intro = tot-newC;
+                          return (
+                            React.createElement('button', { key: cat, style: {...S.catBtn,"--accent":color}, className: "cat-btn", onClick: function(){startStudy(level,cat);},}
+                              , React.createElement('span', { style: {fontSize:26,color:color},}, CAT_META[cat].icon)
+                              , React.createElement('span', { style: {fontSize:16,color:T.text},}, CAT_META[cat].label)
+                              , React.createElement('span', { style: {fontSize:16,color:T.textMuted},}, intro, "/", tot)
+                              , due>0&&React.createElement('span', { style: {fontSize:16,color:color,fontFamily:"monospace"},}, due, " due" )
+                              , due===0&&newC>0&&React.createElement('span', { style: {fontSize:16,color:T.textMuted},}, Math.min(dailyLimit===9999?newC:dailyLimit,newC), " new" )
+                              , due===0&&newC===0&&React.createElement('span', { style: {fontSize:16,color:"#22c55e"},}, "✓")
+                            )
+                          );
+                        })
+                      )
+                    )
+                  )
+                )
+              );
+            })
+          )
 
-          /* Conversation button */
-          , React.createElement('div', { style: {marginTop:10},}
-            , React.createElement('div', { style: {...S.sectionLabel,marginTop:0},}, "AI Conversation" )
-            , React.createElement('button', { style: {...S.levelCard,display:"flex",alignItems:"center",gap:14,cursor:"pointer",width:"100%"}, className: "cat-btn", onClick: () => setScreen("conversation"),}
-              , React.createElement('span', { style: {fontSize:36},}, "💬")
-              , React.createElement('div', { style: {textAlign:"left"},}
-                , React.createElement('div', { style: {fontSize:20,fontWeight:600,color:T.text},}, "Practice Conversation" )
-                , React.createElement('div', { style: {fontSize:17,color:T.textMuted,marginTop:2},}, "Chat with an AI tutor in Japanese"      )
+          /* ── STEP 3: Practice ── */
+          , React.createElement('div', { style: {marginTop:20,opacity:scriptsPassed?1:0.4},}
+            , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:10,marginBottom:10},}
+              , React.createElement('div', { style: {background:scriptsPassed?"#f97316":"#444",borderRadius:"50%",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:700,color:"#fff",flexShrink:0},}, "3")
+              , React.createElement('div', null
+                , React.createElement('div', { style: {fontSize:19,fontWeight:700,color:T.text},}, "Practice")
+                , React.createElement('div', { style: {fontSize:16,color:T.textMuted},}, "Loanwords, sentences & particles"   )
+              )
+            )
+            , React.createElement('div', { style: {display:"grid",gridTemplateColumns:"1fr 1fr",gap:10},}
+              , React.createElement('button', { style: {...S.sectionCard,"--accent":"#0891b2"}, className: "section-card", onClick: startKatakanaWords,}
+                , React.createElement('span', { style: {fontSize:32,color:"#0891b2"},}, "カ")
+                , React.createElement('span', { style: {fontSize:17,fontWeight:600,color:T.text},}, "Katakana Words" )
+                , React.createElement('span', { style: {fontSize:16,color:T.textMuted},}, KATAKANA_WORDS.length, " loanwords" )
+                , (function(){
+                  const kDue=katakanaWordsProg.filter(function(p){return p.introduced&&p.due<=Date.now();}).length;
+                  const kNew=katakanaWordsProg.filter(function(p){return !p.introduced;}).length;
+                  if(kDue>0)return React.createElement("span",{style:{fontSize:16,color:"#0891b2",fontFamily:"monospace"}},kDue+" due");
+                  if(kNew>0)return React.createElement("span",{style:{fontSize:16,color:T.textMuted,fontFamily:"monospace"}},Math.min(dailyLimit===9999?kNew:dailyLimit,kNew)+" new");
+                  return React.createElement("span",{style:{fontSize:16,color:"#22c55e",fontFamily:"monospace"}},"✓ done");
+                })()
+              )
+              , React.createElement('button', { style: {...S.sectionCard,"--accent":"#7c3aed"}, className: "section-card", onClick: function(){setScreen("sentencesMenu");},}
+                , React.createElement('span', { style: {fontSize:32,color:"#7c3aed"},}, "文")
+                , React.createElement('span', { style: {fontSize:17,fontWeight:600,color:T.text},}, "Sentences")
+                , React.createElement('span', { style: {fontSize:16,color:T.textMuted},}, "Particles & builders"  )
+                , React.createElement('span', { style: {fontSize:16,color:particlePassed?"#22c55e":"#7c3aed",fontFamily:"monospace"},}, particlePassed?"✓ particles passed":"Start with particles")
               )
             )
           )
 
+          /* ── STEP 4: Speak ── */
+          , React.createElement('div', { style: {marginTop:20,opacity:scriptsPassed?1:0.4},}
+            , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:10,marginBottom:10},}
+              , React.createElement('div', { style: {background:scriptsPassed?"#e11d48":"#444",borderRadius:"50%",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:700,color:"#fff",flexShrink:0},}, "4")
+              , React.createElement('div', null
+                , React.createElement('div', { style: {fontSize:19,fontWeight:700,color:T.text},}, "Speak & Chat"  )
+                , React.createElement('div', { style: {fontSize:16,color:T.textMuted},}, "Have a real conversation with an AI tutor"       )
+              )
+            )
+            , React.createElement('button', { style: {...S.levelCard,display:"flex",alignItems:"center",gap:14,cursor:"pointer",width:"100%","--accent":"#e11d48"}, className: "cat-btn", onClick: function(){setScreen("conversation");},}
+              , React.createElement('span', { style: {fontSize:40},}, "💬")
+              , React.createElement('div', { style: {textAlign:"left"},}
+                , React.createElement('div', { style: {fontSize:19,fontWeight:600,color:T.text},}, "AI Conversation" )
+                , React.createElement('div', { style: {fontSize:16,color:T.textMuted,marginTop:2},}, "Pick a topic, speak or type in Japanese, get corrections"         )
+              )
+              , React.createElement('span', { style: {color:"#e11d48",fontSize:22,marginLeft:"auto"},}, "›")
+            )
+          )
+
+          /* ── Daily Progress ── */
+          , dailyReviewed > 0 && (
+            React.createElement('div', { style: {...S.gateBanner,background:T.bg2,border:"1px solid "+T.border,marginTop:16},}
+              , React.createElement('span', { style: {fontSize:26},}, "📊")
+              , React.createElement('div', { style: {flex:1},}
+                , React.createElement('div', { style: {fontSize:19,fontWeight:600,color:T.text},}, "Today's Progress")
+                , React.createElement('div', { style: {fontSize:17,color:T.textMuted,marginTop:2},}, dailyReviewed, " cards reviewed · "    , dailyIntroduced, " new introduced"  )
+                , React.createElement('div', { style: {height:5,background:T.border,borderRadius:2,marginTop:6,overflow:"hidden"},}
+                  , React.createElement('div', { style: {height:"100%",width:Math.min(100,Math.round((dailyReviewed/Math.max(dailyLimit===9999?50:dailyLimit,1))*100))+"%",background:"#22c55e",borderRadius:2,transition:"width 0.4s"},})
+                )
+              )
+            )
+          )
         )
       )
 
@@ -3167,12 +3210,20 @@ function App() {
             )
           )
           , flipped && (
-            React.createElement('div', { style: S.ratingRow, className: "rating-reveal",}
-              , RATINGS.map(r => (
-                React.createElement('button', { key: r.value, style: {...S.ratingBtn,borderColor:r.color,color:r.color}, className: "rating-btn", onClick: () => handleRate(r.value),}
-                  , React.createElement('span', { style: S.ratingLabel,}, r.label), React.createElement('span', { style: S.ratingDesc,}, r.desc)
-                )
-              ))
+            React.createElement('div', { className: "rating-reveal",}
+              , React.createElement('div', { style: {textAlign:"center",fontSize:16,color:T.textMuted,marginBottom:8,fontFamily:"monospace",letterSpacing:0.5},}, "How well did you know this? Your answer affects when it comes back."
+
+              )
+              , React.createElement('div', { style: S.ratingRow,}
+                , RATINGS.map(function(r) {
+                  return (
+                    React.createElement('button', { key: r.value, style: {...S.ratingBtn,borderColor:r.color,color:r.color}, className: "rating-btn", onClick: function(){handleRate(r.value);},}
+                      , React.createElement('span', { style: S.ratingLabel,}, r.label)
+                      , React.createElement('span', { style: S.ratingDesc,}, r.desc)
+                    )
+                  );
+                })
+              )
             )
           )
         )
