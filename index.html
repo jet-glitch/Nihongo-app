@@ -5,11 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Nihongo" />
-  <title>日本語 Nihongo</title>
+  <meta name="apple-mobile-web-app-title" content="Zoku" />
+  <title>続 Zoku — Learn Japanese</title>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <style>* { margin:0; padding:0; box-sizing:border-box; } body { background:#0a0a0f; }</style>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#08080f; font-family: Georgia, serif; }
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:2px; }
+  </style>
 </head>
 <body>
   <div id="root"></div>
@@ -1212,7 +1218,7 @@ const JLPT = {
       {f:"個人の自由と社会の秩序をどのように両立させるかが民主主義の根本的な課題である",b:"How to reconcile individual freedom and social order is a fundamental challenge of democracy",hint:"N1 Reading"},
       {f:"技術革新は私たちの生活に利便性をもたらす一方で、雇用問題という新たな課題も生み出している",b:"While technological innovation brings convenience to our lives, it also creates new challenges such as employment issues",hint:"N1 Reading"},
       {f:"文化的背景の異なる人々が共存するためには相互理解と尊重が不可欠だ",b:"Mutual understanding and respect are indispensable for people with different cultural backgrounds to coexist",hint:"N1 Reading"},
-      {f:"経済的格差の拡大は社会の安定を脅かす深刻な問題となっている",b:"The widening economic gap has become a serious problem threatening social stability",hint:"N1 Reading"},
+      {f:"経済的格差の拡大は社会の安定を脅かす深刻な問題となっている",b:"The widening economic gap has become a serious problem threatening social szokulity",hint:"N1 Reading"},
       {f:"人工知能の発展にともない、人間の仕事が機械に取って代わられる可能性が高まっている",b:"With the development of AI, the possibility of machines replacing human jobs is increasing",hint:"N1 Reading"},
       {f:"言語とは単なるコミュニケーションの手段ではなく、思考そのものを形成するものだという見方がある",b:"There is a view that language is not merely a means of communication, but something that shapes thought itself",hint:"N1 Reading"},
       {f:"近代化の過程で失われた伝統的な価値観を再評価する動きが世界各地で見られる",b:"There are movements in various parts of the world to re-evaluate traditional values lost in the process of modernization",hint:"N1 Reading"},
@@ -1422,6 +1428,75 @@ const KATAKANA_WORDS = [
 ];
 
 // All JLPT levels in order
+// ── XP & LEVELING SYSTEM ──────────────────────────────────
+const XP_PER_LEVEL = [0,100,300,500,800,1200,1600,2200,2800,3500,4300,5200,6300,7500,8700,10100,11700,13300,15000,16900,18900,21000,23200,25500,28000,30500,33200,36000,38900,41900,45100,48400,51700,55200,58800,62600,66400,70400,74500,78600,83000,87400,91900,96600,101400,106300,111300,116400,121600,127000];
+const RANK_TITLES = [
+  {min:1,max:5,title:"Beginner",jp:"初心者",color:"#9ca3af"},
+  {min:6,max:10,title:"Student",jp:"学生",color:"#22c55e"},
+  {min:11,max:15,title:"Learner",jp:"学習者",color:"#3b82f6"},
+  {min:16,max:20,title:"Scholar",jp:"学者",color:"#8b5cf6"},
+  {min:21,max:25,title:"Advanced",jp:"上級者",color:"#f97316"},
+  {min:26,max:30,title:"Expert",jp:"専門家",color:"#ef4444"},
+  {min:31,max:40,title:"Master",jp:"マスター",color:"#ec4899"},
+  {min:41,max:49,title:"Sensei",jp:"先生",color:"#f59e0b"},
+  {min:50,max:50,title:"Grand Master",jp:"大師範",color:"#e11d48"},
+];
+const XP_REWARDS = {
+  cardGood: 6, cardEasy: 12, cardNew: 4,
+  cardMastered: 30, particleCorrect: 10, sentenceCorrect: 18,
+  quizPassed: 75, levelTestPassed: 250,
+  soloGameComplete: 40, soloGamePerfect: 120,
+};
+const BACKGROUNDS = [
+  {id:"default",  name:"Void",         jp:"虚無",  unlockLevel:1,  emoji:"⬛",
+   bg:"#08080f"},
+  {id:"midnight", name:"Night Sky",    jp:"夜空",  unlockLevel:5,  emoji:"🌌",
+   bg:"linear-gradient(160deg,#020208 0%,#05021a 40%,#080212 100%)",
+   accent:"rgba(139,92,246,0.15)", kanji:"夜空星月"},
+  {id:"forest",   name:"Bamboo",       jp:"竹林",  unlockLevel:10, emoji:"🎋",
+   bg:"linear-gradient(160deg,#010a03 0%,#021408 50%,#010a03 100%)",
+   accent:"rgba(34,197,94,0.12)", kanji:"竹林自然"},
+  {id:"crimson",  name:"Torii Gate",   jp:"鳥居",  unlockLevel:15, emoji:"⛩️",
+   bg:"linear-gradient(160deg,#0f0101 0%,#1a0303 50%,#0f0101 100%)",
+   accent:"rgba(225,29,72,0.15)", kanji:"鳥居神社"},
+  {id:"ocean",    name:"Deep Sea",     jp:"深海",  unlockLevel:20, emoji:"🌊",
+   bg:"linear-gradient(160deg,#000810 0%,#001525 50%,#000810 100%)",
+   accent:"rgba(6,182,212,0.15)", kanji:"深海水波"},
+  {id:"aurora",   name:"Aurora",       jp:"極光",  unlockLevel:25, emoji:"🌠",
+   bg:"linear-gradient(160deg,#020510 0%,#050218 30%,#010a05 70%,#020510 100%)",
+   accent:"rgba(16,185,129,0.12)", kanji:"極光天地"},
+  {id:"gold",     name:"Feudal",       jp:"武士",  unlockLevel:30, emoji:"⚔️",
+   bg:"linear-gradient(160deg,#0a0700 0%,#150e00 50%,#0a0700 100%)",
+   accent:"rgba(245,158,11,0.15)", kanji:"武士道義"},
+  {id:"sakura",   name:"Sakura",       jp:"桜",    unlockLevel:40, emoji:"🌸",
+   bg:"linear-gradient(160deg,#0f0008 0%,#180010 50%,#0f0008 100%)",
+   accent:"rgba(236,72,153,0.15)", kanji:"桜花散春"},
+  {id:"grand",    name:"Immortal",     jp:"不死",  unlockLevel:50, emoji:"🐉",
+   bg:"linear-gradient(160deg,#050003 0%,#0d0015 25%,#000508 50%,#0d0015 75%,#050003 100%)",
+   accent:"rgba(167,139,250,0.2)", kanji:"不死龍神"},
+];
+
+const CARD_BORDERS = [
+  {id:"default",  name:"Plain",        jp:"無地",  unlockLevel:1,  style:"1px solid rgba(255,255,255,0.1)",   color:"rgba(255,255,255,0.1)",  glow:""},
+  {id:"green",    name:"Jade Seal",    jp:"翡翠",  unlockLevel:3,  style:"1px solid rgba(34,197,94,0.5)",    color:"rgba(34,197,94,0.5)",    glow:"0 0 14px rgba(34,197,94,0.25)"},
+  {id:"blue",     name:"Blue Wave",    jp:"青波",  unlockLevel:7,  style:"1px solid rgba(59,130,246,0.6)",   color:"rgba(59,130,246,0.6)",   glow:"0 0 14px rgba(59,130,246,0.3)"},
+  {id:"purple",   name:"Spirit",       jp:"霊気",  unlockLevel:12, style:"1px solid rgba(124,58,237,0.7)",   color:"rgba(124,58,237,0.7)",   glow:"0 0 18px rgba(124,58,237,0.35)"},
+  {id:"red",      name:"Crimson Oni",  jp:"赤鬼",  unlockLevel:18, style:"1px solid rgba(225,29,72,0.7)",    color:"rgba(225,29,72,0.7)",    glow:"0 0 18px rgba(225,29,72,0.35)"},
+  {id:"gold",     name:"Samurai",      jp:"侍",    unlockLevel:24, style:"1px solid rgba(245,158,11,0.8)",   color:"rgba(245,158,11,0.8)",   glow:"0 0 22px rgba(245,158,11,0.4)"},
+  {id:"rainbow",  name:"Dragon",       jp:"龍",    unlockLevel:35, style:"2px solid transparent",            color:"prismatic",              glow:"0 0 28px rgba(139,92,246,0.4)"},
+  {id:"divine",   name:"Immortal",     jp:"仙人",  unlockLevel:45, style:"2px solid rgba(255,255,255,0.9)",  color:"rgba(255,255,255,0.9)",  glow:"0 0 35px rgba(255,255,255,0.25)"},
+];
+
+const getRank = (level) => RANK_TITLES.find(r => level >= r.min && level <= r.max) || RANK_TITLES[0];
+const getLevelFromXP = (xp) => {
+  for (let i = XP_PER_LEVEL.length - 1; i >= 0; i--) {
+    if (xp >= XP_PER_LEVEL[i]) return i + 1;
+  }
+  return 1;
+};
+const getXPForLevel = (level) => XP_PER_LEVEL[Math.min(level - 1, XP_PER_LEVEL.length - 1)];
+const getXPForNextLevel = (level) => XP_PER_LEVEL[Math.min(level, XP_PER_LEVEL.length - 1)];
+
 const LEVELS = ["N5","N4","N3","N2","N1"];
 const LEVEL_COLORS = { N5:"#22c55e", N4:"#3b82f6", N3:"#f97316", N2:"#a855f7", N1:"#ef4444" };
 const CATEGORIES = ["vocab","kanji","grammar","reading"];
@@ -1584,6 +1659,27 @@ function App() {
     const today = new Date().toDateString();
     return saved.date === today ? saved.count : 0;
   });
+  // XP & Level state
+  const [totalXP, setTotalXP] = React.useState(() => loadState("zoku_xp", 0));
+  const [xpAnim, setXpAnim] = React.useState(null); // {amount, x, y} for floating XP popup
+  const [levelUpAnim, setLevelUpAnim] = React.useState(null); // new level number
+
+  const awardXP = (amount, label) => {
+    setTotalXP(function(prev) {
+      const oldLevel = getLevelFromXP(prev);
+      const newXP = prev + amount;
+      const newLevel = getLevelFromXP(newXP);
+      saveState("zoku_xp", newXP);
+      if (newLevel > oldLevel) {
+        setLevelUpAnim(newLevel);
+        setTimeout(function(){setLevelUpAnim(null);}, 3000);
+      }
+      return newXP;
+    });
+    setXpAnim({amount, label});
+    setTimeout(function(){setXpAnim(null);}, 1500);
+  };
+
   const [dailyReviewed, setDailyReviewed] = React.useState(() => {
     const s = loadState("nh_dailyRev", {date:"",count:0});
     return new Date().toDateString() === s.date ? s.count : 0;
@@ -1595,6 +1691,68 @@ function App() {
 
   // ── UI state ──
   const [screen, setScreen] = React.useState("home");
+  const [mainMode, setMainMode] = React.useState("splash");
+  const [onlineScreen, setOnlineScreen] = React.useState("lobby");
+  const [roomCode, setRoomCode] = React.useState("");
+  const [roomInput, setRoomInput] = React.useState("");
+  const [playerName, setPlayerName] = React.useState(() => loadState("zoku_name", ""));
+  const [nameInput, setNameInput] = React.useState("");
+  const [avatar, setAvatar] = React.useState(() => loadState("zoku_avatar", null)); // base64 or emoji key
+  const [showAvatarPicker, setShowAvatarPicker] = React.useState(false);
+
+  // Cosmetics
+  const [activeBg, setActiveBg] = React.useState(() => loadState("zoku_bg", "default"));
+  const [activeBorder, setActiveBorder] = React.useState(() => loadState("zoku_border", "default"));
+  const [showCosmetics, setShowCosmetics] = React.useState(false);
+  const [previewBg, setPreviewBg] = React.useState(null);
+  const [previewBorder, setPreviewBorder] = React.useState(null);
+
+  const saveActiveBg = (id) => { saveState("zoku_bg", id); setActiveBg(id); };
+  const saveActiveBorder = (id) => { saveState("zoku_border", id); setActiveBorder(id); };
+
+  const currentBg = BACKGROUNDS.find(function(b){return b.id===activeBg;}) || BACKGROUNDS[0];
+  const currentBorder = CARD_BORDERS.find(function(b){return b.id===activeBorder;}) || CARD_BORDERS[0];
+  const playerLevel = getLevelFromXP(totalXP);
+
+  const AVATAR_CHARS = [
+    {key:"samurai",emoji:"🥷",label:"Ninja"},
+    {key:"sensei",emoji:"👨‍🏫",label:"Sensei"},
+    {key:"scholar",emoji:"🧑‍🎓",label:"Scholar"},
+    {key:"dragon",emoji:"🐉",label:"Dragon"},
+    {key:"fox",emoji:"🦊",label:"Kitsune"},
+    {key:"cat",emoji:"🐱",label:"Neko"},
+    {key:"panda",emoji:"🐼",label:"Panda"},
+    {key:"robot",emoji:"🤖",label:"Robot"},
+    {key:"ghost",emoji:"👻",label:"Yūrei"},
+    {key:"star",emoji:"⭐",label:"Star"},
+    {key:"fire",emoji:"🔥",label:"Fire"},
+    {key:"moon",emoji:"🌙",label:"Moon"},
+    {key:"sakura",emoji:"🌸",label:"Sakura"},
+    {key:"sword",emoji:"⚔️",label:"Warrior"},
+    {key:"crown",emoji:"👑",label:"Royalty"},
+    {key:"wizard",emoji:"🧙",label:"Wizard"},
+  ];
+
+  const saveAvatar = (val) => { saveState("zoku_avatar", val); setAvatar(val); };
+
+  const getAvatarDisplay = (av) => {
+    if (!av) return "🥷";
+    if (av.startsWith("data:")) return null; // photo
+    const found = AVATAR_CHARS.find(function(a){return a.key===av;});
+    return found ? found.emoji : "🥷";
+  };
+  const [isHost, setIsHost] = React.useState(false);
+  const [players, setPlayers] = React.useState([]);
+  const [gameMode, setGameMode] = React.useState("characters");
+  const [gameLevel, setGameLevel] = React.useState("N5");
+  const [gameQuestion, setGameQuestion] = React.useState(null);
+  const [gameAnswers, setGameAnswers] = React.useState([]);
+  const [gameScores, setGameScores] = React.useState({});
+  const [gameAnswered, setGameAnswered] = React.useState(false);
+  const [gameSelected, setGameSelected] = React.useState(null);
+  const [gameRound, setGameRound] = React.useState(0);
+  const [gameTimeLeft, setGameTimeLeft] = React.useState(10);
+  const [gameResults, setGameResults] = React.useState([]);
   const [activeLevel, setActiveLevel] = React.useState(null);
   const [activeCategory, setActiveCategory] = React.useState(null);
   const [theme, setTheme] = React.useState(() => loadState("nh_theme", "dark"));
@@ -1604,15 +1762,15 @@ function App() {
 
   const isDark = theme === "dark";
   const T = {
-    bg:        isDark ? "#0a0a0f" : "#f5f5f0",
-    bg2:       isDark ? "#13131a" : "#ffffff",
-    bg3:       isDark ? "#0d0d14" : "#f0ede8",
-    border:    isDark ? "#1e1e2a" : "#e0ddd8",
-    border2:   isDark ? "#2a2a38" : "#d0cdc8",
-    text:      isDark ? "#f0ede8" : "#1a1a22",
-    textSub:   isDark ? "#c8c0b0" : "#4a4a5a",
-    textMuted: isDark ? "#8a8070" : "#9090a0",
-    textFaint: isDark ? "#3a3a48" : "#c0c0cc",
+    bg:        isDark ? "#08080f" : "#f5f5f0",
+    bg2:       isDark ? "rgba(255,255,255,0.05)" : "#ffffff",
+    bg3:       isDark ? "rgba(255,255,255,0.03)" : "#f0ede8",
+    border:    isDark ? "rgba(255,255,255,0.08)" : "#e0ddd8",
+    border2:   isDark ? "rgba(255,255,255,0.12)" : "#d0cdc8",
+    text:      isDark ? "#ffffff" : "#1a1a22",
+    textSub:   isDark ? "#e0d8cc" : "#4a4a5a",
+    textMuted: isDark ? "#a09888" : "#9090a0",
+    textFaint: isDark ? "#606070" : "#c0c0cc",
   };
 
   const saveTheme = (v) => { saveState("nh_theme", v); setTheme(v); };
@@ -1865,6 +2023,20 @@ function App() {
     return next;
   };
 
+  // Game timer
+  React.useEffect(() => {
+    if (mainMode !== "online" || onlineScreen !== "game" || gameAnswered || !gameQuestion) return;
+    if (gameTimeLeft <= 0) {
+      setGameAnswered(true);
+      setGameSelected(null);
+      return;
+    }
+    const timer = setTimeout(function() {
+      setGameTimeLeft(function(t){return t-1;});
+    }, 1000);
+    return function() { clearTimeout(timer); };
+  }, [gameTimeLeft, gameAnswered, onlineScreen, mainMode, gameQuestion]);
+
   const bumpReviewed = (level, cat) => {
     const today = new Date().toDateString();
     const key = level+"_"+cat;
@@ -1902,6 +2074,93 @@ function App() {
 
     return [...due, ...newCards];
   }, [cardProgress, dailyLimit]);
+
+  // ── Multiplayer helpers ──
+  const genCode = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  };
+
+  const getGamePool = (mode, level) => {
+    if (mode === "characters") {
+      return HIRAGANA.concat(KATAKANA).map(function(c) {
+        return {question: c.f, answer: c.b, type: "character"};
+      });
+    }
+    if (mode === "words") {
+      return JLPT[level].vocab.map(function(c) {
+        return {question: c.f, answer: c.b, type: "word"};
+      });
+    }
+    if (mode === "sentences") {
+      return SENTENCES[level].map(function(s) {
+        return {question: s.english, answer: s.answer.join(" "), type: "sentence", words: s.words};
+      });
+    }
+    return [];
+  };
+
+  const buildQuestion = (mode, level) => {
+    const pool = getGamePool(mode, level);
+    const idx = Math.floor(Math.random() * pool.length);
+    const correct = pool[idx];
+    const wrong = [];
+    while (wrong.length < 3) {
+      const w = pool[Math.floor(Math.random() * pool.length)];
+      if (w.answer !== correct.answer && !wrong.find(function(x){return x.answer===w.answer;})) {
+        wrong.push(w);
+      }
+    }
+    const opts = [correct, ...wrong].sort(function(){return Math.random()-0.5;});
+    return {question: correct.question, correct: correct.answer, options: opts.map(function(o){return o.answer;})};
+  };
+
+  const startSoloGame = (mode, level) => {
+    const q = buildQuestion(mode, level);
+    setGameMode(mode);
+    setGameLevel(level);
+    setGameQuestion(q);
+    setGameAnswers([]);
+    setGameScores({"You": 0});
+    setGameAnswered(false);
+    setGameSelected(null);
+    setGameRound(1);
+    setGameTimeLeft(10);
+    setGameResults([]);
+    setOnlineScreen("game");
+  };
+
+  const handleGameAnswer = (answer) => {
+    if (gameAnswered) return;
+    setGameSelected(answer);
+    setGameAnswered(true);
+    const correct = answer === gameQuestion.correct;
+    const pts = correct ? Math.max(1, gameTimeLeft) : 0;
+    setGameScores(function(prev) {
+      return {...prev, "You": (prev["You"] || 0) + pts};
+    });
+    setGameResults(function(prev) {
+      return [...prev, {question: gameQuestion.question, correct: gameQuestion.correct, selected: answer, got: correct}];
+    });
+  };
+
+  const nextGameRound = () => {
+    if (gameRound >= 10) {
+      const pts = gameScores["You"] || 0;
+      const xp = pts >= 90 ? XP_REWARDS.soloGamePerfect : XP_REWARDS.soloGameComplete + Math.floor(pts/2);
+      awardXP(xp, pts >= 90 ? "Perfect Game!" : "Game Complete!");
+      setOnlineScreen("results");
+      return;
+    }
+    const q = buildQuestion(gameMode, gameLevel);
+    setGameQuestion(q);
+    setGameAnswered(false);
+    setGameSelected(null);
+    setGameTimeLeft(10);
+    setGameRound(function(r){return r+1;});
+  };
 
   const startStudy = (level, cat) => {
     const q = buildStudyQueue(level, cat);
@@ -1974,8 +2233,16 @@ function App() {
       const updated = { ...cardProgress, [cardKey(activeLevel,activeCategory,i)]: newProg };
       saveCardProgress(updated);
     }
-    if (wasNew) bumpDaily(1);
+    if (wasNew) {
+      bumpDaily(1);
+      awardXP(XP_REWARDS.cardNew, "New card");
+    }
     bumpReviewed(activeLevel, activeCategory);
+    if (rating === 3) awardXP(XP_REWARDS.cardGood, "Good");
+    if (rating === 4) {
+      awardXP(XP_REWARDS.cardEasy, "Easy!");
+      if (newProg.interval && newProg.interval > 21) awardXP(XP_REWARDS.cardMastered, "Mastered!");
+    }
     if (rating <= 2) saveMistake(queue[queueIndex].card, activeLevel, activeCategory);
     setSessionStats(s => ({correct: s.correct + (rating >= 3 ? 1 : 0), total: s.total + 1}));
     if (queueIndex + 1 >= queue.length) setScreen("done");
@@ -2003,7 +2270,7 @@ function App() {
     setTimeout(() => {
       if (quizIndex + 1 >= quizQuestions.length) {
         const score = newAnswers.filter(a=>a.correct).length / quizQuestions.length;
-        if (score >= PASS_THRESHOLD) saveScripts({...scriptUnlocked,[quizDeck]:true});
+        if (score >= PASS_THRESHOLD) { saveScripts({...scriptUnlocked,[quizDeck]:true}); awardXP(XP_REWARDS.quizPassed, "Script Passed!"); }
         setScreen("scriptQuizResult");
       } else {
         setQuizIndex(i=>i+1); setQuizSelected(null); setQuizConfirmed(false);
@@ -2087,6 +2354,7 @@ function App() {
       if (levelTestIndex + 1 >= levelTestQuestions.length) {
         const score = newAnswers.filter(a=>a.correct).length / levelTestQuestions.length;
         if (score >= PASS_THRESHOLD) {
+          awardXP(XP_REWARDS.levelTestPassed, "Level Test Passed!");
           const nextIdx = LEVELS.indexOf(levelTestLevel) + 1;
           const nextLevel = LEVELS[nextIdx] || levelTestLevel;
           const newPassed = {...levelProgress.passed, [levelTestLevel]:true};
@@ -2123,12 +2391,14 @@ function App() {
     const newScore = {correct: particleScore.correct+(correct?1:0), total: particleScore.total+1};
     setParticleScore(newScore);
     setParticleConfirmed(true);
+    if (correct) awardXP(XP_REWARDS.particleCorrect, "+XP Particle!");
     // Check if passed (80% after all questions)
     if (particleIndex + 1 >= PARTICLES.length) {
       const pct = newScore.correct / PARTICLES.length;
       if (pct >= PASS_THRESHOLD && !particlePassed) {
         saveState("nh_particlePassed", true);
         setParticlePassed(true);
+        awardXP(XP_REWARDS.quizPassed, "+XP Quiz Passed!");
       }
     }
   };
@@ -2176,6 +2446,7 @@ function App() {
     setSentenceCorrect(correct);
     setSentenceChecked(true);
     setSentenceScore(s => ({correct: s.correct+(correct?1:0), total: s.total+1}));
+    if (correct) awardXP(XP_REWARDS.sentenceCorrect, "+XP Sentence!");
     if (!correct) saveMistake({f: SENTENCES[level][idx].english, b: SENTENCES[level][idx].answer.join(" "), hint:`${level} Sentence`}, level, "reading");
   };
 
@@ -2241,16 +2512,385 @@ function App() {
   };
   const isScript = screen === 'study' && (activeCategory === 'hiragana' || activeCategory === 'katakana');
 
+  // Kanji characters for background
+  const BG_KANJI = ["日","本","語","山","水","火","木","金","土","空","海","花","月","星","風","雨","雲","道","心","力","夢","愛","光","命","時","人","手","目","耳","口","声","音","歌","学","文","書","読","話","聞","見","知","思","感","動","静","強","弱","大","小","美","楽","悲","喜","怒","和","平","戦","勝","負","生","死","始","終","新","古","高","低","長","短","多","少","早","遅","明","暗","寒","暑","春","夏","秋","冬"];
+
   return (
-    React.createElement('div', { style: {...S.root, background: T.bg, color: T.text},}
+    React.createElement('div', { style: {...S.root, background: currentBg.bg, color: T.text, position:"relative", overflow:"hidden"},}
+      /* Animated kanji background */
+      , React.createElement('div', { style: {position:"fixed",top:0,left:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0,overflow:"hidden"},}
+        , BG_KANJI.map(function(k, i) {
+          const col = (i % 12) * 8.5 + 1;
+          const delay = -(i * 1.7) % 25;
+          const dur = 12 + (i % 10) * 2;
+          const size = 16 + (i % 5) * 5;
+          const opacity = 0.07 + (i % 4) * 0.02;
+          return React.createElement("div", {
+            key: i,
+            style: {
+              position:"absolute",
+              left: col + "%",
+              fontSize: size,
+              color: "rgba(255,255,255," + opacity + ")",
+              fontFamily: "Georgia,serif",
+              animation: "kanjiFloat " + dur + "s " + delay + "s linear infinite",
+              userSelect:"none",
+              lineHeight:1,
+              writingMode: "vertical-rl",
+              letterSpacing: 10,
+            }
+          }, BG_KANJI.slice(i % (BG_KANJI.length - 5), (i % (BG_KANJI.length - 5)) + 5).join(""));
+        })
+      )
       , React.createElement('style', null, CSS)
 
+      /* Persistent avatar button - shows on all screens */
+      , screen !== "home" && (
+        React.createElement('button', {
+          style: {position:"fixed",top:16,right:16,width:40,height:40,borderRadius:12,border:"1px solid rgba(255,255,255,0.2)",background:"rgba(255,255,255,0.08)",fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:98,overflow:"hidden"},
+          onClick: function(){setShowAvatarPicker(true);},}
+          , avatar && avatar.startsWith("data:")
+            ? React.createElement("img",{src:avatar,style:{width:"100%",height:"100%",objectFit:"cover"}})
+            : getAvatarDisplay(avatar)
+        )
+      )
+
+      /* ── COSMETICS MODAL ── */
+      , showCosmetics && (
+        React.createElement('div', { style: {position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.9)",zIndex:1000,display:"flex",alignItems:"flex-end",justifyContent:"center"},
+          onClick: function(e){if(e.target===e.currentTarget)setShowCosmetics(false);},}
+          , React.createElement('div', { style: {background:"#0d0d18",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"24px 24px 0 0",padding:"24px 20px 48px",width:"100%",maxWidth:480,animation:"fadeUp 0.3s ease",maxHeight:"85vh",overflowY:"auto"},}
+
+            , React.createElement('div', { style: {display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24},}
+              , React.createElement('div', { style: {fontSize:22,fontWeight:700,color:"#fff"},}, "🎨 Customize" )
+              , React.createElement('button', { style: {background:"rgba(255,255,255,0.08)",border:"none",borderRadius:10,width:36,height:36,fontSize:20,cursor:"pointer",color:"rgba(255,255,255,0.6)"},
+                onClick: function(){setShowCosmetics(false);},}, "✕")
+            )
+
+            /* Preview panel - at top */
+            , (previewBg || previewBorder) && (function(){
+              const bgToShow = previewBg ? BACKGROUNDS.find(function(b){return b.id===previewBg;}) : null;
+              const borderToShow = previewBorder ? CARD_BORDERS.find(function(b){return b.id===previewBorder;}) : null;
+              return (
+                React.createElement('div', { style: {marginBottom:20}, className: "card-back-reveal",}
+                  , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.4)",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:12,textAlign:"center"},}, "👁 Preview — reach the level to unlock"
+
+                  )
+                  , React.createElement('div', { style: {borderRadius:20,overflow:"hidden",border:"1px solid rgba(255,255,255,0.12)"},}
+                    , React.createElement('div', { style: {background: bgToShow ? bgToShow.bg : currentBg.bg, padding:"24px 16px",display:"flex",flexDirection:"column",alignItems:"center",gap:14,position:"relative",overflow:"hidden"},}
+                      /* Background kanji art */
+                      , (bgToShow||currentBg) && (bgToShow||currentBg).kanji && (
+                        React.createElement('div', { style: {position:"absolute",right:-10,top:"50%",transform:"translateY(-50%)",fontSize:52,color:(bgToShow||currentBg).accent||"rgba(255,255,255,0.06)",fontFamily:"Georgia,serif",writingMode:"vertical-rl",lineHeight:1,pointerEvents:"none",userSelect:"none"},}
+                          , (bgToShow||currentBg).kanji
+                        )
+                      )
+                      /* Sample card */
+                      , React.createElement('div', { style: {
+                        background:"rgba(255,255,255,0.06)",
+                        border: borderToShow ? (borderToShow.color==="prismatic"?"2px solid transparent":borderToShow.style) : currentBorder.style,
+                        boxShadow: borderToShow ? borderToShow.glow : currentBorder.glow||"none",
+                        borderRadius:20, padding:"22px 28px", textAlign:"center", width:"100%",
+                        position:"relative",zIndex:1,
+                        backgroundImage: borderToShow && borderToShow.color==="prismatic" ? "linear-gradient(rgba(255,255,255,0.06),rgba(255,255,255,0.06)),linear-gradient(135deg,#e11d48,#7c3aed,#3b82f6,#22c55e,#f59e0b)" : undefined,
+                        backgroundOrigin: borderToShow && borderToShow.color==="prismatic" ? "border-box" : undefined,
+                        backgroundClip: borderToShow && borderToShow.color==="prismatic" ? "padding-box,border-box" : undefined,
+                      },}
+                        , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:1,marginBottom:12},}, "N5 · 語彙"  )
+                        , React.createElement('div', { style: {fontSize:52,color:"#fff",marginBottom:10,fontFamily:"Georgia"},}, "食べる")
+                        , React.createElement('div', { style: {width:32,height:1,background:"rgba(255,255,255,0.15)",margin:"0 auto 10px"},})
+                        , React.createElement('div', { style: {fontSize:20,color:"rgba(255,255,255,0.75)"},}, "To eat · taberu"   )
+                      )
+                      /* Labels */
+                      , React.createElement('div', { style: {display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center",position:"relative",zIndex:1},}
+                        , bgToShow && React.createElement('div', { style: {background:"rgba(0,0,0,0.5)",borderRadius:10,padding:"5px 12px",fontSize:16,color:"#f59e0b",fontFamily:"monospace"},}, bgToShow.emoji, " " , bgToShow.jp, " · Lv."  , bgToShow.unlockLevel)
+                        , borderToShow && React.createElement('div', { style: {background:"rgba(0,0,0,0.5)",borderRadius:10,padding:"5px 12px",fontSize:16,color:"#a78bfa",fontFamily:"monospace"},}, "✨ " , borderToShow.jp, " · Lv."  , borderToShow.unlockLevel)
+                      )
+                    )
+                  )
+                  , React.createElement('div', { style: {textAlign:"center",marginTop:8,fontSize:16,color:"rgba(255,255,255,0.3)"},}, "Keep studying to unlock!"   )
+                )
+              );
+            })()
+
+            /* Backgrounds */
+            , React.createElement('div', { style: {marginBottom:28},}
+              , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.4)",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:14},}, "背景 Backgrounds" )
+              , React.createElement('div', { style: {display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10},}
+                , BACKGROUNDS.map(function(bg) {
+                  const unlocked = playerLevel >= bg.unlockLevel;
+                  const isActive = activeBg === bg.id;
+                  const isPreviewing = previewBg === bg.id;
+                  return (
+                    React.createElement('button', { key: bg.id,
+                      style: {border:"2px solid "+(isActive?"#e11d48":isPreviewing?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.06)"),borderRadius:16,padding:0,cursor:"pointer",overflow:"hidden",position:"relative",opacity:unlocked?1:0.65,transition:"all 0.2s",background:bg.bg},
+                      onClick: function(){
+                        if (unlocked) { saveActiveBg(bg.id); setPreviewBg(null); }
+                        else { setPreviewBg(isPreviewing?null:bg.id); }
+                      },}
+                      /* Art panel */
+                      , React.createElement('div', { style: {height:72,background:bg.bg,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden"},}
+                        /* Floating kanji art */
+                        , bg.kanji && (
+                          React.createElement('div', { style: {position:"absolute",fontSize:32,color:bg.accent||"rgba(255,255,255,0.08)",fontFamily:"Georgia,serif",letterSpacing:4,writingMode:"vertical-rl",lineHeight:1},}
+                            , bg.kanji
+                          )
+                        )
+                        /* Center emoji */
+                        , React.createElement('span', { style: {fontSize:26,position:"relative",zIndex:1,filter:unlocked?"none":"grayscale(1)"},}
+                          , unlocked||isPreviewing ? bg.emoji : "🔒"
+                        )
+                        /* Active checkmark */
+                        , isActive && React.createElement('div', { style: {position:"absolute",top:4,right:4,background:"#e11d48",borderRadius:6,width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#fff"},}, "✓")
+                        , isPreviewing && !isActive && React.createElement('div', { style: {position:"absolute",top:4,right:4,background:"rgba(255,255,255,0.2)",borderRadius:6,width:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16},}, "👁")
+                      )
+                      /* Label */
+                      , React.createElement('div', { style: {padding:"7px 8px",background:"rgba(0,0,0,0.7)"},}
+                        , React.createElement('div', { style: {display:"flex",alignItems:"baseline",gap:4},}
+                          , React.createElement('span', { style: {fontSize:16,fontWeight:700,color:"#fff"},}, bg.name)
+                          , React.createElement('span', { style: {fontSize:16,color:"rgba(255,255,255,0.4)",fontFamily:"Georgia"},}, bg.jp)
+                        )
+                        , !unlocked && React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.25)",fontFamily:"monospace"},}, "Lv.", bg.unlockLevel)
+                        , unlocked && isActive && React.createElement('div', { style: {fontSize:16,color:"#e11d48",fontFamily:"monospace"},}, "● active" )
+                      )
+                    )
+                  );
+                })
+              )
+            )
+
+            /* Card borders */
+            , React.createElement('div', null
+              , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.4)",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:14},}, "枠線 Card Borders"  )
+              , React.createElement('div', { style: {display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10},}
+                , CARD_BORDERS.map(function(border) {
+                  const unlocked = playerLevel >= border.unlockLevel;
+                  const isActive = activeBorder === border.id;
+                  const isPreviewing = previewBorder === border.id;
+                  return (
+                    React.createElement('button', { key: border.id,
+                      style: {border:"2px solid "+(isActive?"#e11d48":isPreviewing?"rgba(255,255,255,0.4)":"rgba(255,255,255,0.06)"),borderRadius:16,padding:0,cursor:"pointer",opacity:unlocked?1:0.65,overflow:"hidden",background:"rgba(255,255,255,0.03)",transition:"all 0.2s"},
+                      onClick: function(){
+                        if (unlocked) { saveActiveBorder(border.id); setPreviewBorder(null); }
+                        else { setPreviewBorder(isPreviewing?null:border.id); }
+                      },}
+                      /* Art preview */
+                      , React.createElement('div', { style: {padding:"16px 12px",display:"flex",alignItems:"center",gap:12},}
+                        /* Mini card with border */
+                        , React.createElement('div', { style: {
+                          width:48,height:56,borderRadius:12,
+                          background:"rgba(255,255,255,0.04)",
+                          border:border.color==="prismatic"?"2px solid transparent":border.style,
+                          boxShadow:border.glow||"none",
+                          flexShrink:0,
+                          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+                          gap:2,
+                          backgroundImage:border.color==="prismatic"?"linear-gradient(rgba(255,255,255,0.04),rgba(255,255,255,0.04)),linear-gradient(135deg,#e11d48,#7c3aed,#3b82f6,#22c55e,#f59e0b)":undefined,
+                          backgroundOrigin:border.color==="prismatic"?"border-box":undefined,
+                          backgroundClip:border.color==="prismatic"?"padding-box,border-box":undefined,
+                        },}
+                          , React.createElement('span', { style: {fontSize:22,lineHeight:1},}, "字")
+                          , React.createElement('span', { style: {fontSize:16,color:"rgba(255,255,255,0.3)",fontFamily:"monospace"},}, "N5")
+                        )
+                        , React.createElement('div', { style: {flex:1},}
+                          , React.createElement('div', { style: {display:"flex",alignItems:"baseline",gap:5,marginBottom:3},}
+                            , React.createElement('span', { style: {fontSize:17,fontWeight:700,color:"#fff"},}, border.name)
+                            , React.createElement('span', { style: {fontSize:16,color:"rgba(255,255,255,0.35)",fontFamily:"Georgia"},}, border.jp)
+                          )
+                          , !unlocked && React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.25)",fontFamily:"monospace"},}, "Lv.", border.unlockLevel)
+                          , unlocked && isActive && React.createElement('div', { style: {fontSize:16,color:"#e11d48",fontFamily:"monospace"},}, "● active" )
+                          , unlocked && !isActive && React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.25)",fontFamily:"monospace"},}, "tap to apply"  )
+                          , !unlocked && isPreviewing && React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.5)",fontFamily:"monospace"},}, "👁 previewing" )
+                        )
+                      )
+                    )
+                  );
+                })
+              )
+            )
+
+
+
+          )
+        )
+      )
+
+      /* ── AVATAR PICKER MODAL ── */
+      , showAvatarPicker && (
+        React.createElement('div', { style: {position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.85)",zIndex:1000,display:"flex",alignItems:"flex-end",justifyContent:"center"},
+          onClick: function(e){if(e.target===e.currentTarget)setShowAvatarPicker(false);},}
+          , React.createElement('div', { style: {background:"#111118",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"24px 24px 0 0",padding:"24px 20px 48px",width:"100%",maxWidth:480,animation:"fadeUp 0.3s ease"},}
+            , React.createElement('div', { style: {display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20},}
+              , React.createElement('div', { style: {fontSize:22,fontWeight:700,color:"#fff"},}, "Choose Avatar" )
+              , React.createElement('button', { style: {background:"rgba(255,255,255,0.08)",border:"none",borderRadius:10,width:36,height:36,fontSize:20,cursor:"pointer",color:"rgba(255,255,255,0.6)"},
+                onClick: function(){setShowAvatarPicker(false);},}, "✕")
+            )
+
+            /* Upload photo */
+            , React.createElement('div', { style: {marginBottom:20},}
+              , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.4)",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:10},}, "Upload photo" )
+              , React.createElement('label', { style: {display:"flex",alignItems:"center",gap:12,background:"rgba(255,255,255,0.05)",border:"1px dashed rgba(255,255,255,0.2)",borderRadius:16,padding:"16px",cursor:"pointer"},}
+                , React.createElement('div', { style: {width:52,height:52,borderRadius:14,overflow:"hidden",background:"rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0},}
+                  , avatar && avatar.startsWith("data:")
+                    ? React.createElement("img",{src:avatar,style:{width:"100%",height:"100%",objectFit:"cover"}})
+                    : "📷"
+                )
+                , React.createElement('div', null
+                  , React.createElement('div', { style: {fontSize:18,fontWeight:600,color:"#fff",marginBottom:2},}, "Upload from camera roll"   )
+                  , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.4)"},}, "JPG, PNG · auto-cropped to square"     )
+                )
+                , React.createElement('input', { type: "file", accept: "image/*", style: {display:"none"},
+                  onChange: function(e){
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                      const img = new Image();
+                      img.onload = function() {
+                        const canvas = document.createElement("canvas");
+                        const size = Math.min(img.width, img.height);
+                        canvas.width = 120; canvas.height = 120;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, (img.width-size)/2, (img.height-size)/2, size, size, 0, 0, 120, 120);
+                        saveAvatar(canvas.toDataURL("image/jpeg", 0.8));
+                        setShowAvatarPicker(false);
+                      };
+                      img.src = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                  },})
+              )
+            )
+
+            /* Character grid */
+            , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.4)",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:10},}, "Or choose a character"   )
+            , React.createElement('div', { style: {display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10},}
+              , AVATAR_CHARS.map(function(a) {
+                const isSelected = avatar === a.key;
+                return (
+                  React.createElement('button', { key: a.key,
+                    style: {background:isSelected?"rgba(225,29,72,0.2)":"rgba(255,255,255,0.05)",border:"2px solid "+(isSelected?"#e11d48":"rgba(255,255,255,0.08)"),borderRadius:16,padding:"14px 8px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:6,transition:"all 0.15s"},
+                    onClick: function(){saveAvatar(a.key);setShowAvatarPicker(false);},}
+                    , React.createElement('span', { style: {fontSize:36},}, a.emoji)
+                    , React.createElement('span', { style: {fontSize:16,color:isSelected?"#e11d48":"rgba(255,255,255,0.5)",fontFamily:"monospace"},}, a.label)
+                  )
+                );
+              })
+            )
+          )
+        )
+      )
+
+      /* Floating XP popup */
+      , xpAnim && (
+        React.createElement('div', { style: {position:"fixed",bottom:100,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#f59e0b,#e11d48)",borderRadius:20,padding:"8px 20px",fontSize:20,fontWeight:800,color:"#fff",zIndex:999,animation:"xpPop 1.5s ease forwards",pointerEvents:"none",whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(245,158,11,0.5)"},}, "+"
+          , xpAnim.amount, " XP"
+        )
+      )
+
+      /* Level up overlay */
+      , levelUpAnim && (
+        React.createElement('div', { style: {position:"fixed",top:0,left:0,width:"100%",height:"100%",background:"rgba(0,0,0,0.92)",zIndex:998,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16,animation:"fadeUp 0.3s ease",padding:"0 24px"},
+          onClick: function(){setLevelUpAnim(null);},}
+          , React.createElement('div', { style: {fontSize:68},}, "⭐")
+          , React.createElement('div', { style: {fontSize:24,color:"rgba(255,255,255,0.6)",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace"},}, "Level Up!" )
+          , React.createElement('div', { style: {fontSize:84,fontWeight:900,background:"linear-gradient(135deg,#f59e0b,#e11d48)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1},}, "Lv.", levelUpAnim)
+          , React.createElement('div', { style: {fontSize:24,fontWeight:700,color:getRank(levelUpAnim).color},}, getRank(levelUpAnim).jp, " — "  , getRank(levelUpAnim).title)
+          , (function(){
+            const unlockBg = BACKGROUNDS.find(function(b){return b.unlockLevel===levelUpAnim;});
+            const unlockBorder = CARD_BORDERS.find(function(b){return b.unlockLevel===levelUpAnim;});
+            if (!unlockBg && !unlockBorder) return null;
+            return (
+              React.createElement('div', { style: {background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:16,padding:"16px 24px",textAlign:"center",marginTop:8},}
+                , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.5)",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:10},}, "🎁 Unlocked" )
+                , unlockBg && React.createElement('div', { style: {fontSize:19,fontWeight:700,color:"#f59e0b",marginBottom:4},}, "🌌 \"" , unlockBg.name, "\" Background" )
+                , unlockBorder && React.createElement('div', { style: {fontSize:19,fontWeight:700,color:"#a78bfa"},}, "✨ \"" , unlockBorder.name, "\" Card Border"  )
+                , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.4)",marginTop:8},}, "Find it in Settings → Customize"     )
+              )
+            );
+          })()
+          , React.createElement('div', { style: {fontSize:17,color:"rgba(255,255,255,0.4)",marginTop:4},}, "Tap to continue"  )
+        )
+      )
+
       /* ── HOME ── */
-      , screen === "home" && (
+      , screen === "home" && mainMode === "splash" && (
+        React.createElement('div', { style: {minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 24px",position:"relative",zIndex:1},}
+          /* Logo */
+          , React.createElement('div', { style: {textAlign:"center",marginBottom:48},}
+            , React.createElement('div', { style: {display:"inline-flex",alignItems:"center",justifyContent:"center",width:100,height:100,borderRadius:32,background:"linear-gradient(135deg,#e11d48,#7c3aed)",boxShadow:"0 12px 48px rgba(225,29,72,0.5)",marginBottom:20,fontSize:56},}, "続")
+            , React.createElement('div', { style: {fontSize:42,fontWeight:900,letterSpacing:6,color:"#fff",marginBottom:8},}, "ZOKU")
+            , React.createElement('div', { style: {fontSize:19,color:"rgba(255,255,255,0.5)",letterSpacing:1},}, "Keep going. Every day counts."    )
+          )
+
+          /* Two big buttons */
+          , React.createElement('div', { style: {display:"flex",flexDirection:"column",gap:16,width:"100%",maxWidth:380},}
+            , React.createElement('button', {
+              style: {background:"linear-gradient(135deg,#e11d48,#be123c)",border:"none",borderRadius:20,padding:"24px",cursor:"pointer",display:"flex",alignItems:"center",gap:16,boxShadow:"0 8px 32px rgba(225,29,72,0.4)",transition:"transform 0.2s"},
+              onClick: function(){setMainMode("training");},}
+              , React.createElement('span', { style: {fontSize:44},}, "🎌")
+              , React.createElement('div', { style: {textAlign:"left"},}
+                , React.createElement('div', { style: {fontSize:24,fontWeight:800,color:"#fff",marginBottom:4},}, "Training")
+                , React.createElement('div', { style: {fontSize:17,color:"rgba(255,255,255,0.7)"},}, "Flashcards, grammar, sentences & more"    )
+              )
+              , React.createElement('span', { style: {marginLeft:"auto",fontSize:26,color:"rgba(255,255,255,0.7)"},}, "›")
+            )
+
+            , React.createElement('button', {
+              style: {background:"linear-gradient(135deg,#7c3aed,#4f46e5)",border:"none",borderRadius:20,padding:"24px",cursor:"pointer",display:"flex",alignItems:"center",gap:16,boxShadow:"0 8px 32px rgba(124,58,237,0.4)",transition:"transform 0.2s"},
+              onClick: function(){setMainMode("online");},}
+              , React.createElement('span', { style: {fontSize:44},}, "⚔️")
+              , React.createElement('div', { style: {textAlign:"left"},}
+                , React.createElement('div', { style: {fontSize:24,fontWeight:800,color:"#fff",marginBottom:4},}, "Online")
+                , React.createElement('div', { style: {fontSize:17,color:"rgba(255,255,255,0.7)"},}, "Challenge friends in Japanese trivia"    )
+              )
+              , React.createElement('span', { style: {marginLeft:"auto",fontSize:26,color:"rgba(255,255,255,0.7)"},}, "›")
+            )
+          )
+
+          , (function(){
+            const splashLvl = getLevelFromXP(totalXP);
+            const rank = getRank(splashLvl);
+            return (
+              React.createElement('div', { style: {marginTop:28,display:"flex",alignItems:"center",gap:12},}
+                /* Avatar */
+                , React.createElement('button', {
+                  style: {width:52,height:52,borderRadius:16,border:"2px solid "+rank.color+"66",background:"rgba(255,255,255,0.08)",fontSize:32,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0},
+                  onClick: function(){setShowAvatarPicker(true);},}
+                  , avatar && avatar.startsWith("data:")
+                    ? React.createElement("img",{src:avatar,style:{width:"100%",height:"100%",objectFit:"cover"}})
+                    : getAvatarDisplay(avatar)
+                )
+                , React.createElement('div', null
+                  , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:8},}
+                    , React.createElement('div', { style: {background:rank.color+"22",border:"1px solid "+rank.color+"44",borderRadius:10,padding:"3px 10px",fontSize:17,fontWeight:800,color:rank.color,fontFamily:"monospace"},}, "Lv.", splashLvl)
+                    , React.createElement('div', { style: {fontSize:17,fontWeight:600,color:"#fff"},}, playerName || "Set name →")
+                  )
+                  , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.4)",marginTop:3},}, rank.title, " · "  , totalXP, " XP" )
+                )
+              )
+            );
+          })()
+          , React.createElement('div', { style: {marginTop:12,fontSize:16,color:"rgba(255,255,255,0.2)",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace"},}, "日本語を学ぼう")
+        )
+      )
+
+      /* ── TRAINING HOME ── */
+      , screen === "home" && mainMode === "training" && (
         React.createElement('div', { style: S.home,}
+          /* Back to splash */
+          , React.createElement('button', { style: {position:"fixed",top:16,left:16,background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:12,width:44,height:44,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:99,color:"#fff"},
+            onClick: function(){setMainMode("splash");},}, "←")
+          /* Avatar button */
+          , React.createElement('button', {
+            style: {position:"fixed",top:16,right:68,width:44,height:44,borderRadius:12,border:"1px solid rgba(255,255,255,0.2)",background:"rgba(255,255,255,0.08)",fontSize:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:99,overflow:"hidden"},
+            onClick: function(){setShowAvatarPicker(true);},}
+            , avatar && avatar.startsWith("data:")
+              ? React.createElement("img",{src:avatar,style:{width:"100%",height:"100%",objectFit:"cover"}})
+              : getAvatarDisplay(avatar)
+          )
           /* Settings gear button */
           , React.createElement('button', {
-            style: {position:"fixed",top:16,right:16,background:T.bg2,border:`1px solid ${T.border}`,borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:99,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"},
+            style: {position:"fixed",top:16,right:16,background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.3)",borderRadius:12,width:44,height:44,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:99,boxShadow:"0 2px 12px rgba(0,0,0,0.4)",color:"#ffffff"},
             onClick: () => setScreen("settings"),
             title: "Settings",}
 , "⚙")
@@ -2264,16 +2904,41 @@ function App() {
             )
           )
 
-          , React.createElement('div', { style: S.header,}
-            , React.createElement('div', { style: S.logo,}, React.createElement('span', { style: {...S.logoJp,color:T.text},}, "日本語"), React.createElement('span', { style: {...S.logoEn,color:T.textMuted},}, "NIHONGO"))
-            , React.createElement('p', { style: {...S.tagline,color:T.textMuted},}, "N5 to N1 — Learn Japanese the right way"        )
-          )
+          , React.createElement('div', { style: {textAlign:"center",marginBottom:20,padding:"8px 0"},}
+              /* Logo badge */
+              , React.createElement('div', { style: {display:"inline-flex",alignItems:"center",justifyContent:"center",width:80,height:80,borderRadius:24,background:"linear-gradient(135deg,#e11d48 0%,#7c3aed 100%)",boxShadow:"0 8px 32px rgba(225,29,72,0.4)",marginBottom:16,fontSize:46},}, "続")
+              , React.createElement('div', { style: {fontSize:36,fontWeight:900,letterSpacing:4,color:"#fff",marginBottom:6},}, "ZOKU")
+              , React.createElement('div', { style: {fontSize:18,color:"rgba(255,255,255,0.5)",letterSpacing:1,marginBottom:16},}, "Keep going. Every day counts."    )
+              /* XP Level bar */
+              , (function(){
+                const lvl = getLevelFromXP(totalXP);
+                const rank = getRank(lvl);
+                const curLevelXP = getXPForLevel(lvl);
+                const nextLevelXP = getXPForNextLevel(lvl);
+                const progress = nextLevelXP > curLevelXP ? Math.round(((totalXP - curLevelXP) / (nextLevelXP - curLevelXP)) * 100) : 100;
+                return (
+                  React.createElement('div', { style: {width:"100%",maxWidth:320,margin:"0 auto"},}
+                    , React.createElement('div', { style: {display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8},}
+                      , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:8},}
+                        , React.createElement('div', { style: {background:"linear-gradient(135deg,"+rank.color+","+rank.color+"88)",borderRadius:10,padding:"4px 12px",fontSize:17,fontWeight:800,color:"#fff",fontFamily:"monospace"},}, "Lv.", lvl)
+                        , React.createElement('div', { style: {fontSize:17,fontWeight:600,color:rank.color},}, rank.jp, " " , rank.title)
+                      )
+                      , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.4)",fontFamily:"monospace"},}, totalXP, " XP" )
+                    )
+                    , React.createElement('div', { style: {height:6,background:"rgba(255,255,255,0.08)",borderRadius:3,overflow:"hidden"},}
+                      , React.createElement('div', { style: {height:"100%",width:progress+"%",background:"linear-gradient(90deg,"+rank.color+",#f59e0b)",borderRadius:3,transition:"width 0.6s ease"},})
+                    )
+                    , lvl < 50 && React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.3)",marginTop:5,textAlign:"right",fontFamily:"monospace"},}, nextLevelXP - totalXP, " XP to Lv."   , lvl+1)
+                  )
+                );
+              })()
+            )
 
-          /* ── FIRST TIME: show welcome banner ── */
+            /* ── FIRST TIME: show welcome banner ── */
           , !scriptUnlocked.hiragana && !scriptUnlocked.katakana && Object.keys(cardProgress).length === 0 && (
             React.createElement('div', { style: {background:"linear-gradient(135deg,rgba(225,29,72,0.15),rgba(124,58,237,0.15))",border:"1px solid rgba(225,29,72,0.3)",borderRadius:16,padding:"20px 18px",marginBottom:4,textAlign:"center"},}
               , React.createElement('div', { style: {fontSize:32,marginBottom:8},}, "👋 こんにちは！" )
-              , React.createElement('div', { style: {fontSize:21,fontWeight:700,color:T.text,marginBottom:6},}, "Welcome to Nihongo!"  )
+              , React.createElement('div', { style: {fontSize:21,fontWeight:700,color:T.text,marginBottom:6},}, "Welcome to Zoku!"  )
               , React.createElement('div', { style: {fontSize:18,color:T.textMuted,lineHeight:1.7,marginBottom:14},}, "You have zero Japanese experience? No problem! Follow the steps below in order and you will be reading, writing and speaking Japanese before you know it."
 
               )
@@ -2450,6 +3115,210 @@ function App() {
                 )
               )
             )
+          )
+        )
+      )
+
+      /* ── ONLINE LOBBY ── */
+      , screen === "home" && mainMode === "online" && onlineScreen === "lobby" && (
+        React.createElement('div', { style: {minHeight:"100vh",display:"flex",flexDirection:"column",padding:"32px 24px",position:"relative",zIndex:1,maxWidth:480,margin:"0 auto",width:"100%"},}
+          , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:12,marginBottom:32},}
+            , React.createElement('button', { style: {background:"rgba(255,255,255,0.1)",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",color:"#fff"}, onClick: function(){setMainMode("splash");},}, "←")
+            , React.createElement('div', { style: {fontSize:26,fontWeight:800,color:"#fff"},}, "⚔️ Online Battle"  )
+          )
+
+          /* Name input */
+          , !playerName && (
+            React.createElement('div', { style: {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:20,padding:24,marginBottom:20},}
+              , React.createElement('div', { style: {fontSize:19,fontWeight:700,color:"#fff",marginBottom:4},}, "Your name" )
+              , React.createElement('div', { style: {fontSize:17,color:"rgba(255,255,255,0.5)",marginBottom:14},}, "Pick a name to show other players"      )
+              , React.createElement('input', { value: nameInput, onChange: function(e){setNameInput(e.target.value);}, placeholder: "Enter your name..."  , maxLength: 16,
+                style: {width:"100%",background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:12,padding:"12px 16px",fontSize:20,color:"#fff",outline:"none",marginBottom:12,boxSizing:"border-box"},})
+              , React.createElement('button', { style: {...S.primaryBtn,width:"100%"}, onClick: function(){if(nameInput.trim()){saveState("zoku_name",nameInput.trim());setPlayerName(nameInput.trim());}},}, "Save Name" )
+            )
+          )
+
+          , playerName && (
+            React.createElement(React.Fragment, null
+              , React.createElement('div', { style: {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:"14px 16px",marginBottom:20,display:"flex",alignItems:"center",gap:12},}
+                , React.createElement('button', {
+                  style: {width:48,height:48,borderRadius:14,border:"2px solid rgba(255,255,255,0.2)",background:"rgba(255,255,255,0.08)",fontSize:30,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0},
+                  onClick: function(){setShowAvatarPicker(true);},}
+                  , avatar && avatar.startsWith("data:")
+                    ? React.createElement("img",{src:avatar,style:{width:"100%",height:"100%",objectFit:"cover"}})
+                    : getAvatarDisplay(avatar)
+                )
+                , React.createElement('div', { style: {flex:1},}
+                  , React.createElement('div', { style: {fontSize:20,fontWeight:700,color:"#fff"},}, playerName)
+                  , React.createElement('button', { style: {background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer",fontSize:16,padding:0}, onClick: function(){setPlayerName("");saveState("zoku_name","");},}, "change name" )
+                )
+                , React.createElement('button', { style: {background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,padding:"6px 12px",cursor:"pointer",fontSize:16,color:"rgba(255,255,255,0.6)"},
+                  onClick: function(){setShowAvatarPicker(true);},}, "Edit avatar" )
+              )
+
+              /* Game mode picker */
+              , React.createElement('div', { style: {background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:20,padding:20,marginBottom:16},}
+                , React.createElement('div', { style: {fontSize:18,fontWeight:700,color:"#fff",marginBottom:14},}, "Game Mode" )
+                , React.createElement('div', { style: {display:"flex",flexDirection:"column",gap:8},}
+                  , [
+                    {key:"characters",icon:"あ",label:"Characters",sub:"Identify hiragana & katakana"},
+                    {key:"words",icon:"語",label:"Words",sub:"Match vocabulary by level"},
+                    {key:"sentences",icon:"文",label:"Sentences",sub:"Translate sentences"}
+                  ].map(function(m) {
+                    return (
+                      React.createElement('button', { key: m.key,
+                        style: {border:"1px solid "+(gameMode===m.key?"#7c3aed":"rgba(255,255,255,0.1)"),borderRadius:14,padding:"14px 16px",cursor:"pointer",background:gameMode===m.key?"rgba(124,58,237,0.15)":"rgba(255,255,255,0.04)",display:"flex",alignItems:"center",gap:12,textAlign:"left",transition:"all 0.15s"},
+                        onClick: function(){setGameMode(m.key);},}
+                        , React.createElement('span', { style: {fontSize:28},}, m.icon)
+                        , React.createElement('div', null
+                          , React.createElement('div', { style: {fontSize:19,fontWeight:700,color:"#fff"},}, m.label)
+                          , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.5)"},}, m.sub)
+                        )
+                        , gameMode===m.key&&React.createElement('span', { style: {marginLeft:"auto",color:"#7c3aed",fontSize:22},}, "✓")
+                      )
+                    );
+                  })
+                )
+
+                , gameMode !== "characters" && (
+                  React.createElement('div', { style: {marginTop:14},}
+                    , React.createElement('div', { style: {fontSize:17,color:"rgba(255,255,255,0.5)",marginBottom:10},}, "Level")
+                    , React.createElement('div', { style: {display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8},}
+                      , LEVELS.map(function(lv) {
+                        return (
+                          React.createElement('button', { key: lv,
+                            style: {border:"2px solid "+(gameLevel===lv?LEVEL_COLORS[lv]:"rgba(255,255,255,0.1)"),borderRadius:10,padding:"10px 4px",cursor:"pointer",background:gameLevel===lv?"rgba(255,255,255,0.1)":"transparent",color:gameLevel===lv?LEVEL_COLORS[lv]:"rgba(255,255,255,0.5)",fontSize:18,fontWeight:700,fontFamily:"monospace"},
+                            onClick: function(){setGameLevel(lv);},}
+                            , lv
+                          )
+                        );
+                      })
+                    )
+                  )
+                )
+              )
+
+              /* Play Solo */
+              , React.createElement('button', { style: {...S.primaryBtn,background:"linear-gradient(135deg,#7c3aed,#4f46e5)",marginBottom:10,boxShadow:"0 8px 32px rgba(124,58,237,0.4)"},
+                onClick: function(){startSoloGame(gameMode,gameLevel);},}, "🎮 Play Solo Practice"
+
+              )
+
+              , React.createElement('div', { style: {textAlign:"center",fontSize:17,color:"rgba(255,255,255,0.3)",margin:"8px 0"},}, "— or play with friends —"     )
+
+              /* Join room */
+              , React.createElement('div', { style: {background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:20},}
+                , React.createElement('div', { style: {fontSize:18,fontWeight:700,color:"#fff",marginBottom:4},}, "Multiplayer")
+                , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.4)",marginBottom:14},}, "Coming soon — share a room code with friends to battle live!"           )
+                , React.createElement('div', { style: {display:"flex",gap:10,marginBottom:10},}
+                  , React.createElement('input', { value: roomInput, onChange: function(e){setRoomInput(e.target.value.toUpperCase());}, placeholder: "Room code..." , maxLength: 4,
+                    style: {flex:1,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:12,padding:"12px 16px",fontSize:22,color:"#fff",outline:"none",fontFamily:"monospace",letterSpacing:4,textTransform:"uppercase"},})
+                  , React.createElement('button', { style: {background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.15)",borderRadius:12,padding:"0 18px",cursor:"pointer",fontSize:18,color:"rgba(255,255,255,0.5)",opacity:0.5},}, "Join")
+                )
+                , React.createElement('button', { style: {width:"100%",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"12px",cursor:"pointer",fontSize:18,color:"rgba(255,255,255,0.4)"},}, "Create Room" )
+              )
+            )
+          )
+        )
+      )
+
+      /* ── SOLO GAME ── */
+      , screen === "home" && mainMode === "online" && onlineScreen === "game" && gameQuestion && (
+        React.createElement('div', { style: {minHeight:"100vh",display:"flex",flexDirection:"column",padding:"24px 20px",position:"relative",zIndex:1,maxWidth:480,margin:"0 auto",width:"100%"},}
+          , React.createElement('div', { style: {display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16},}
+            , React.createElement('button', { style: {background:"rgba(255,255,255,0.1)",border:"none",borderRadius:10,width:40,height:40,fontSize:22,cursor:"pointer",color:"#fff"},
+              onClick: function(){setOnlineScreen("lobby");},}, "←")
+            , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:10},}
+              , React.createElement('span', { style: {background:"rgba(124,58,237,0.3)",border:"1px solid #7c3aed",borderRadius:10,padding:"4px 12px",fontSize:17,color:"#c4b5fd",fontFamily:"monospace"},}, "Round " , gameRound, "/10")
+              , React.createElement('span', { style: {background:"rgba(255,255,255,0.1)",borderRadius:10,padding:"4px 12px",fontSize:17,color:"#fff",fontFamily:"monospace",fontWeight:700},}, "⭐ "
+                 , gameScores["You"] || 0
+              )
+            )
+          )
+
+          /* Timer bar */
+          , React.createElement('div', { style: {height:6,background:"rgba(255,255,255,0.08)",borderRadius:3,marginBottom:24,overflow:"hidden"},}
+            , React.createElement('div', { style: {height:"100%",width:(gameTimeLeft/10*100)+"%",background:gameTimeLeft>5?"#22c55e":gameTimeLeft>3?"#f97316":"#ef4444",borderRadius:3,transition:"width 1s linear"},})
+          )
+
+          /* Question card */
+          , React.createElement('div', { style: {background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:24,padding:"36px 24px",textAlign:"center",marginBottom:24},}
+            , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.4)",fontFamily:"monospace",letterSpacing:2,textTransform:"uppercase",marginBottom:16},}
+              , gameMode==="characters"?"What does this mean?":gameMode==="words"?"What is this word?":"Translate this sentence"
+            )
+            , React.createElement('div', { style: {fontSize:gameMode==="sentences"?18:56,lineHeight:1.3,color:"#fff",fontWeight:gameMode==="sentences"?400:700,fontStyle:gameMode==="sentences"?"italic":"normal"},}
+              , gameQuestion.question
+            )
+          )
+
+          /* Answer options */
+          , React.createElement('div', { style: {display:"flex",flexDirection:"column",gap:10},}
+            , gameQuestion.options.map(function(opt, i) {
+              var colors = ["#e11d48","#7c3aed","#0891b2","#f97316"];
+              var isCorrect = opt === gameQuestion.correct;
+              var isSelected = gameSelected === opt;
+              var bg = gameAnswered
+                ? isCorrect ? "rgba(34,197,94,0.2)" : isSelected ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.03)"
+                : "rgba(255,255,255,0.06)";
+              var border = gameAnswered
+                ? isCorrect ? "#22c55e" : isSelected ? "#ef4444" : "rgba(255,255,255,0.08)"
+                : colors[i]+"66";
+              return (
+                React.createElement('button', { key: i,
+                  style: {background:bg,border:"1px solid "+border,borderRadius:16,padding:"16px 20px",cursor:gameAnswered?"default":"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:12,transition:"all 0.2s",fontSize:19,color:gameAnswered?(isCorrect?"#22c55e":isSelected?"#ef4444":"rgba(255,255,255,0.4)"):"#fff"},
+                  onClick: function(){handleGameAnswer(opt);},}
+                  , React.createElement('span', { style: {width:28,height:28,borderRadius:8,background:gameAnswered?"transparent":colors[i]+"33",border:"1px solid "+colors[i]+"66",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,fontWeight:700,color:colors[i],flexShrink:0,fontFamily:"monospace"},}
+                    , ["A","B","C","D"][i]
+                  )
+                  , React.createElement('span', { style: {flex:1,lineHeight:1.4},}, opt)
+                  , gameAnswered && isCorrect && React.createElement('span', { style: {fontSize:22},}, "✓")
+                  , gameAnswered && isSelected && !isCorrect && React.createElement('span', { style: {fontSize:22},}, "✗")
+                )
+              );
+            })
+          )
+
+          , gameAnswered && (
+            React.createElement('button', { style: {...S.primaryBtn,background:"linear-gradient(135deg,#7c3aed,#4f46e5)",marginTop:20},
+              onClick: nextGameRound,}
+              , gameRound >= 10 ? "See Results →" : "Next Question →"
+            )
+          )
+        )
+      )
+
+      /* ── GAME RESULTS ── */
+      , screen === "home" && mainMode === "online" && onlineScreen === "results" && (
+        React.createElement('div', { style: {minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 24px",position:"relative",zIndex:1,maxWidth:480,margin:"0 auto",width:"100%"},}
+          , React.createElement('div', { style: {textAlign:"center",marginBottom:32},}
+            , React.createElement('div', { style: {fontSize:60,marginBottom:12},}, gameScores["You"]>=70?"🏆":gameScores["You"]>=40?"⭐":"📚")
+            , React.createElement('div', { style: {fontSize:32,fontWeight:900,color:"#fff",marginBottom:8},}, "Game Over!" )
+            , React.createElement('div', { style: {fontSize:56,fontWeight:900,color:"#7c3aed",marginBottom:4},}, gameScores["You"] || 0)
+            , React.createElement('div', { style: {fontSize:18,color:"rgba(255,255,255,0.5)"},}, "points out of "   , 10 * 10, " possible" )
+          )
+
+          /* Round breakdown */
+          , React.createElement('div', { style: {width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:20,marginBottom:24},}
+            , React.createElement('div', { style: {fontSize:17,color:"rgba(255,255,255,0.5)",marginBottom:14,fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"},}, "Round Review" )
+            , React.createElement('div', { style: {display:"flex",flexDirection:"column",gap:8},}
+              , gameResults.map(function(r, i) {
+                return (
+                  React.createElement('div', { key: i, style: {display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"},}
+                    , React.createElement('span', { style: {fontSize:20},}, r.got?"✅":"❌")
+                    , React.createElement('div', { style: {flex:1},}
+                      , React.createElement('div', { style: {fontSize:18,color:"#fff"},}, r.question)
+                      , !r.got&&React.createElement('div', { style: {fontSize:16,color:"#22c55e"},}, "Correct: " , r.correct)
+                    )
+                  )
+                );
+              })
+            )
+          )
+
+          , React.createElement('div', { style: {display:"flex",flexDirection:"column",gap:12,width:"100%"},}
+            , React.createElement('button', { style: {...S.primaryBtn,background:"linear-gradient(135deg,#7c3aed,#4f46e5)"},
+              onClick: function(){startSoloGame(gameMode,gameLevel);},}, "Play Again" )
+            , React.createElement('button', { style: {...S.secondaryBtn}, onClick: function(){setOnlineScreen("lobby");},}, "Back to Lobby"  )
           )
         )
       )
@@ -2892,6 +3761,18 @@ function App() {
             , React.createElement('span', { style: {width:40},})
           )
 
+          /* Cosmetics button */
+          , React.createElement('button', {
+            style: {width:"100%",background:"linear-gradient(135deg,rgba(225,29,72,0.15),rgba(124,58,237,0.15))",border:"1px solid rgba(124,58,237,0.3)",borderRadius:16,padding:"16px 20px",cursor:"pointer",display:"flex",alignItems:"center",gap:14,marginBottom:4,textAlign:"left"},
+            onClick: function(){setShowCosmetics(true);},}
+            , React.createElement('span', { style: {fontSize:32},}, "🎨")
+            , React.createElement('div', null
+              , React.createElement('div', { style: {fontSize:19,fontWeight:700,color:"#fff"},}, "Customize")
+              , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.5)",marginTop:2},}, "Backgrounds & card borders — unlock by leveling up"        )
+            )
+            , React.createElement('span', { style: {marginLeft:"auto",color:"rgba(255,255,255,0.4)",fontSize:22},}, "›")
+          )
+
           /* Daily cards */
           , React.createElement('div', { style: {...S.settingsBox, background:T.bg2, border:`1px solid ${T.border}`, marginTop:24},}
             , React.createElement('div', { style: {...S.settingsTitle, color:T.textMuted},}, "📚 New cards per day"    )
@@ -3168,7 +4049,7 @@ function App() {
             , React.createElement('div', { style: {...S.progressBarFill,width:`${(queueIndex/queue.length)*100}%`,background:activeCategory==="katakana_words"?"#0891b2":LEVEL_COLORS[activeLevel]||"#555"},} )
           )
           , React.createElement('div', { style: S.cardArea,}
-            , React.createElement('div', { key: animKey, className: `flashcard${isFlipping?" flipping":""}`, style: {...S.card, background:T.bg2, border:`1px solid ${T.border}`}, onClick: !flipped?handleFlip:undefined,}
+            , React.createElement('div', { key: animKey, className: `flashcard${isFlipping?" flipping":""}`, style: {...S.card, background:"rgba(255,255,255,0.06)", border:currentBorder.color==="prismatic"?"2px solid transparent":currentBorder.style, boxShadow:currentBorder.glow||"none", backgroundImage:currentBorder.color==="prismatic"?"linear-gradient(rgba(255,255,255,0.06),rgba(255,255,255,0.06)),linear-gradient(135deg,#e11d48,#7c3aed,#3b82f6,#22c55e,#f59e0b)":undefined, backgroundOrigin:"border-box", backgroundClip:currentBorder.color==="prismatic"?"padding-box,border-box":undefined}, onClick: !flipped?handleFlip:undefined,}
               , React.createElement('div', { style: {...S.cardHint,color:T.textFaint},}, card.card.hint || (activeCategory === "katakana_words" ? "Katakana Word" : `${activeLevel} · ${activeCategory}`))
               , !card.prog.introduced && React.createElement('div', { style: S.newBadge,}, "NEW")
               , React.createElement('div', { style: {...S.cardFront,fontSize:activeCategory==='reading'?20:activeCategory==='grammar'?24:60,lineHeight:1.4,color:T.text},}
@@ -3423,114 +4304,115 @@ function App() {
 // STYLES
 // ─────────────────────────────────────────────────────────────
 const S = {
-  root:{minHeight:"100vh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Georgia','Times New Roman',serif",display:"flex",flexDirection:"column"},
-  home:{maxWidth:680,margin:"0 auto",padding:"40px 20px 80px",width:"100%"},
-  header:{textAlign:"center",marginBottom:24},
+  root:{minHeight:"100vh",background:"#08080f",color:"#f0ede8",fontFamily:"'Georgia','Times New Roman',serif",display:"flex",flexDirection:"column"},
+  home:{maxWidth:680,margin:"0 auto",padding:"32px 18px 100px",width:"100%",position:"relative",zIndex:1},
+  header:{textAlign:"center",marginBottom:20},
   logo:{display:"flex",flexDirection:"column",alignItems:"center",gap:4,marginBottom:10},
   logoJp:{fontSize:52,fontWeight:400,letterSpacing:8,color:"#f0ede8",lineHeight:1},
   logoEn:{fontSize:16,letterSpacing:6,color:"#8a8070",fontStyle:"italic"},
   tagline:{color:"#8a8070",fontSize:18,letterSpacing:1,marginBottom:10},
-  gateBanner:{display:"flex",alignItems:"flex-start",gap:12,background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"14px 16px",marginBottom:18},
-  gateIcon:{fontSize:24,marginTop:2},gateTitle:{fontSize:17,color:"#f0ede8",marginBottom:3,fontWeight:600},gateSub:{fontSize:16,color:"#8a8070"},
-  sectionLabel:{fontSize:16,color:"#3a3a48",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginBottom:8},
+  gateBanner:{display:"flex",alignItems:"flex-start",gap:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"16px",marginBottom:16},
+  gateIcon:{fontSize:26,marginTop:2},gateTitle:{fontSize:18,color:"#fff",marginBottom:3,fontWeight:600},gateSub:{fontSize:16,color:"rgba(255,255,255,0.4)"},
+  sectionLabel:{fontSize:16,color:"rgba(255,255,255,0.25)",letterSpacing:3,textTransform:"uppercase",fontFamily:"monospace",marginBottom:10},
   grid2:{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:4},
-  sectionCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"18px 16px",width:"100%",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:4,position:"relative",transition:"all 0.2s",textAlign:"left",cursor:"pointer"},
+  sectionCard:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"22px 18px",width:"100%",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:6,position:"relative",transition:"all 0.25s",textAlign:"left",cursor:"pointer"},
   sectionIcon:{fontSize:32,lineHeight:1,marginBottom:4},
-  sectionName:{fontSize:18,fontWeight:600,color:"#f0ede8"},
-  sectionCount:{fontSize:16,color:"#8a8070"},
+  sectionName:{fontSize:18,fontWeight:700,color:"#fff"},
+  sectionCount:{fontSize:16,color:"rgba(255,255,255,0.4)"},
   duePill:{borderRadius:10,padding:"2px 8px",fontSize:16,color:"#fff",fontFamily:"monospace"},
   passedBadge:{position:"absolute",bottom:10,right:10,fontSize:16,color:"#22c55e",fontFamily:"monospace"},
-  testBtn:{width:"100%",background:"transparent",border:"1px solid",borderRadius:8,padding:"9px",fontSize:16,fontFamily:"Georgia,serif",cursor:"pointer",letterSpacing:0.5,transition:"all 0.15s"},
-  submenuCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:14,padding:"20px 18px",display:"flex",alignItems:"center",gap:16,cursor:"pointer",transition:"all 0.2s",textAlign:"left",width:"100%"},
-  levelCard:{background:"#13131a",borderRadius:14,padding:"16px",marginBottom:10},
-  levelBadge:{fontSize:16,fontWeight:700,color:"#fff",borderRadius:6,padding:"3px 8px",fontFamily:"monospace"},
-  catBtn:{background:"#0d0d14",border:"1px solid #1e1e2a",borderRadius:10,padding:"10px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",transition:"all 0.15s"},
-  settingsBox:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:12,padding:"16px",marginTop:20},
-  settingsTitle:{fontSize:16,color:"#8a8070",letterSpacing:1},
-  limitBtn:{border:"1px solid",borderRadius:8,padding:"6px 12px",fontSize:16,cursor:"pointer",fontFamily:"monospace",transition:"all 0.15s"},
-  studyWrap:{maxWidth:560,margin:"0 auto",padding:"24px 20px",width:"100%",minHeight:"100vh",display:"flex",flexDirection:"column"},
-  studyHeader:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12},
-  backBtn:{background:"none",border:"none",color:"#8a8070",cursor:"pointer",fontSize:18,padding:0},
-  sectionPill:{borderRadius:20,padding:"4px 12px",fontSize:16,color:"#fff",letterSpacing:0.5},
-  progressLabel:{fontSize:17,color:"#8a8070",fontFamily:"monospace"},
-  progressBarWrap:{height:3,background:"#1e1e2a",borderRadius:2,marginBottom:28,overflow:"hidden"},
+  testBtn:{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"11px",fontSize:17,fontFamily:"Georgia,serif",cursor:"pointer",letterSpacing:0.5,transition:"all 0.2s",color:"rgba(255,255,255,0.6)"},
+  submenuCard:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"20px 18px",display:"flex",alignItems:"center",gap:16,cursor:"pointer",transition:"all 0.25s",textAlign:"left",width:"100%"},
+  levelCard:{background:"rgba(255,255,255,0.04)",borderRadius:20,padding:"16px",marginBottom:10,border:"1px solid rgba(255,255,255,0.07)"},
+  levelBadge:{fontSize:16,fontWeight:700,color:"#fff",borderRadius:8,padding:"4px 10px",fontFamily:"monospace"},
+  catBtn:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"12px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",transition:"all 0.2s"},
+  settingsBox:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"20px",marginTop:16},
+  settingsTitle:{fontSize:17,color:"rgba(255,255,255,0.5)",letterSpacing:1},
+  limitBtn:{border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"10px 12px",fontSize:17,cursor:"pointer",fontFamily:"monospace",transition:"all 0.15s",background:"rgba(255,255,255,0.04)",color:"rgba(255,255,255,0.6)"},
+  studyWrap:{maxWidth:560,margin:"0 auto",padding:"24px 20px",width:"100%",minHeight:"100vh",display:"flex",flexDirection:"column",position:"relative",zIndex:1},
+  studyHeader:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14},
+  backBtn:{background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer",fontSize:19,padding:0},
+  sectionPill:{borderRadius:20,padding:"6px 16px",fontSize:17,color:"#fff",letterSpacing:0.5,fontWeight:700},
+  progressLabel:{fontSize:17,color:"rgba(255,255,255,0.4)",fontFamily:"monospace"},
+  progressBarWrap:{height:3,background:"rgba(255,255,255,0.08)",borderRadius:2,marginBottom:28,overflow:"hidden"},
   progressBarFill:{height:"100%",borderRadius:2,transition:"width 0.4s ease"},
   cardArea:{flex:1,display:"flex",alignItems:"center",justifyContent:"center"},
-  card:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"36px 28px",width:"100%",minHeight:280,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,position:"relative",transition:"transform 0.15s",userSelect:"none"},
-  cardHint:{position:"absolute",top:14,left:18,fontSize:16,color:"#3a3a48",letterSpacing:1,fontFamily:"monospace",textTransform:"uppercase"},
-  newBadge:{position:"absolute",top:12,right:14,background:"rgba(34,197,94,0.15)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:6,padding:"2px 7px",fontSize:16,color:"#22c55e",fontFamily:"monospace"},
-  cardFront:{fontSize:64,lineHeight:1,textAlign:"center",color:"#f0ede8"},
-  cardBack:{display:"flex",flexDirection:"column",alignItems:"center",gap:12,width:"100%"},
-  divider:{width:40,height:1,background:"#1e1e2a"},
-  cardAnswer:{fontSize:24,color:"#c8c0b0",textAlign:"center",lineHeight:1.4},
-  tapHint:{fontSize:16,color:"#3a3a48",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginTop:8},
-  scriptMnemonic:{fontSize:16,color:"#8a7060",fontStyle:"italic",textAlign:"center",lineHeight:1.5,padding:"0 8px"},
-  exampleBox:{width:"100%",background:"#0d0d14",border:"1px solid #1e1e2a",borderRadius:10,padding:"12px 14px",display:"flex",flexDirection:"column",gap:4},
-  exampleLabel:{fontSize:16,color:"#065f46",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:4},
-  toggleBtn:{background:"transparent",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 6px",fontSize:16,color:"#8a8070",cursor:"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"},
-  formalActive:{background:"rgba(59,130,246,0.12)",borderColor:"#3b82f6",color:"#93c5fd"},
-  informalActive:{background:"rgba(249,115,22,0.12)",borderColor:"#f97316",color:"#fed7aa"},
+  card:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:28,padding:"44px 32px",width:"100%",minHeight:300,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,position:"relative",transition:"transform 0.15s",userSelect:"none"},
+  cardHint:{position:"absolute",top:16,left:20,fontSize:16,color:"rgba(255,255,255,0.2)",letterSpacing:1,fontFamily:"monospace",textTransform:"uppercase"},
+  newBadge:{position:"absolute",top:14,right:16,background:"rgba(34,197,94,0.2)",border:"1px solid rgba(34,197,94,0.4)",borderRadius:8,padding:"3px 8px",fontSize:16,color:"#22c55e",fontFamily:"monospace",fontWeight:700},
+  cardFront:{fontSize:68,lineHeight:1,textAlign:"center",color:"#fff"},
+  cardBack:{display:"flex",flexDirection:"column",alignItems:"center",gap:14,width:"100%"},
+  divider:{width:48,height:1,background:"rgba(255,255,255,0.1)"},
+  cardAnswer:{fontSize:26,color:"rgba(255,255,255,0.7)",textAlign:"center",lineHeight:1.5},
+  tapHint:{fontSize:16,color:"rgba(255,255,255,0.2)",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginTop:8},
+  scriptMnemonic:{fontSize:17,color:"rgba(255,255,255,0.4)",fontStyle:"italic",textAlign:"center",lineHeight:1.6,padding:"0 8px"},
+  exampleBox:{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"14px",display:"flex",flexDirection:"column",gap:4},
+  exampleLabel:{fontSize:16,color:"#10b981",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:4},
+  toggleBtn:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,padding:"8px",fontSize:17,color:"rgba(255,255,255,0.5)",cursor:"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"},
+  formalActive:{background:"rgba(59,130,246,0.15)",borderColor:"#3b82f6",color:"#93c5fd"},
+  informalActive:{background:"rgba(249,115,22,0.15)",borderColor:"#f97316",color:"#fed7aa"},
   ratingRow:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginTop:20,paddingBottom:20},
-  ratingBtn:{background:"transparent",border:"1px solid",borderRadius:10,padding:"12px 6px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,transition:"all 0.15s"},
-  ratingLabel:{fontSize:17,fontWeight:600},ratingDesc:{fontSize:16,opacity:0.7,fontFamily:"monospace"},
-  quizCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"32px 22px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:16},
-  quizPromptLabel:{fontSize:16,color:"#8a8070",letterSpacing:1,textTransform:"uppercase",fontFamily:"monospace"},
-  quizChar:{fontSize:76,lineHeight:1,color:"#f0ede8"},
-  quizOptions:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,width:"100%"},
-  quizOpt:{border:"1px solid",borderRadius:10,padding:"14px",fontSize:22,cursor:"pointer",transition:"all 0.15s",fontFamily:"monospace",letterSpacing:1},
-  confirmBtn:{border:"none",borderRadius:10,padding:"12px 36px",fontSize:18,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5,marginTop:4},
+  ratingBtn:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:"14px 6px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,transition:"all 0.2s"},
+  ratingLabel:{fontSize:18,fontWeight:700},ratingDesc:{fontSize:16,opacity:0.6,fontFamily:"monospace"},
+  quizCard:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:28,padding:"40px 24px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:20},
+  quizPromptLabel:{fontSize:17,color:"rgba(255,255,255,0.4)",letterSpacing:1,textTransform:"uppercase",fontFamily:"monospace"},
+  quizChar:{fontSize:84,lineHeight:1,color:"#fff"},
+  quizOptions:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,width:"100%"},
+  quizOpt:{border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:"18px",fontSize:26,cursor:"pointer",transition:"all 0.2s",fontFamily:"monospace",background:"rgba(255,255,255,0.04)",color:"#fff"},
+  confirmBtn:{border:"none",borderRadius:14,padding:"16px 44px",fontSize:20,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5,marginTop:4,fontWeight:700},
   doneWrap:{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:24,minHeight:"100vh"},
-  doneCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"44px 28px",maxWidth:420,width:"100%",textAlign:"center"},
-  doneEmoji:{fontSize:56,marginBottom:12},doneTitle:{fontSize:30,fontWeight:400,marginBottom:20,color:"#f0ede8"},
-  scoreBig:{fontSize:56,fontWeight:700,lineHeight:1,marginBottom:6},
-  scorePercent:{fontSize:17,color:"#8a8070",fontFamily:"monospace",marginBottom:18},
-  passMsg:{fontSize:17,color:"#c8c0b0",lineHeight:1.7,marginBottom:24,padding:"0 4px"},
-  failMsg:{fontSize:17,color:"#8a8070",lineHeight:1.7,marginBottom:24},
-  wrongSummary:{background:"#0d0d14",border:"1px solid #2a1a1a",borderRadius:12,padding:"12px 14px",marginBottom:14,textAlign:"left"},
-  wrongSummaryTitle:{fontSize:16,color:"#ef4444",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:8},
+  doneCard:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:28,padding:"48px 28px",maxWidth:420,width:"100%",textAlign:"center"},
+  doneEmoji:{fontSize:64,marginBottom:16},doneTitle:{fontSize:32,fontWeight:700,marginBottom:24,color:"#fff"},
+  scoreBig:{fontSize:64,fontWeight:900,lineHeight:1,marginBottom:8},
+  scorePercent:{fontSize:18,color:"rgba(255,255,255,0.4)",fontFamily:"monospace",marginBottom:20},
+  passMsg:{fontSize:18,color:"rgba(255,255,255,0.6)",lineHeight:1.8,marginBottom:28,padding:"0 4px"},
+  failMsg:{fontSize:18,color:"rgba(255,255,255,0.4)",lineHeight:1.8,marginBottom:28},
+  wrongSummary:{background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:16,padding:"16px",marginBottom:16,textAlign:"left"},
+  wrongSummaryTitle:{fontSize:16,color:"#ef4444",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:10},
   wrongChars:{display:"flex",flexWrap:"wrap",gap:8},
-  wrongCharPill:{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,padding:"4px 10px",fontSize:22,color:"#f0ede8"},
-  reviewCard:{background:"#13131a",border:"1px solid #1e1e2a",borderRadius:20,padding:"28px 22px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:18},
+  wrongCharPill:{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:10,padding:"6px 12px",fontSize:24,color:"#fff"},
+  reviewCard:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:28,padding:"32px 22px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:20},
   reviewTop:{display:"flex",alignItems:"center",justifyContent:"center",gap:20},
-  reviewChar:{fontSize:76,lineHeight:1,color:"#f0ede8"},reviewArrow:{fontSize:28,color:"#3a3a48"},
+  reviewChar:{fontSize:76,lineHeight:1,color:"#fff"},reviewArrow:{fontSize:28,color:"rgba(255,255,255,0.2)"},
   reviewAnswer:{fontSize:30,color:"#22c55e",fontFamily:"monospace",fontWeight:700},
-  reviewDivider:{width:"100%",height:1,background:"#1e1e2a"},
+  reviewDivider:{width:"100%",height:1,background:"rgba(255,255,255,0.08)"},
   mnemonicSection:{width:"100%",display:"flex",flexDirection:"column",gap:8},
-  mnemonicLabel:{fontSize:16,color:"#7c3aed",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"},
-  mnemonicText:{fontSize:18,color:"#c8c0b0",lineHeight:1.7,fontStyle:"italic"},
-  mnemonicLoading:{fontSize:17,color:"#8a8070",fontFamily:"monospace"},
-  reviewMistake:{width:"100%",background:"#0d0d14",borderRadius:10,padding:"10px 14px"},
-  reviewWrong:{fontSize:16,color:"#8a8070",fontFamily:"monospace"},
+  mnemonicLabel:{fontSize:16,color:"#a78bfa",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"},
+  mnemonicText:{fontSize:18,color:"rgba(255,255,255,0.6)",lineHeight:1.7,fontStyle:"italic"},
+  mnemonicLoading:{fontSize:17,color:"rgba(255,255,255,0.3)",fontFamily:"monospace"},
+  reviewMistake:{width:"100%",background:"rgba(255,255,255,0.03)",borderRadius:12,padding:"12px 14px"},
+  reviewWrong:{fontSize:16,color:"rgba(255,255,255,0.3)",fontFamily:"monospace"},
   reviewNav:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:16,paddingBottom:20},
-  navBtn:{background:"transparent",border:"1px solid #1e1e2a",borderRadius:10,padding:"12px",fontSize:18,color:"#8a8070",cursor:"pointer",fontFamily:"Georgia,serif"},
-  navBtnPrimary:{border:"none",borderRadius:10,padding:"12px",fontSize:18,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif"},
-  doneStats:{display:"flex",justifyContent:"space-around",marginBottom:24,gap:16},
+  navBtn:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"14px",fontSize:19,color:"rgba(255,255,255,0.5)",cursor:"pointer",fontFamily:"Georgia,serif"},
+  navBtnPrimary:{border:"none",borderRadius:14,padding:"14px",fontSize:19,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif",fontWeight:700},
+  doneStats:{display:"flex",justifyContent:"space-around",marginBottom:28,gap:16},
   doneStat:{display:"flex",flexDirection:"column",gap:4},
-  doneStatNum:{fontSize:36,fontWeight:700,color:"#f0ede8"},
-  doneStatLabel:{fontSize:16,color:"#8a8070",letterSpacing:1,textTransform:"uppercase"},
-  doneActions:{display:"flex",flexDirection:"column",gap:10},
-  primaryBtn:{background:"#e11d48",color:"#fff",border:"none",borderRadius:10,padding:"14px",fontSize:19,cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5},
-  secondaryBtn:{background:"transparent",color:"#8a8070",border:"1px solid #1e1e2a",borderRadius:10,padding:"14px",fontSize:19,cursor:"pointer",fontFamily:"Georgia,serif"},
+  doneStatNum:{fontSize:42,fontWeight:900,color:"#fff"},
+  doneStatLabel:{fontSize:16,color:"rgba(255,255,255,0.4)",letterSpacing:1,textTransform:"uppercase"},
+  doneActions:{display:"flex",flexDirection:"column",gap:12},
+  primaryBtn:{background:"linear-gradient(135deg,#e11d48,#7c3aed)",color:"#fff",border:"none",borderRadius:14,padding:"18px",fontSize:20,cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5,fontWeight:700,boxShadow:"0 8px 32px rgba(225,29,72,0.4)"},
+  secondaryBtn:{background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.5)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:"18px",fontSize:20,cursor:"pointer",fontFamily:"Georgia,serif"},
 };
 
 const CSS = `
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:#0a0a0f; }
-  .section-card:hover { border-color:var(--accent) !important; transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.4); }
-  .cat-btn:hover { border-color:var(--accent) !important; transform:translateY(-1px); }
-  .test-btn:hover { background:rgba(255,255,255,0.04) !important; transform:translateY(-1px); }
-  .flashcard { animation:cardIn 0.35s cubic-bezier(0.34,1.56,0.64,1); }
-  .flashcard:active { transform:scale(0.98); }
+  body { background:#08080f; }
+  .section-card:hover { border-color:var(--accent) !important; transform:translateY(-4px); box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 0 1px var(--accent); background:rgba(255,255,255,0.08) !important; }
+  .cat-btn:hover { border-color:var(--accent) !important; transform:translateY(-2px); background:rgba(255,255,255,0.08) !important; }
+  .test-btn:hover { background:rgba(255,255,255,0.08) !important; border-color:rgba(255,255,255,0.2) !important; color:#fff !important; }
+  .flashcard { animation:cardIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  .flashcard:active { transform:scale(0.97); }
   .flipping { transform:rotateY(90deg); opacity:0; transition:transform 0.15s,opacity 0.15s; }
-  .card-back-reveal { animation:fadeUp 0.25s ease; }
-  .rating-reveal { animation:fadeUp 0.3s ease; }
-  .rating-btn:hover { background:rgba(255,255,255,0.04) !important; transform:translateY(-2px); }
+  .card-back-reveal { animation:fadeUp 0.3s ease; }
+  .rating-reveal { animation:fadeUp 0.35s ease; }
+  .rating-btn:hover { transform:translateY(-3px); background:rgba(255,255,255,0.08) !important; }
   .loading-dots::after { content:""; animation:dots 1.2s steps(4,end) infinite; }
   @keyframes dots { 0%,20%{content:"."} 40%{content:".."} 60%{content:"..."} 80%,100%{content:""} }
-  @keyframes cardIn { from{opacity:0;transform:scale(0.94) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes cardIn { from{opacity:0;transform:scale(0.92) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes kanjiFloat { 0%{transform:translateY(110vh)} 100%{transform:translateY(-110vh)} }
+  @keyframes xpPop { 0%{opacity:0;transform:translateX(-50%) translateY(20px)} 20%{opacity:1;transform:translateX(-50%) translateY(0)} 70%{opacity:1;transform:translateX(-50%) translateY(-10px)} 100%{opacity:0;transform:translateX(-50%) translateY(-30px)} }
 `;
-
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
   </script>
 </body>
