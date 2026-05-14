@@ -6,19 +6,17 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Zoku" />
-  <title>続 Zoku — Learn Japanese</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:#08080f; font-family: Georgia, serif; }
-    ::-webkit-scrollbar { width:4px; }
-    ::-webkit-scrollbar-track { background:transparent; }
-    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:2px; }
-  </style>
+  <title>続 Zoku</title>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <style>* { margin:0; padding:0; box-sizing:border-box; } body { background:#0f0e0c; font-family:Georgia,serif; } ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}</style>
 </head>
 <body>
   <div id="root"></div>
+  <div id="err" style="position:fixed;top:0;left:0;right:0;background:#300;color:#f88;padding:12px;font-size:13px;font-family:monospace;display:none;z-index:9999;word-break:break-all;white-space:pre-wrap;max-height:40vh;overflow:auto;"></div>
+  <script>
+window.onerror=function(msg,src,line,col,err){var d=document.getElementById('err');d.style.display='block';d.textContent='ERROR line '+line+': '+msg+'\n'+(err&&err.stack||'');return true;};
+  </script>
   <script>
 
 
@@ -1477,17 +1475,153 @@ const BACKGROUNDS = [
 ];
 
 const CARD_BORDERS = [
-  {id:"default",  name:"Plain",        jp:"無地",  unlockLevel:1,  style:"1px solid rgba(255,255,255,0.1)",   color:"rgba(255,255,255,0.1)",  glow:""},
-  {id:"green",    name:"Jade Seal",    jp:"翡翠",  unlockLevel:3,  style:"1px solid rgba(34,197,94,0.5)",    color:"rgba(34,197,94,0.5)",    glow:"0 0 14px rgba(34,197,94,0.25)"},
-  {id:"blue",     name:"Blue Wave",    jp:"青波",  unlockLevel:7,  style:"1px solid rgba(59,130,246,0.6)",   color:"rgba(59,130,246,0.6)",   glow:"0 0 14px rgba(59,130,246,0.3)"},
-  {id:"purple",   name:"Spirit",       jp:"霊気",  unlockLevel:12, style:"1px solid rgba(124,58,237,0.7)",   color:"rgba(124,58,237,0.7)",   glow:"0 0 18px rgba(124,58,237,0.35)"},
-  {id:"red",      name:"Crimson Oni",  jp:"赤鬼",  unlockLevel:18, style:"1px solid rgba(225,29,72,0.7)",    color:"rgba(225,29,72,0.7)",    glow:"0 0 18px rgba(225,29,72,0.35)"},
-  {id:"gold",     name:"Samurai",      jp:"侍",    unlockLevel:24, style:"1px solid rgba(245,158,11,0.8)",   color:"rgba(245,158,11,0.8)",   glow:"0 0 22px rgba(245,158,11,0.4)"},
-  {id:"rainbow",  name:"Dragon",       jp:"龍",    unlockLevel:35, style:"2px solid transparent",            color:"prismatic",              glow:"0 0 28px rgba(139,92,246,0.4)"},
-  {id:"divine",   name:"Immortal",     jp:"仙人",  unlockLevel:45, style:"2px solid rgba(255,255,255,0.9)",  color:"rgba(255,255,255,0.9)",  glow:"0 0 35px rgba(255,255,255,0.25)"},
+  {id:"default",  name:"Plain",       jp:"無地", unlockLevel:1,  color:"rgba(255,255,255,0.1)", glow:"",
+   css:{border:"1px solid rgba(255,255,255,0.1)"}},
+  {id:"green",    name:"Jade Seal",   jp:"翡翠", unlockLevel:3,  color:"rgba(34,197,94,0.5)",  glow:"0 0 14px rgba(34,197,94,0.25)",
+   css:{border:"1.5px solid rgba(34,197,94,0.55)"}},
+  {id:"blue",     name:"Blue Wave",   jp:"青波", unlockLevel:7,  color:"rgba(59,130,246,0.6)", glow:"0 0 14px rgba(59,130,246,0.3)",
+   css:{border:"1.5px solid rgba(59,130,246,0.5)"}},
+  {id:"purple",   name:"Spirit",      jp:"霊気", unlockLevel:12, color:"rgba(124,58,237,0.7)", glow:"0 0 18px rgba(124,58,237,0.35)",
+   css:{border:"1.5px solid rgba(124,58,237,0.6)"}},
+  {id:"red",      name:"Crimson Oni", jp:"赤鬼", unlockLevel:18, color:"rgba(225,29,72,0.7)",  glow:"0 0 18px rgba(225,29,72,0.35)",
+   css:{border:"1.5px solid rgba(225,29,72,0.6)"}},
+  {id:"gold",     name:"Samurai",     jp:"侍",   unlockLevel:24, color:"rgba(245,158,11,0.8)", glow:"0 0 22px rgba(245,158,11,0.4)",
+   css:{border:"1.5px solid rgba(245,158,11,0.65)"}},
+  {id:"rainbow",  name:"Dragon",      jp:"龍",   unlockLevel:35, color:"prismatic",            glow:"0 0 28px rgba(139,92,246,0.35)",
+   css:{border:"2px solid transparent",backgroundImage:"linear-gradient(rgba(255,255,255,0.05),rgba(255,255,255,0.05)),linear-gradient(135deg,#e11d48,#f97316,#f59e0b,#22c55e,#3b82f6,#8b5cf6,#ec4899)",backgroundOrigin:"border-box",backgroundClip:"padding-box,border-box"}},
+  {id:"divine",   name:"Immortal",    jp:"仙人", unlockLevel:45, color:"rgba(255,255,255,0.9)", glow:"0 0 35px rgba(255,255,255,0.2)",
+   css:{border:"2px solid rgba(255,255,255,0.85)"}},
 ];
 
-const getRank = (level) => RANK_TITLES.find(r => level >= r.min && level <= r.max) || RANK_TITLES[0];
+const BORDER_ART = {
+  default: () => null,
+
+  green: () => React.createElement("svg", {style:{position:"absolute",top:"-3px",left:"-3px",right:"-3px",bottom:"-3px",width:"calc(100% + 6px)",height:"calc(100% + 6px)",pointerEvents:"none",overflow:"visible",zIndex:10,borderRadius:"inherit"},viewBox:"0 0 300 360",preserveAspectRatio:"none"},
+    React.createElement("rect",{x:"1",y:"1",width:"298",height:"358",rx:"20",fill:"none",stroke:"rgba(34,197,94,0.6)",strokeWidth:"2"}),
+    React.createElement("rect",{x:"5",y:"5",width:"290",height:"350",rx:"17",fill:"none",stroke:"rgba(34,197,94,0.15)",strokeWidth:"1"}),
+    React.createElement("rect",{x:"5",y:"5",width:"28",height:"28",rx:"6",fill:"rgba(34,197,94,0.15)",stroke:"rgba(34,197,94,0.5)",strokeWidth:"1.5"}),
+    React.createElement("circle",{cx:"19",cy:"19",r:"6",fill:"rgba(34,197,94,0.4)"}),
+    React.createElement("circle",{cx:"19",cy:"19",r:"3",fill:"rgba(34,197,94,1)"}),
+    React.createElement("rect",{x:"267",y:"5",width:"28",height:"28",rx:"6",fill:"rgba(34,197,94,0.15)",stroke:"rgba(34,197,94,0.5)",strokeWidth:"1.5"}),
+    React.createElement("circle",{cx:"281",cy:"19",r:"6",fill:"rgba(34,197,94,0.4)"}),
+    React.createElement("circle",{cx:"281",cy:"19",r:"3",fill:"rgba(34,197,94,1)"}),
+    React.createElement("rect",{x:"5",y:"327",width:"28",height:"28",rx:"6",fill:"rgba(34,197,94,0.15)",stroke:"rgba(34,197,94,0.5)",strokeWidth:"1.5"}),
+    React.createElement("circle",{cx:"19",cy:"341",r:"6",fill:"rgba(34,197,94,0.4)"}),
+    React.createElement("circle",{cx:"19",cy:"341",r:"3",fill:"rgba(34,197,94,1)"}),
+    React.createElement("rect",{x:"267",y:"327",width:"28",height:"28",rx:"6",fill:"rgba(34,197,94,0.15)",stroke:"rgba(34,197,94,0.5)",strokeWidth:"1.5"}),
+    React.createElement("circle",{cx:"281",cy:"341",r:"6",fill:"rgba(34,197,94,0.4)"}),
+    React.createElement("circle",{cx:"281",cy:"341",r:"3",fill:"rgba(34,197,94,1)"}),
+    React.createElement("polygon",{points:"150,0 156,8 150,4 144,8",fill:"rgba(34,197,94,0.9)"}),
+    React.createElement("polygon",{points:"150,360 156,352 150,356 144,352",fill:"rgba(34,197,94,0.9)"}),
+    React.createElement("polygon",{points:"0,180 8,174 4,180 8,186",fill:"rgba(34,197,94,0.9)"}),
+    React.createElement("polygon",{points:"300,180 292,174 296,180 292,186",fill:"rgba(34,197,94,0.9)"})
+  ),
+
+  blue: () => React.createElement("svg", {style:{position:"absolute",top:"-3px",left:"-3px",right:"-3px",bottom:"-3px",width:"calc(100% + 6px)",height:"calc(100% + 6px)",pointerEvents:"none",overflow:"visible",zIndex:10,borderRadius:"inherit"},viewBox:"0 0 300 360",preserveAspectRatio:"none"},
+    React.createElement("rect",{x:"1",y:"1",width:"298",height:"358",rx:"20",fill:"none",stroke:"rgba(59,130,246,0.6)",strokeWidth:"2"}),
+    React.createElement("path",{d:"M20,4 C35,0 50,8 65,4 C80,0 95,8 110,4 C125,0 140,8 155,4 C170,0 185,8 200,4 C215,0 230,8 245,4 C260,0 275,8 280,4",fill:"none",stroke:"rgba(59,130,246,0.85)",strokeWidth:"2.5"}),
+    React.createElement("path",{d:"M20,10 C35,6 50,14 65,10 C80,6 95,14 110,10 C125,6 140,14 155,10 C170,6 185,14 200,10 C215,6 230,14 245,10 C260,6 275,14 280,10",fill:"none",stroke:"rgba(59,130,246,0.4)",strokeWidth:"1.5"}),
+    React.createElement("path",{d:"M20,356 C35,352 50,360 65,356 C80,352 95,360 110,356 C125,352 140,360 155,356 C170,352 185,360 200,356 C215,352 230,360 245,356 C260,352 275,360 280,356",fill:"none",stroke:"rgba(59,130,246,0.85)",strokeWidth:"2.5"}),
+    React.createElement("path",{d:"M20,350 C35,346 50,354 65,350 C80,346 95,354 110,350 C125,346 140,354 155,350 C170,346 185,354 200,350 C215,346 230,354 245,350 C260,346 275,354 280,350",fill:"none",stroke:"rgba(59,130,246,0.4)",strokeWidth:"1.5"}),
+    React.createElement("circle",{cx:"4",cy:"180",r:"8",fill:"none",stroke:"rgba(59,130,246,0.6)",strokeWidth:"2"}),
+    React.createElement("circle",{cx:"4",cy:"180",r:"3",fill:"rgba(59,130,246,1)"}),
+    React.createElement("circle",{cx:"296",cy:"180",r:"8",fill:"none",stroke:"rgba(59,130,246,0.6)",strokeWidth:"2"}),
+    React.createElement("circle",{cx:"296",cy:"180",r:"3",fill:"rgba(59,130,246,1)"})
+  ),
+
+  purple: () => React.createElement("svg", {style:{position:"absolute",top:"-3px",left:"-3px",right:"-3px",bottom:"-3px",width:"calc(100% + 6px)",height:"calc(100% + 6px)",pointerEvents:"none",overflow:"visible",zIndex:10,borderRadius:"inherit"},viewBox:"0 0 300 360",preserveAspectRatio:"none"},
+    React.createElement("rect",{x:"1",y:"1",width:"298",height:"358",rx:"20",fill:"none",stroke:"rgba(124,58,237,0.7)",strokeWidth:"2"}),
+    React.createElement("path",{d:"M8,40 C16,55 5,72 10,90 C15,108 5,122 9,142 C13,162 5,175 8,195 C11,215 4,228 8,248 C12,268 6,280 8,320",fill:"none",stroke:"rgba(124,58,237,0.6)",strokeWidth:"2.5"}),
+    React.createElement("circle",{cx:"9",cy:"68",r:"6",fill:"rgba(124,58,237,0.5)"}),
+    React.createElement("circle",{cx:"9",cy:"68",r:"3",fill:"rgba(167,139,250,1)"}),
+    React.createElement("circle",{cx:"8",cy:"132",r:"5",fill:"rgba(124,58,237,0.4)"}),
+    React.createElement("circle",{cx:"8",cy:"132",r:"2.5",fill:"rgba(167,139,250,0.9)"}),
+    React.createElement("circle",{cx:"9",cy:"196",r:"6",fill:"rgba(124,58,237,0.5)"}),
+    React.createElement("circle",{cx:"9",cy:"196",r:"3",fill:"rgba(167,139,250,1)"}),
+    React.createElement("circle",{cx:"8",cy:"260",r:"5",fill:"rgba(124,58,237,0.4)"}),
+    React.createElement("circle",{cx:"8",cy:"260",r:"2.5",fill:"rgba(167,139,250,0.9)"}),
+    React.createElement("path",{d:"M292,40 C284,55 295,72 290,90 C285,108 295,122 291,142 C287,162 295,175 292,195 C289,215 296,228 292,248 C288,268 294,280 292,320",fill:"none",stroke:"rgba(124,58,237,0.6)",strokeWidth:"2.5"}),
+    React.createElement("circle",{cx:"291",cy:"68",r:"6",fill:"rgba(124,58,237,0.5)"}),
+    React.createElement("circle",{cx:"291",cy:"68",r:"3",fill:"rgba(167,139,250,1)"}),
+    React.createElement("circle",{cx:"292",cy:"132",r:"5",fill:"rgba(124,58,237,0.4)"}),
+    React.createElement("circle",{cx:"292",cy:"132",r:"2.5",fill:"rgba(167,139,250,0.9)"}),
+    React.createElement("circle",{cx:"291",cy:"196",r:"6",fill:"rgba(124,58,237,0.5)"}),
+    React.createElement("circle",{cx:"291",cy:"196",r:"3",fill:"rgba(167,139,250,1)"}),
+    React.createElement("circle",{cx:"292",cy:"260",r:"5",fill:"rgba(124,58,237,0.4)"}),
+    React.createElement("circle",{cx:"292",cy:"260",r:"2.5",fill:"rgba(167,139,250,0.9)"}),
+    React.createElement("path",{d:"M110,2 L150,0 L190,2 L190,16 L150,20 L110,16 Z",fill:"rgba(124,58,237,0.2)",stroke:"rgba(124,58,237,0.7)",strokeWidth:"1.5"}),
+    React.createElement("path",{d:"M110,344 L150,340 L190,344 L190,358 L150,362 L110,358 Z",fill:"rgba(124,58,237,0.2)",stroke:"rgba(124,58,237,0.7)",strokeWidth:"1.5"})
+  ),
+
+  red: () => React.createElement("svg", {style:{position:"absolute",top:"-3px",left:"-3px",right:"-3px",bottom:"-3px",width:"calc(100% + 6px)",height:"calc(100% + 6px)",pointerEvents:"none",overflow:"visible",zIndex:10,borderRadius:"inherit"},viewBox:"0 0 300 360",preserveAspectRatio:"none"},
+    React.createElement("rect",{x:"1",y:"1",width:"298",height:"358",rx:"20",fill:"none",stroke:"rgba(225,29,72,0.7)",strokeWidth:"2"}),
+    React.createElement("path",{d:"M25,0 L33,16 L41,0 L49,16 L57,0 L65,16 L73,0 L81,16 L89,0 L97,16 L105,0 L113,16 L121,0 L129,16 L137,0 L145,16 L153,0 L161,16 L169,0 L177,16 L185,0 L193,16 L201,0 L209,16 L217,0 L225,16 L233,0 L241,16 L249,0 L257,16 L265,0 L273,0",fill:"rgba(225,29,72,0.15)",stroke:"rgba(225,29,72,0.85)",strokeWidth:"1.8",strokeLinejoin:"round"}),
+    React.createElement("path",{d:"M25,360 L33,344 L41,360 L49,344 L57,360 L65,344 L73,360 L81,344 L89,360 L97,344 L105,360 L113,344 L121,360 L129,344 L137,360 L145,344 L153,360 L161,344 L169,360 L177,344 L185,360 L193,344 L201,360 L209,344 L217,360 L225,344 L233,360 L241,344 L249,360 L257,344 L265,360 L273,360",fill:"rgba(225,29,72,0.15)",stroke:"rgba(225,29,72,0.85)",strokeWidth:"1.8",strokeLinejoin:"round"}),
+    React.createElement("polygon",{points:"0,0 24,0 0,24",fill:"rgba(225,29,72,0.45)",stroke:"rgba(225,29,72,0.8)",strokeWidth:"1"}),
+    React.createElement("polygon",{points:"300,0 276,0 300,24",fill:"rgba(225,29,72,0.45)",stroke:"rgba(225,29,72,0.8)",strokeWidth:"1"}),
+    React.createElement("polygon",{points:"0,360 24,360 0,336",fill:"rgba(225,29,72,0.45)",stroke:"rgba(225,29,72,0.8)",strokeWidth:"1"}),
+    React.createElement("polygon",{points:"300,360 276,360 300,336",fill:"rgba(225,29,72,0.45)",stroke:"rgba(225,29,72,0.8)",strokeWidth:"1"}),
+    React.createElement("rect",{x:"12",y:"20",width:"276",height:"320",rx:"14",fill:"none",stroke:"rgba(225,29,72,0.25)",strokeWidth:"1"})
+  ),
+
+  gold: () => React.createElement("svg", {style:{position:"absolute",top:"-3px",left:"-3px",right:"-3px",bottom:"-3px",width:"calc(100% + 6px)",height:"calc(100% + 6px)",pointerEvents:"none",overflow:"visible",zIndex:10,borderRadius:"inherit"},viewBox:"0 0 300 360",preserveAspectRatio:"none"},
+    React.createElement("rect",{x:"1",y:"1",width:"298",height:"358",rx:"20",fill:"none",stroke:"rgba(245,158,11,0.7)",strokeWidth:"2"}),
+    React.createElement("path",{d:"M8,36 L8,8 L36,8",fill:"none",stroke:"rgba(245,158,11,1)",strokeWidth:"4",strokeLinecap:"square"}),
+    React.createElement("path",{d:"M264,8 L292,8 L292,36",fill:"none",stroke:"rgba(245,158,11,1)",strokeWidth:"4",strokeLinecap:"square"}),
+    React.createElement("path",{d:"M8,324 L8,352 L36,352",fill:"none",stroke:"rgba(245,158,11,1)",strokeWidth:"4",strokeLinecap:"square"}),
+    React.createElement("path",{d:"M264,352 L292,352 L292,324",fill:"none",stroke:"rgba(245,158,11,1)",strokeWidth:"4",strokeLinecap:"square"}),
+    React.createElement("rect",{x:"10",y:"10",width:"14",height:"14",fill:"rgba(245,158,11,0.7)"}),
+    React.createElement("rect",{x:"276",y:"10",width:"14",height:"14",fill:"rgba(245,158,11,0.7)"}),
+    React.createElement("rect",{x:"10",y:"336",width:"14",height:"14",fill:"rgba(245,158,11,0.7)"}),
+    React.createElement("rect",{x:"276",y:"336",width:"14",height:"14",fill:"rgba(245,158,11,0.7)"}),
+    React.createElement("rect",{x:"20",y:"20",width:"260",height:"320",rx:"12",fill:"none",stroke:"rgba(245,158,11,0.2)",strokeWidth:"1",strokeDasharray:"5,6"}),
+    React.createElement("line",{x1:"60",y1:"8",x2:"110",y2:"8",stroke:"rgba(245,158,11,0.5)",strokeWidth:"2"}),
+    React.createElement("line",{x1:"190",y1:"8",x2:"240",y2:"8",stroke:"rgba(245,158,11,0.5)",strokeWidth:"2"}),
+    React.createElement("line",{x1:"60",y1:"352",x2:"110",y2:"352",stroke:"rgba(245,158,11,0.5)",strokeWidth:"2"}),
+    React.createElement("line",{x1:"190",y1:"352",x2:"240",y2:"352",stroke:"rgba(245,158,11,0.5)",strokeWidth:"2"}),
+    React.createElement("polygon",{points:"150,0 158,12 150,6 142,12",fill:"rgba(245,158,11,1)"}),
+    React.createElement("circle",{cx:"150",cy:"6",r:"4",fill:"rgba(245,158,11,1)"})
+  ),
+
+  rainbow: () => React.createElement("svg", {style:{position:"absolute",top:"-4px",left:"-4px",right:"-4px",bottom:"-4px",width:"calc(100% + 8px)",height:"calc(100% + 8px)",pointerEvents:"none",overflow:"visible",zIndex:10,borderRadius:"inherit"},viewBox:"0 0 308 368",preserveAspectRatio:"none"},
+    React.createElement("path",{d:"M30,2 L278,2",stroke:"#e11d48",strokeWidth:"4",strokeLinecap:"round"}),
+    React.createElement("path",{d:"M282,6 L302,26",stroke:"#f97316",strokeWidth:"4",strokeLinecap:"round"}),
+    React.createElement("path",{d:"M304,30 L304,338",stroke:"#f59e0b",strokeWidth:"4",strokeLinecap:"round"}),
+    React.createElement("path",{d:"M300,342 L280,362",stroke:"#22c55e",strokeWidth:"4",strokeLinecap:"round"}),
+    React.createElement("path",{d:"M276,366 L32,366",stroke:"#3b82f6",strokeWidth:"4",strokeLinecap:"round"}),
+    React.createElement("path",{d:"M28,362 L8,342",stroke:"#8b5cf6",strokeWidth:"4",strokeLinecap:"round"}),
+    React.createElement("path",{d:"M4,338 L4,30",stroke:"#ec4899",strokeWidth:"4",strokeLinecap:"round"}),
+    React.createElement("path",{d:"M8,26 L28,6",stroke:"#e11d48",strokeWidth:"4",strokeLinecap:"round"}),
+    React.createElement("rect",{x:"14",y:"14",width:"280",height:"340",rx:"14",fill:"none",stroke:"rgba(255,255,255,0.08)",strokeWidth:"1"}),
+    React.createElement("circle",{cx:"30",cy:"22",r:"5",fill:"#e11d48"}),
+    React.createElement("circle",{cx:"278",cy:"22",r:"5",fill:"#f59e0b"}),
+    React.createElement("circle",{cx:"278",cy:"346",r:"5",fill:"#22c55e"}),
+    React.createElement("circle",{cx:"30",cy:"346",r:"5",fill:"#8b5cf6"})
+  ),
+
+  divine: () => React.createElement("svg", {style:{position:"absolute",top:"-4px",left:"-4px",right:"-4px",bottom:"-4px",width:"calc(100% + 8px)",height:"calc(100% + 8px)",pointerEvents:"none",overflow:"visible",zIndex:10,borderRadius:"inherit"},viewBox:"0 0 308 368",preserveAspectRatio:"none"},
+    React.createElement("rect",{x:"2",y:"2",width:"304",height:"364",rx:"20",fill:"none",stroke:"rgba(255,255,255,0.9)",strokeWidth:"3"}),
+    React.createElement("rect",{x:"8",y:"8",width:"292",height:"352",rx:"17",fill:"none",stroke:"rgba(255,255,255,0.18)",strokeWidth:"1.5"}),
+    React.createElement("rect",{x:"14",y:"14",width:"280",height:"340",rx:"14",fill:"none",stroke:"rgba(255,255,255,0.07)",strokeWidth:"1"}),
+    React.createElement("text",{x:"10",y:"26",fontFamily:"Georgia,serif",fontSize:"18",fill:"rgba(255,255,255,0.85)"},"✦"),
+    React.createElement("text",{x:"280",y:"26",fontFamily:"Georgia,serif",fontSize:"18",fill:"rgba(255,255,255,0.85)"},"✦"),
+    React.createElement("text",{x:"10",y:"362",fontFamily:"Georgia,serif",fontSize:"18",fill:"rgba(255,255,255,0.85)"},"✦"),
+    React.createElement("text",{x:"280",y:"362",fontFamily:"Georgia,serif",fontSize:"18",fill:"rgba(255,255,255,0.85)"},"✦"),
+    React.createElement("circle",{cx:"154",cy:"4",r:"6",fill:"none",stroke:"rgba(255,255,255,0.6)",strokeWidth:"2"}),
+    React.createElement("circle",{cx:"154",cy:"4",r:"2.5",fill:"rgba(255,255,255,1)"}),
+    React.createElement("circle",{cx:"154",cy:"364",r:"6",fill:"none",stroke:"rgba(255,255,255,0.6)",strokeWidth:"2"}),
+    React.createElement("circle",{cx:"154",cy:"364",r:"2.5",fill:"rgba(255,255,255,1)"}),
+    React.createElement("circle",{cx:"3",cy:"184",r:"6",fill:"none",stroke:"rgba(255,255,255,0.6)",strokeWidth:"2"}),
+    React.createElement("circle",{cx:"3",cy:"184",r:"2.5",fill:"rgba(255,255,255,1)"}),
+    React.createElement("circle",{cx:"305",cy:"184",r:"6",fill:"none",stroke:"rgba(255,255,255,0.6)",strokeWidth:"2"}),
+    React.createElement("circle",{cx:"305",cy:"184",r:"2.5",fill:"rgba(255,255,255,1)"}),
+    React.createElement("line",{x1:"36",y1:"4",x2:"76",y2:"4",stroke:"rgba(255,255,255,0.4)",strokeWidth:"2"}),
+    React.createElement("line",{x1:"232",y1:"4",x2:"272",y2:"4",stroke:"rgba(255,255,255,0.4)",strokeWidth:"2"}),
+    React.createElement("line",{x1:"36",y1:"364",x2:"76",y2:"364",stroke:"rgba(255,255,255,0.4)",strokeWidth:"2"}),
+    React.createElement("line",{x1:"232",y1:"364",x2:"272",y2:"364",stroke:"rgba(255,255,255,0.4)",strokeWidth:"2"})
+  ),
+};
+
 const getLevelFromXP = (xp) => {
   for (let i = XP_PER_LEVEL.length - 1; i >= 0; i--) {
     if (xp >= XP_PER_LEVEL[i]) return i + 1;
@@ -1497,159 +1631,170 @@ const getLevelFromXP = (xp) => {
 const getXPForLevel = (level) => XP_PER_LEVEL[Math.min(level - 1, XP_PER_LEVEL.length - 1)];
 const getXPForNextLevel = (level) => XP_PER_LEVEL[Math.min(level, XP_PER_LEVEL.length - 1)];
 
-const LEVELS = ["N5","N4","N3","N2","N1"];
-const LEVEL_COLORS = { N5:"#22c55e", N4:"#3b82f6", N3:"#f97316", N2:"#a855f7", N1:"#ef4444" };
-const CATEGORIES = ["vocab","kanji","grammar","reading"];
-const CAT_META = {
-  vocab:   { icon:"語", label:"Vocabulary" },
-  kanji:   { icon:"漢", label:"Kanji"      },
-  grammar: { icon:"文", label:"Grammar"    },
-  reading: { icon:"読", label:"Reading"    },
+const S = {
+  root:{minHeight:"100vh",background:"#0f0e0c",color:"#f0ede8",fontFamily:"'Georgia','Times New Roman',serif",display:"flex",flexDirection:"column"},
+  home:{maxWidth:680,margin:"0 auto",padding:"32px 20px 100px",width:"100%"},
+  header:{textAlign:"center",marginBottom:20},
+  logo:{display:"flex",flexDirection:"column",alignItems:"center",gap:4,marginBottom:10},
+  logoJp:{fontSize:48,fontWeight:400,letterSpacing:8,color:"#f0ede8",lineHeight:1},
+  logoEn:{fontSize:11,letterSpacing:6,color:"rgba(255,255,255,0.25)",fontFamily:"monospace"},
+  tagline:{color:"rgba(255,255,255,0.25)",fontSize:12,letterSpacing:3,fontFamily:"monospace"},
+  gateBanner:{display:"flex",alignItems:"flex-start",gap:12,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:14,padding:"16px",marginBottom:16},
+  gateIcon:{fontSize:20,marginTop:2},
+  gateTitle:{fontSize:14,color:"#fff",marginBottom:3,fontWeight:600},
+  gateSub:{fontSize:12,color:"rgba(255,255,255,0.4)"},
+  sectionLabel:{fontSize:10,color:"rgba(255,255,255,0.2)",letterSpacing:3,textTransform:"uppercase",fontFamily:"monospace",marginBottom:10},
+  grid2:{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:4},
+  sectionCard:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:18,padding:"22px 18px",width:"100%",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:6,position:"relative",transition:"all 0.2s",textAlign:"left",cursor:"pointer"},
+  sectionIcon:{fontSize:26,lineHeight:1,marginBottom:4},
+  sectionName:{fontSize:14,fontWeight:600,color:"#fff"},
+  sectionCount:{fontSize:12,color:"rgba(255,255,255,0.35)"},
+  duePill:{borderRadius:8,padding:"2px 8px",fontSize:11,color:"#fff",fontFamily:"monospace"},
+  passedBadge:{position:"absolute",bottom:10,right:10,fontSize:10,color:"#22c55e",fontFamily:"monospace"},
+  testBtn:{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"11px",fontSize:13,fontFamily:"Georgia,serif",cursor:"pointer",color:"rgba(255,255,255,0.5)",transition:"all 0.2s"},
+  submenuCard:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:18,padding:"18px 20px",display:"flex",alignItems:"center",gap:16,cursor:"pointer",transition:"all 0.2s",textAlign:"left",width:"100%"},
+  levelCard:{background:"rgba(255,255,255,0.03)",borderRadius:18,padding:"16px",marginBottom:8,border:"1px solid rgba(255,255,255,0.06)"},
+  levelBadge:{fontSize:11,fontWeight:700,color:"#fff",borderRadius:6,padding:"3px 8px",fontFamily:"monospace"},
+  catBtn:{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"12px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",transition:"all 0.2s"},
+  settingsBox:{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:"20px",marginTop:16},
+  settingsTitle:{fontSize:12,color:"rgba(255,255,255,0.4)",letterSpacing:1},
+  limitBtn:{border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"9px 12px",fontSize:13,cursor:"pointer",fontFamily:"monospace",background:"rgba(255,255,255,0.03)",color:"rgba(255,255,255,0.5)",transition:"all 0.15s"},
+  studyWrap:{maxWidth:560,margin:"0 auto",padding:"24px 20px",width:"100%",minHeight:"100vh",display:"flex",flexDirection:"column",position:"relative",zIndex:1},
+  studyHeader:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14},
+  backBtn:{background:"none",border:"none",color:"rgba(255,255,255,0.35)",cursor:"pointer",fontSize:14,padding:0,fontFamily:"monospace",letterSpacing:1},
+  sectionPill:{borderRadius:20,padding:"5px 14px",fontSize:11,color:"rgba(255,255,255,0.7)",letterSpacing:2,fontFamily:"monospace",textTransform:"uppercase",border:"1px solid rgba(255,255,255,0.1)"},
+  progressLabel:{fontSize:12,color:"rgba(255,255,255,0.3)",fontFamily:"monospace"},
+  progressBarWrap:{height:2,background:"rgba(255,255,255,0.06)",borderRadius:1,marginBottom:28,overflow:"hidden"},
+  progressBarFill:{height:"100%",borderRadius:1,transition:"width 0.4s ease"},
+  cardArea:{flex:1,display:"flex",alignItems:"center",justifyContent:"center"},
+  card:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:24,padding:"44px 32px",width:"100%",minHeight:300,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,position:"relative",transition:"transform 0.15s",userSelect:"none",overflow:"visible"},
+  cardHint:{position:"absolute",top:16,left:20,fontSize:10,color:"rgba(255,255,255,0.18)",letterSpacing:2,fontFamily:"monospace",textTransform:"uppercase"},
+  newBadge:{position:"absolute",top:14,right:16,background:"rgba(34,197,94,0.12)",border:"1px solid rgba(34,197,94,0.3)",borderRadius:6,padding:"2px 8px",fontSize:10,color:"#22c55e",fontFamily:"monospace"},
+  cardFront:{fontSize:64,lineHeight:1,textAlign:"center",color:"#fff"},
+  cardBack:{display:"flex",flexDirection:"column",alignItems:"center",gap:14,width:"100%"},
+  divider:{width:32,height:1,background:"rgba(255,255,255,0.1)"},
+  cardAnswer:{fontSize:22,color:"rgba(255,255,255,0.65)",textAlign:"center",lineHeight:1.5},
+  tapHint:{fontSize:10,color:"rgba(255,255,255,0.18)",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginTop:8},
+  scriptMnemonic:{fontSize:13,color:"rgba(255,255,255,0.35)",fontStyle:"italic",textAlign:"center",lineHeight:1.6},
+  exampleBox:{width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"14px",display:"flex",flexDirection:"column",gap:4},
+  exampleLabel:{fontSize:10,color:"#10b981",fontFamily:"monospace",letterSpacing:2,textTransform:"uppercase",marginBottom:4},
+  toggleBtn:{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"8px",fontSize:13,color:"rgba(255,255,255,0.4)",cursor:"pointer",transition:"all 0.15s"},
+  formalActive:{background:"rgba(59,130,246,0.1)",borderColor:"rgba(59,130,246,0.4)",color:"#93c5fd"},
+  informalActive:{background:"rgba(249,115,22,0.1)",borderColor:"rgba(249,115,22,0.4)",color:"#fed7aa"},
+  ratingRow:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginTop:20,paddingBottom:20},
+  ratingBtn:{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"14px 6px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,transition:"all 0.2s"},
+  ratingLabel:{fontSize:14,fontWeight:700},
+  ratingDesc:{fontSize:11,opacity:0.5,fontFamily:"monospace"},
+  quizCard:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:24,padding:"40px 24px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:20},
+  quizPromptLabel:{fontSize:10,color:"rgba(255,255,255,0.3)",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace"},
+  quizChar:{fontSize:80,lineHeight:1,color:"#fff"},
+  quizOptions:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,width:"100%"},
+  quizOpt:{border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"18px",fontSize:22,cursor:"pointer",transition:"all 0.2s",fontFamily:"monospace",background:"rgba(255,255,255,0.03)",color:"#fff"},
+  confirmBtn:{border:"none",borderRadius:12,padding:"15px 44px",fontSize:15,color:"#fff",cursor:"pointer",letterSpacing:1,marginTop:4,fontWeight:600},
+  doneWrap:{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:24,minHeight:"100vh"},
+  doneCard:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:24,padding:"48px 28px",maxWidth:420,width:"100%",textAlign:"center"},
+  doneEmoji:{fontSize:48,marginBottom:16},
+  doneTitle:{fontSize:26,fontWeight:600,marginBottom:24,color:"#fff",letterSpacing:-0.5},
+  scoreBig:{fontSize:60,fontWeight:900,lineHeight:1,marginBottom:8},
+  scorePercent:{fontSize:13,color:"rgba(255,255,255,0.3)",fontFamily:"monospace",marginBottom:20},
+  passMsg:{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.8,marginBottom:28},
+  failMsg:{fontSize:14,color:"rgba(255,255,255,0.35)",lineHeight:1.8,marginBottom:28},
+  wrongSummary:{background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.15)",borderRadius:14,padding:"16px",marginBottom:16,textAlign:"left"},
+  wrongSummaryTitle:{fontSize:10,color:"#ef4444",fontFamily:"monospace",letterSpacing:2,textTransform:"uppercase",marginBottom:10},
+  wrongChars:{display:"flex",flexWrap:"wrap",gap:8},
+  wrongCharPill:{background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:8,padding:"5px 12px",fontSize:20,color:"#fff"},
+  reviewCard:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:24,padding:"32px 22px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:20},
+  reviewTop:{display:"flex",alignItems:"center",justifyContent:"center",gap:20},
+  reviewChar:{fontSize:72,lineHeight:1,color:"#fff"},
+  reviewArrow:{fontSize:24,color:"rgba(255,255,255,0.15)"},
+  reviewAnswer:{fontSize:26,color:"#22c55e",fontFamily:"monospace",fontWeight:700},
+  reviewDivider:{width:"100%",height:1,background:"rgba(255,255,255,0.06)"},
+  mnemonicSection:{width:"100%",display:"flex",flexDirection:"column",gap:8},
+  mnemonicLabel:{fontSize:10,color:"#a78bfa",fontFamily:"monospace",letterSpacing:2,textTransform:"uppercase"},
+  mnemonicText:{fontSize:14,color:"rgba(255,255,255,0.55)",lineHeight:1.7,fontStyle:"italic"},
+  mnemonicLoading:{fontSize:13,color:"rgba(255,255,255,0.25)",fontFamily:"monospace"},
+  reviewMistake:{width:"100%",background:"rgba(255,255,255,0.02)",borderRadius:10,padding:"12px 14px"},
+  reviewWrong:{fontSize:12,color:"rgba(255,255,255,0.25)",fontFamily:"monospace"},
+  reviewNav:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:16,paddingBottom:20},
+  navBtn:{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:"14px",fontSize:14,color:"rgba(255,255,255,0.4)",cursor:"pointer"},
+  navBtnPrimary:{border:"none",borderRadius:12,padding:"14px",fontSize:14,color:"#fff",cursor:"pointer",fontWeight:600},
+  doneStats:{display:"flex",justifyContent:"space-around",marginBottom:28,gap:16},
+  doneStat:{display:"flex",flexDirection:"column",gap:4},
+  doneStatNum:{fontSize:36,fontWeight:800,color:"#fff"},
+  doneStatLabel:{fontSize:10,color:"rgba(255,255,255,0.3)",letterSpacing:2,textTransform:"uppercase"},
+  doneActions:{display:"flex",flexDirection:"column",gap:12},
+  primaryBtn:{background:"#fff",color:"#0f0e0c",border:"none",borderRadius:12,padding:"16px",fontSize:15,cursor:"pointer",letterSpacing:0.5,fontWeight:700},
+  secondaryBtn:{background:"transparent",color:"rgba(255,255,255,0.4)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"16px",fontSize:15,cursor:"pointer"},
 };
 
-// ─────────────────────────────────────────────────────────────
-// SCRIPT MNEMONICS
-// ─────────────────────────────────────────────────────────────
-const MNEMONICS = {
-  "あ":"Looks like an 'A' with arms spread wide saying 'ahh!'",
-  "い":"Two strokes like two 'i' letters side by side — 'ee'",
-  "う":"Like a little hook catching a 'oo' sound",
-  "え":"Looks like a person dancing with arms up — 'eh!'",
-  "お":"Like 'oh!' with a surprised open mouth",
-  "か":"A sword ('ka-tana') slashing diagonally","き":"Like a key ('ki') with two horizontal bars",
-  "く":"A crow's beak opening to say 'ku'","け":"A person with a tall hat — 'ke'",
-  "こ":"Two lines like a 'ko'ld road","さ":"Cross with a curl — 'sa'murai sword",
-  "し":"A fishhook — 'shi'ny and curved","す":"A 'su'bway loop","せ":"A 'se'at with a backrest",
-  "そ":"Like a 'so'ccer ball with a curve","た":"A 'ta'ble with one leg",
-  "ち":"Like a 'chi'cken facing left","つ":"A wave — 'tsu' as water rushes",
-  "て":"A hand reaching out — 'te' means hand!","と":"A 'to'e with a spike",
-  "な":"'na'tural swirling lines","に":"Two lines — 'ni' means 2!",
-  "ぬ":"Like 'nu'dles swirling","ね":"A cat's tail — 'ne' (cats say nyan!)",
-  "の":"A spinning top — just a circle with a tail","は":"Like H with an extra stroke",
-  "ひ":"A smiling mouth saying 'hee!'","ふ":"Mount 'fu'ji with 4 strokes",
-  "へ":"A small tent peak","ほ":"Like 'ho'me — a house",
-  "ま":"Like 'ma'ma holding a baby","み":"A fish hook going 'mi'les deep",
-  "む":"A cow face — moo → 'mu'","め":"A swirling eye — 'me' means eye!",
-  "も":"A fishing hook with two worms","や":"Like a 'ya'k with horns",
-  "ゆ":"'yu'niverse swirling","よ":"Like the letter F — 'yo' bro!",
-  "ら":"A 'la'zy person lounging","り":"Legs running — 'ri'ght away!",
-  "る":"A 'ru'g being rolled up","れ":"A 're'ed blowing in wind",
-  "ろ":"A 'ro'ad that loops back","わ":"'wa'ter rippling — あ without left stroke",
-  "を":"Special particle — 'wo'nderful but rare","ん":"Backwards 'n' — it IS just 'n'!",
-  "ア":"Like the capital A!","イ":"Two strokes like 'i' — 'ee'",
-  "ウ":"Like a crown — 'oo' royalty","エ":"Like H on its side — 'eh'",
-  "オ":"Like an 'o'ar for rowing","カ":"A 'ka'rate chop!",
-  "キ":"A 'ki'te string with crossbars","ク":"A crow's beak — 'ku'",
-  "ケ":"A 'ke'ttle with a spout","コ":"A 'co'rner — two right angles",
-  "サ":"A 'sa'murai's crossed blades","シ":"Three dots — a 'shi'ny smile",
-  "ス":"A 'su'rfboard standing up","セ":"A person 'se'ated at a desk",
-  "ソ":"Two dots and a slash — 'so'nar","タ":"A 'ta'xi with antenna",
-  "チ":"A 'chi'mney with a curve","ツ":"Three dots and a swish — 'tsu'nami",
-  "テ":"A 'te'levision antenna","ト":"A 'to'tem pole with a wing",
-  "ナ":"A 'na'il through a plank","ニ":"Two lines — 'ni' means 2!",
-  "ヌ":"'nu'dles crossing over","ネ":"A 'ne'twork of crossed lines",
-  "ノ":"A single slash — 'no' more strokes!","ハ":"Two people bowing — 'ha'!",
-  "ヒ":"Like the letter F — 'hee'!","フ":"A funny little hook — 'fu'",
-  "ヘ":"Same as hiragana へ — a tent peak!","ホ":"A 'ho'ly cross with extra strokes",
-  "マ":"A 'ma'gic wand with a curl","ミ":"Three lines — 'mi' fingers",
-  "ム":"A 'mu'stache shape","メ":"A big X — 'me'!",
-  "モ":"'mo're lines than ヨ","ヤ":"A 'ya'rd pitchfork",
-  "ユ":"Like a U — 'yu'!","ヨ":"Like the letter E — 'yo'!",
-  "ラ":"A 'la'mp with a curved base","リ":"Two clean strokes — 'ri'ght!",
-  "ル":"A 'ru'ler with a bent end","レ":"A check mark — 're'!",
-  "ロ":"A 'ro'om — a square box","ワ":"'wa'ter dripping from a spout",
-  "ヲ":"Rare particle — 'wo'rthy of memory","ン":"Like a backwards ン — just 'n'!",
-};
+const CSS = `
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#0f0e0c; }
+  .section-card:hover { border-color:rgba(255,255,255,0.15) !important; background:rgba(255,255,255,0.06) !important; transform:translateY(-2px); }
+  .cat-btn:hover { border-color:rgba(255,255,255,0.15) !important; background:rgba(255,255,255,0.06) !important; }
+  .test-btn:hover { background:rgba(255,255,255,0.07) !important; color:rgba(255,255,255,0.8) !important; }
+  .flashcard { animation:cardIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  .flashcard:active { transform:scale(0.98); }
+  .flipping { transform:rotateY(90deg); opacity:0; transition:transform 0.15s,opacity 0.15s; }
+  .card-back-reveal { animation:fadeUp 0.3s ease; }
+  .rating-reveal { animation:fadeUp 0.35s ease; }
+  .rating-btn:hover { border-color:rgba(255,255,255,0.2) !important; background:rgba(255,255,255,0.06) !important; transform:translateY(-2px); }
+  .loading-dots::after { content:""; animation:dots 1.2s steps(4,end) infinite; }
+  @keyframes dots { 0%,20%{content:"."} 40%{content:".."} 60%{content:"..."} 80%,100%{content:""} }
+  @keyframes cardIn { from{opacity:0;transform:scale(0.94) translateY(14px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes xpPop { 0%{opacity:0;transform:translateX(-50%) translateY(20px)} 20%{opacity:1;transform:translateX(-50%) translateY(0)} 70%{opacity:1;transform:translateX(-50%) translateY(-10px)} 100%{opacity:0;transform:translateX(-50%) translateY(-30px)} }
+  @keyframes kanjiFloat { 0%{transform:translateY(110vh)} 100%{transform:translateY(-110vh)} }
+  details summary::-webkit-details-marker { display:none; }
+  details[open] summary span:last-child { transform:rotate(90deg); display:inline-block; }
+  button:hover { opacity:0.85; }
+  .section-card:hover { border-color:rgba(255,255,255,0.12) !important; background:rgba(255,255,255,0.05) !important; }
+`;
 
-// ─────────────────────────────────────────────────────────────
-// SPACED REPETITION
-// ─────────────────────────────────────────────────────────────
-function applyRating(prog, rating) {
-  let { interval, easeFactor, repetitions } = prog;
-  if (rating === 1) { interval = 1; repetitions = 0; }
-  else {
-    if (repetitions === 0) interval = 1;
-    else if (repetitions === 1) interval = 6;
-    else interval = Math.round(interval * easeFactor);
-    repetitions += 1;
-    easeFactor = Math.max(1.3, easeFactor + 0.1 - (4 - rating) * (0.08 + (4 - rating) * 0.02));
-  }
-  return { interval, easeFactor, repetitions, due: Date.now() + interval * 60 * 1000 * 10 };
-}
 
-function freshProg() { return { interval:0, easeFactor:2.5, due:Date.now(), repetitions:0, introduced:false }; }
-
-// ─────────────────────────────────────────────────────────────
-// QUIZ BUILDER (for hiragana/katakana unlock tests)
-// ─────────────────────────────────────────────────────────────
-function buildQuiz(deck) {
-  const cards = [...deck].sort(() => Math.random() - 0.5);
-  return cards.map((card) => {
-    const wrong = deck.filter(c => c.b !== card.b).sort(() => Math.random() - 0.5).slice(0,3).map(c => c.b);
-    const options = [...wrong, card.b].sort(() => Math.random() - 0.5);
-    return { question: card.f, answer: card.b, options, card };
-  });
-}
-
-const PASS_THRESHOLD = 0.8;
-const RATINGS = [
-  {label:"Again",value:1,color:"#ef4444",desc:"Didn't know"},
-  {label:"Hard", value:2,color:"#f97316",desc:"Struggled"},
-  {label:"Good", value:3,color:"#22c55e",desc:"Got it"},
-  {label:"Easy", value:4,color:"#3b82f6",desc:"Too easy"},
-];
-
-// ─────────────────────────────────────────────────────────────
-// STORAGE HELPERS
-// ─────────────────────────────────────────────────────────────
-function loadState(key, fallback) {
-  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e2) { return fallback; }
-}
-function saveState(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e3) {} }
-
-// ─────────────────────────────────────────────────────────────
-// EXPANSION BOX (formal/informal/on-yomi/kun-yomi)
-// ─────────────────────────────────────────────────────────────
-function ExpansionBox(props) { var mode = props.mode; var card = props.card;
-  if (!mode || !card) return null;
-  const raw = mode === 'formal' ? card.formal : card.informal;
-  if (!raw) return null;
-  const [jpPart, ...rest] = raw.split(' — ');
-  const enPart = rest.join(' — ');
-  const colors = { formal:{bg:"rgba(59,130,246,0.07)",border:"rgba(59,130,246,0.2)"}, informal:{bg:"rgba(249,115,22,0.07)",border:"rgba(249,115,22,0.2)"} };
-  const c = colors[mode];
-  return (
-    React.createElement('div', { style: {padding:"12px 14px",background:c.bg,border:`1px solid ${c.border}`,borderRadius:10,display:"flex",flexDirection:"column",gap:4}, className: "card-back-reveal",}
-      , React.createElement('div', { style: {fontSize:21,color:"#f0ede8",lineHeight:1.4},}, jpPart)
-      , enPart && React.createElement('div', { style: {fontSize:16,color:"#8a8070",fontFamily:"monospace"},}, enPart)
-    )
-  );
-}
-
-function CardToggles(props) { var card = props.card; var section = props.section; var mode = props.mode; var setMode = props.setMode;
+function CardToggles({ card, section, mode, setMode }) {
   if (!card) return null;
-  const isKanji = section === 'kanji';
-  const hasF = !!card.formal, hasI = !!card.informal;
-  if (!hasF && !hasI) return null;
-  const toggle = val => setMode(mode === val ? null : val);
-  return (
-    React.createElement('div', { style: {width:"100%",display:"flex",flexDirection:"column",gap:10,marginTop:4},}
-      , React.createElement('div', { style: {display:"grid",gridTemplateColumns:"1fr 1fr",gap:8},}
-        , hasF && React.createElement('button', { style: {...S.toggleBtn,...(mode==='formal'?S.formalActive:{})}, onClick: e=>{e.stopPropagation();toggle('formal');},}
-          , isKanji?"音 On'yomi":"丁寧 Formal")
-        , hasI && React.createElement('button', { style: {...S.toggleBtn,...(mode==='informal'?S.informalActive:{})}, onClick: e=>{e.stopPropagation();toggle('informal');},}
-          , isKanji?"訓 Kun'yomi":"普通 Casual")
-      )
-      , React.createElement(ExpansionBox, { mode: mode, card: card,} )
-    )
+  var hasFormal = card.formal || card.informalFront;
+  var hasInformal = card.informal || card.informalBack;
+  if (!hasFormal && !hasInformal) return null;
+  return React.createElement('div', {style:{display:"flex",gap:8,marginTop:8}},
+    hasFormal && React.createElement('button', {
+      style:{background:mode==="formal"?"rgba(59,130,246,0.2)":"rgba(255,255,255,0.04)",border:"1px solid "+(mode==="formal"?"rgba(59,130,246,0.5)":"rgba(255,255,255,0.08)"),borderRadius:8,padding:"6px 14px",fontSize:12,color:mode==="formal"?"rgba(59,130,246,0.9)":"rgba(255,255,255,0.35)",cursor:"pointer",fontFamily:"monospace"},
+      onClick:function(){setMode(mode==="formal"?null:"formal");}
+    }, "Formal"),
+    hasInformal && React.createElement('button', {
+      style:{background:mode==="informal"?"rgba(249,115,22,0.2)":"rgba(255,255,255,0.04)",border:"1px solid "+(mode==="informal"?"rgba(249,115,22,0.5)":"rgba(255,255,255,0.08)"),borderRadius:8,padding:"6px 14px",fontSize:12,color:mode==="informal"?"rgba(249,115,22,0.9)":"rgba(255,255,255,0.35)",cursor:"pointer",fontFamily:"monospace"},
+      onClick:function(){setMode(mode==="informal"?null:"informal");}
+    }, "Casual")
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// APP
-// ─────────────────────────────────────────────────────────────
 function App() {
   // ── Persistent state ──
+const loadState = (key, def) => {
+  try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
+};
+const saveState = (key, val) => {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} 
+};
+const freshProg = () => ({introduced:false, due:Date.now(), interval:1, ease:2.5, reps:0});
+const getRank = function(level) {
+  var RANKS = [{min:1,max:5,title:"Beginner",jp:"\u521d\u5fc3\u8005",color:"#9ca3af"},{min:6,max:10,title:"Student",jp:"\u5b66\u751f",color:"#22c55e"},{min:11,max:15,title:"Learner",jp:"\u5b66\u7fd2\u8005",color:"#3b82f6"},{min:16,max:20,title:"Scholar",jp:"\u5b66\u8005",color:"#8b5cf6"},{min:21,max:25,title:"Advanced",jp:"\u4e0a\u7d1a\u8005",color:"#f97316"},{min:26,max:30,title:"Expert",jp:"\u5c02\u9580\u5bb6",color:"#ef4444"},{min:31,max:40,title:"Master",jp:"\u30de\u30b9\u30bf\u30fc",color:"#ec4899"},{min:41,max:49,title:"Sensei",jp:"\u5148\u751f",color:"#f59e0b"},{min:50,max:50,title:"Grand Master",jp:"\u5927\u5e2b\u7bc4",color:"#e11d48"}];
+  return RANKS.find(function(r){return level>=r.min&&level<=r.max;})||RANKS[0];
+};
+const getLevelFromXP = function(xp) {
+  for (var i = XP_PER_LEVEL.length - 1; i >= 0; i--) { if (xp >= XP_PER_LEVEL[i]) return i + 1; }
+  return 1;
+};
+const getXPForLevel = function(level) { return XP_PER_LEVEL[Math.min(level-1,XP_PER_LEVEL.length-1)]; };
+const getXPForNextLevel = function(level) { return XP_PER_LEVEL[Math.min(level,XP_PER_LEVEL.length-1)]; };
+const LEVELS = ["N5","N4","N3","N2","N1"];
+const LEVEL_COLORS = {N5:"#22c55e",N4:"#3b82f6",N3:"#f97316",N2:"#a855f7",N1:"#ef4444"};
+const CATEGORIES = ["vocab","kanji","grammar","reading"];
+const CAT_META = {vocab:{label:"Vocab",icon:"\u8a9e"},kanji:{label:"Kanji",icon:"\u5b57"},grammar:{label:"Grammar",icon:"\u6587"},reading:{label:"Reading",icon:"\u8aad"}};
+const PASS_THRESHOLD = 0.8;
+const RATINGS = [{value:1,label:"Again",desc:"<1d",color:"#ef4444"},{value:2,label:"Hard",desc:"~1d",color:"#f97316"},{value:3,label:"Good",desc:"~3d",color:"#3b82f6"},{value:4,label:"Easy",desc:"~1w",color:"#22c55e"}];
+const MNEMONICS = {};
   const [scriptUnlocked, setScriptUnlocked] = React.useState(() => loadState("nh_scripts", {hiragana:false,katakana:false}));
   const [levelProgress, setLevelProgress] = React.useState(() => loadState("nh_levelProgress", {current:"N5", passed:{}}));
   const [cardProgress, setCardProgress] = React.useState(() => loadState("nh_cardProg", {}));
@@ -2214,8 +2359,33 @@ function App() {
     setTimeout(() => { setFlipped(true); setIsFlipping(false); }, 150);
   };
 
+  const applyRating = (prog, rating) => {
+    var now = Date.now();
+    var ease = prog.ease || 2.5;
+    var interval = prog.interval || 1;
+    var reps = prog.reps || 0;
+    if (rating === 1) { interval = 1; reps = 0; ease = Math.max(1.3, ease - 0.2); }
+    else if (rating === 2) { interval = Math.max(1, Math.round(interval * 1.2)); ease = Math.max(1.3, ease - 0.15); }
+    else if (rating === 3) { interval = reps === 0 ? 1 : reps === 1 ? 4 : Math.round(interval * ease); reps++; }
+    else { interval = reps === 0 ? 4 : Math.round(interval * ease * 1.3); ease = Math.min(4, ease + 0.1); reps++; }
+    return { ...prog, ease: ease, interval: interval, reps: reps, due: now + interval * 86400000 };
+  };
+
+  const buildQuiz = (deck) => {
+    var shuffled = [...deck].sort(function(){return Math.random()-0.5;});
+    return shuffled.slice(0, Math.min(20, shuffled.length)).map(function(card) {
+      var wrong = deck.filter(function(c){return c.b !== card.b;}).sort(function(){return Math.random()-0.5;}).slice(0,3).map(function(c){return c.b;});
+      var options = [...wrong, card.b].sort(function(){return Math.random()-0.5;});
+      return { front: card.f, answer: card.b, options: options };
+    });
+  };
+
+  const goToReview = (idx) => {
+    setReviewIndex(idx);
+  };
+
   const handleRate = (rating) => {
-    const {i, prog} = queue[queueIndex];
+    const _qItem = queue[queueIndex]; const i = _qItem.i; const prog = _qItem.prog;
     const wasNew = !prog.introduced;
     const newProg = { ...applyRating(prog, rating), introduced: true };
     if (activeCategory === "katakana_words") {
@@ -2587,13 +2757,10 @@ function App() {
                       /* Sample card */
                       , React.createElement('div', { style: {
                         background:"rgba(255,255,255,0.06)",
-                        border: borderToShow ? (borderToShow.color==="prismatic"?"2px solid transparent":borderToShow.style) : currentBorder.style,
-                        boxShadow: borderToShow ? borderToShow.glow : currentBorder.glow||"none",
+                        ...(borderToShow ? borderToShow.css : currentBorder.css),
+                        boxShadow: borderToShow ? (borderToShow.glow||"none") : (currentBorder.glow||"none"),
                         borderRadius:20, padding:"22px 28px", textAlign:"center", width:"100%",
                         position:"relative",zIndex:1,
-                        backgroundImage: borderToShow && borderToShow.color==="prismatic" ? "linear-gradient(rgba(255,255,255,0.06),rgba(255,255,255,0.06)),linear-gradient(135deg,#e11d48,#7c3aed,#3b82f6,#22c55e,#f59e0b)" : undefined,
-                        backgroundOrigin: borderToShow && borderToShow.color==="prismatic" ? "border-box" : undefined,
-                        backgroundClip: borderToShow && borderToShow.color==="prismatic" ? "padding-box,border-box" : undefined,
                       },}
                         , React.createElement('div', { style: {fontSize:16,color:"rgba(255,255,255,0.3)",fontFamily:"monospace",letterSpacing:1,marginBottom:12},}, "N5 · 語彙"  )
                         , React.createElement('div', { style: {fontSize:52,color:"#fff",marginBottom:10,fontFamily:"Georgia"},}, "食べる")
@@ -2679,14 +2846,12 @@ function App() {
                         , React.createElement('div', { style: {
                           width:48,height:56,borderRadius:12,
                           background:"rgba(255,255,255,0.04)",
-                          border:border.color==="prismatic"?"2px solid transparent":border.style,
+                          ...(border.css||{}),
                           boxShadow:border.glow||"none",
                           flexShrink:0,
                           display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
                           gap:2,
-                          backgroundImage:border.color==="prismatic"?"linear-gradient(rgba(255,255,255,0.04),rgba(255,255,255,0.04)),linear-gradient(135deg,#e11d48,#7c3aed,#3b82f6,#22c55e,#f59e0b)":undefined,
-                          backgroundOrigin:border.color==="prismatic"?"border-box":undefined,
-                          backgroundClip:border.color==="prismatic"?"padding-box,border-box":undefined,
+                          position:"relative",overflow:"hidden",
                         },}
                           , React.createElement('span', { style: {fontSize:22,lineHeight:1},}, "字")
                           , React.createElement('span', { style: {fontSize:16,color:"rgba(255,255,255,0.3)",fontFamily:"monospace"},}, "N5")
@@ -2814,36 +2979,38 @@ function App() {
 
       /* ── HOME ── */
       , screen === "home" && mainMode === "splash" && (
-        React.createElement('div', { style: {minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"32px 24px",position:"relative",zIndex:1},}
+        React.createElement('div', { style: {minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"48px 28px",position:"relative",zIndex:1},}
           /* Logo */
-          , React.createElement('div', { style: {textAlign:"center",marginBottom:48},}
-            , React.createElement('div', { style: {display:"inline-flex",alignItems:"center",justifyContent:"center",width:100,height:100,borderRadius:32,background:"linear-gradient(135deg,#e11d48,#7c3aed)",boxShadow:"0 12px 48px rgba(225,29,72,0.5)",marginBottom:20,fontSize:56},}, "続")
-            , React.createElement('div', { style: {fontSize:42,fontWeight:900,letterSpacing:6,color:"#fff",marginBottom:8},}, "ZOKU")
-            , React.createElement('div', { style: {fontSize:19,color:"rgba(255,255,255,0.5)",letterSpacing:1},}, "Keep going. Every day counts."    )
+          , React.createElement('div', { style: {textAlign:"center",marginBottom:64},}
+            , React.createElement('div', { style: {fontSize:72,lineHeight:1,marginBottom:16,letterSpacing:-2},}, "続")
+            , React.createElement('div', { style: {fontSize:11,letterSpacing:8,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",fontFamily:"monospace",marginBottom:20},}, "ZOKU")
+            , React.createElement('div', { style: {width:32,height:1,background:"rgba(255,255,255,0.15)",margin:"0 auto 20px"},})
+            , React.createElement('div', { style: {fontSize:13,color:"rgba(255,255,255,0.35)",letterSpacing:3,textTransform:"uppercase",fontFamily:"monospace"},}, "Keep going. Every day counts."    )
           )
 
-          /* Two big buttons */
-          , React.createElement('div', { style: {display:"flex",flexDirection:"column",gap:16,width:"100%",maxWidth:380},}
+          /* Two clean buttons */
+          , React.createElement('div', { style: {display:"flex",flexDirection:"column",gap:10,width:"100%",maxWidth:360},}
             , React.createElement('button', {
-              style: {background:"linear-gradient(135deg,#e11d48,#be123c)",border:"none",borderRadius:20,padding:"24px",cursor:"pointer",display:"flex",alignItems:"center",gap:16,boxShadow:"0 8px 32px rgba(225,29,72,0.4)",transition:"transform 0.2s"},
+              style: {background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:0,cursor:"pointer",display:"flex",alignItems:"stretch",overflow:"hidden",transition:"all 0.2s",textAlign:"left"},
               onClick: function(){setMainMode("training");},}
-              , React.createElement('span', { style: {fontSize:44},}, "🎌")
-              , React.createElement('div', { style: {textAlign:"left"},}
-                , React.createElement('div', { style: {fontSize:24,fontWeight:800,color:"#fff",marginBottom:4},}, "Training")
-                , React.createElement('div', { style: {fontSize:17,color:"rgba(255,255,255,0.7)"},}, "Flashcards, grammar, sentences & more"    )
+              , React.createElement('div', { style: {width:3,background:"rgba(180,60,50,0.8)",flexShrink:0}})
+              , React.createElement('div', { style: {padding:"20px 20px",flex:1}}
+                , React.createElement('div', { style: {fontSize:9,letterSpacing:3,color:"rgba(180,60,50,0.7)",textTransform:"uppercase",fontFamily:"monospace",marginBottom:8}}, "STUDY")
+                , React.createElement('div', { style: {fontSize:20,fontWeight:400,color:"rgba(255,255,255,0.9)",fontFamily:"Georgia,serif",marginBottom:4}}, "Training")
+                , React.createElement('div', { style: {fontSize:11,color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}, "Flashcards · Grammar · Speaking")
               )
-              , React.createElement('span', { style: {marginLeft:"auto",fontSize:26,color:"rgba(255,255,255,0.7)"},}, "›")
+              , React.createElement('div', { style: {padding:"20px 16px",display:"flex",alignItems:"center",color:"rgba(255,255,255,0.2)",fontSize:14}}, "→")
             )
-
             , React.createElement('button', {
-              style: {background:"linear-gradient(135deg,#7c3aed,#4f46e5)",border:"none",borderRadius:20,padding:"24px",cursor:"pointer",display:"flex",alignItems:"center",gap:16,boxShadow:"0 8px 32px rgba(124,58,237,0.4)",transition:"transform 0.2s"},
+              style: {background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:12,padding:0,cursor:"pointer",display:"flex",alignItems:"stretch",overflow:"hidden",transition:"all 0.2s",textAlign:"left"},
               onClick: function(){setMainMode("online");},}
-              , React.createElement('span', { style: {fontSize:44},}, "⚔️")
-              , React.createElement('div', { style: {textAlign:"left"},}
-                , React.createElement('div', { style: {fontSize:24,fontWeight:800,color:"#fff",marginBottom:4},}, "Online")
-                , React.createElement('div', { style: {fontSize:17,color:"rgba(255,255,255,0.7)"},}, "Challenge friends in Japanese trivia"    )
+              , React.createElement('div', { style: {width:3,background:"rgba(80,80,200,0.7)",flexShrink:0}})
+              , React.createElement('div', { style: {padding:"20px 20px",flex:1}}
+                , React.createElement('div', { style: {fontSize:9,letterSpacing:3,color:"rgba(80,80,200,0.8)",textTransform:"uppercase",fontFamily:"monospace",marginBottom:8}}, "COMPETE")
+                , React.createElement('div', { style: {fontSize:20,fontWeight:400,color:"rgba(255,255,255,0.9)",fontFamily:"Georgia,serif",marginBottom:4}}, "Online")
+                , React.createElement('div', { style: {fontSize:11,color:"rgba(255,255,255,0.25)",fontFamily:"monospace"}}, "Challenge friends · Ranked play")
               )
-              , React.createElement('span', { style: {marginLeft:"auto",fontSize:26,color:"rgba(255,255,255,0.7)"},}, "›")
+              , React.createElement('div', { style: {padding:"20px 16px",display:"flex",alignItems:"center",color:"rgba(255,255,255,0.2)",fontSize:14}}, "→")
             )
           )
 
@@ -2882,7 +3049,7 @@ function App() {
             onClick: function(){setMainMode("splash");},}, "←")
           /* Avatar button */
           , React.createElement('button', {
-            style: {position:"fixed",top:16,right:68,width:44,height:44,borderRadius:12,border:"1px solid rgba(255,255,255,0.2)",background:"rgba(255,255,255,0.08)",fontSize:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:99,overflow:"hidden"},
+            style: {position:"fixed",top:16,right:56,width:36,height:36,borderRadius:"50%",border:"1px solid rgba(255,255,255,0.12)",background:"rgba(255,255,255,0.05)",fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:99,overflow:"hidden"},
             onClick: function(){setShowAvatarPicker(true);},}
             , avatar && avatar.startsWith("data:")
               ? React.createElement("img",{src:avatar,style:{width:"100%",height:"100%",objectFit:"cover"}})
@@ -2890,7 +3057,7 @@ function App() {
           )
           /* Settings gear button */
           , React.createElement('button', {
-            style: {position:"fixed",top:16,right:16,background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.3)",borderRadius:12,width:44,height:44,fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:99,boxShadow:"0 2px 12px rgba(0,0,0,0.4)",color:"#ffffff"},
+            style: {position:"fixed",top:20,right:20,background:"none",border:"none",fontSize:18,cursor:"pointer",color:"rgba(255,255,255,0.3)",zIndex:99},
             onClick: () => setScreen("settings"),
             title: "Settings",}
 , "⚙")
@@ -2906,9 +3073,10 @@ function App() {
 
           , React.createElement('div', { style: {textAlign:"center",marginBottom:20,padding:"8px 0"},}
               /* Logo badge */
-              , React.createElement('div', { style: {display:"inline-flex",alignItems:"center",justifyContent:"center",width:80,height:80,borderRadius:24,background:"linear-gradient(135deg,#e11d48 0%,#7c3aed 100%)",boxShadow:"0 8px 32px rgba(225,29,72,0.4)",marginBottom:16,fontSize:46},}, "続")
-              , React.createElement('div', { style: {fontSize:36,fontWeight:900,letterSpacing:4,color:"#fff",marginBottom:6},}, "ZOKU")
-              , React.createElement('div', { style: {fontSize:18,color:"rgba(255,255,255,0.5)",letterSpacing:1,marginBottom:16},}, "Keep going. Every day counts."    )
+              , React.createElement('div', { style: {display:"inline-flex",display:"flex",alignItems:"center",justifyContent:"center",width:64,height:64,borderRadius:20,border:"1px solid rgba(255,255,255,0.1)",marginBottom:14,fontSize:36},}, "続")
+              , React.createElement('div', { style: {fontSize:10,letterSpacing:8,color:"rgba(255,255,255,0.25)",fontFamily:"monospace",textTransform:"uppercase",marginBottom:12},}, "ZOKU")
+              , React.createElement('div', { style: {width:20,height:1,background:"rgba(255,255,255,0.1)",margin:"0 auto 12px"},})
+              , React.createElement('div', { style: {fontSize:10,color:"rgba(255,255,255,0.22)",letterSpacing:3,fontFamily:"monospace",textTransform:"uppercase",marginBottom:16},}, "Keep going. Every day counts."    )
               /* XP Level bar */
               , (function(){
                 const lvl = getLevelFromXP(totalXP);
@@ -2934,7 +3102,25 @@ function App() {
               })()
             )
 
-            /* ── FIRST TIME: show welcome banner ── */
+            /* ── HOW TO USE THIS APP ── */
+          , React.createElement('div', {style:{marginBottom:16,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"14px 16px"}},
+            React.createElement('div', {style:{fontSize:10,fontFamily:"monospace",letterSpacing:2,color:"rgba(255,255,255,0.25)",textTransform:"uppercase",marginBottom:10}}, "How to use Zoku"),
+            React.createElement('div', {style:{fontSize:12,color:"rgba(255,255,255,0.4)",lineHeight:1.9}},
+              React.createElement('span', {style:{color:"rgba(180,60,50,0.75)",fontFamily:"monospace",fontSize:10}}, "01 — ALPHABET  "),
+              React.createElement('span', null, "Learn Hiragana & Katakana. Pass the quiz at 80% to unlock vocab."),
+              React.createElement('br', null),
+              React.createElement('span', {style:{color:"rgba(80,80,200,0.75)",fontFamily:"monospace",fontSize:10}}, "02 — VOCABULARY  "),
+              React.createElement('span', null, "Work through N5–N1 flashcards. Rate cards so the app schedules reviews."),
+              React.createElement('br', null),
+              React.createElement('span', {style:{color:"rgba(255,255,255,0.25)",fontFamily:"monospace",fontSize:10}}, "03 — PRACTICE  "),
+              React.createElement('span', null, "Particles, sentences, and katakana loanwords."),
+              React.createElement('br', null),
+              React.createElement('span', {style:{color:"rgba(255,255,255,0.25)",fontFamily:"monospace",fontSize:10}}, "04 — SPEAK  "),
+              React.createElement('span', null, "AI conversations in Japanese at your level.")
+            )
+          )
+
+          /* ── FIRST TIME: show welcome banner ── */
           , !scriptUnlocked.hiragana && !scriptUnlocked.katakana && Object.keys(cardProgress).length === 0 && (
             React.createElement('div', { style: {background:"linear-gradient(135deg,rgba(225,29,72,0.15),rgba(124,58,237,0.15))",border:"1px solid rgba(225,29,72,0.3)",borderRadius:16,padding:"20px 18px",marginBottom:4,textAlign:"center"},}
               , React.createElement('div', { style: {fontSize:32,marginBottom:8},}, "👋 こんにちは！" )
@@ -2949,9 +3135,9 @@ function App() {
           /* ── STEP 1: Learn the Alphabet ── */
           , React.createElement('div', { style: {marginTop:8},}
             , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:10,marginBottom:10},}
-              , React.createElement('div', { style: {background:"#e11d48",borderRadius:"50%",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:700,color:"#fff",flexShrink:0},}, "1")
+              , React.createElement('div', { style: {fontFamily:"monospace",fontSize:9,letterSpacing:2,color:"rgba(180,60,50,0.7)",textTransform:"uppercase"},}, "01 —")
               , React.createElement('div', null
-                , React.createElement('div', { style: {fontSize:19,fontWeight:700,color:T.text},}, "Learn the Alphabet"  )
+                , React.createElement('div', { style: {fontSize:14,fontWeight:400,color:"rgba(255,255,255,0.85)",fontFamily:"Georgia,serif"},}, "Learn the Alphabet"  )
                 , React.createElement('div', { style: {fontSize:16,color:T.textMuted},}, "Hiragana & Katakana — the foundation of Japanese"       )
               )
               , scriptUnlocked.hiragana && scriptUnlocked.katakana && React.createElement('span', { style: {marginLeft:"auto",fontSize:16,color:"#22c55e",fontFamily:"monospace"},}, "✓ Complete" )
@@ -2986,9 +3172,9 @@ function App() {
           /* ── STEP 2: Vocabulary & Grammar ── */
           , React.createElement('div', { style: {marginTop:20,opacity:scriptsPassed?1:0.4},}
             , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:10,marginBottom:10},}
-              , React.createElement('div', { style: {background:scriptsPassed?"#3b82f6":"#444",borderRadius:"50%",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:700,color:"#fff",flexShrink:0},}, "2")
+              , React.createElement('div', { style: {fontFamily:"monospace",fontSize:9,letterSpacing:2,color:scriptsPassed?"rgba(80,80,200,0.7)":"rgba(255,255,255,0.15)",textTransform:"uppercase"},}, "02 —")
               , React.createElement('div', { style: {flex:1},}
-                , React.createElement('div', { style: {fontSize:19,fontWeight:700,color:T.text},}, "Vocabulary & Grammar"  )
+                , React.createElement('div', { style: {fontSize:14,fontWeight:400,color:"rgba(255,255,255,0.85)",fontFamily:"Georgia,serif"},}, "Vocabulary & Grammar"  )
                 , React.createElement('div', { style: {fontSize:16,color:T.textMuted},}, scriptsPassed?"Tap a level to study flashcards":"Finish Step 1 first to unlock")
               )
             )
@@ -3015,10 +3201,10 @@ function App() {
                       , !locked&&React.createElement('div', { style: {fontSize:16,color:T.textMuted},}, doneCards, "/", totalCards, " cards introduced · "    , pct, "%")
                     )
                     , !locked&&!passed&&(
-                      React.createElement('button', { style: {...S.testBtn,borderColor:color,color:color,padding:"4px 12px",fontSize:16,width:"auto"}, onClick: function(){startLevelTest(level);},}, "Test →" )
+                      React.createElement('button', { style: {background:"transparent",border:"1px solid "+color+"55",borderRadius:8,padding:"4px 12px",fontSize:11,color:color,cursor:"pointer",fontFamily:"monospace",letterSpacing:1}, onClick: function(){startLevelTest(level);},}, "Test →" )
                     )
                     , passed&&(
-                      React.createElement('button', { style: {...S.testBtn,borderColor:"#22c55e",color:"#22c55e",padding:"4px 12px",fontSize:16,width:"auto"}, onClick: function(){startLevelTest(level);},}, "Retake")
+                      React.createElement('button', { style: {background:"transparent",border:"1px solid rgba(34,197,94,0.4)",borderRadius:8,padding:"4px 12px",fontSize:11,color:"#22c55e",cursor:"pointer",fontFamily:"monospace",letterSpacing:1}, onClick: function(){startLevelTest(level);},}, "Retake")
                     )
                   )
                   , !locked&&(
@@ -3056,9 +3242,9 @@ function App() {
           /* ── STEP 3: Practice ── */
           , React.createElement('div', { style: {marginTop:20,opacity:scriptsPassed?1:0.4},}
             , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:10,marginBottom:10},}
-              , React.createElement('div', { style: {background:scriptsPassed?"#f97316":"#444",borderRadius:"50%",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:700,color:"#fff",flexShrink:0},}, "3")
+              , React.createElement('div', { style: {fontFamily:"monospace",fontSize:9,letterSpacing:2,color:scriptsPassed?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.15)",textTransform:"uppercase"},}, "03 —")
               , React.createElement('div', null
-                , React.createElement('div', { style: {fontSize:19,fontWeight:700,color:T.text},}, "Practice")
+                , React.createElement('div', { style: {fontSize:14,fontWeight:400,color:"rgba(255,255,255,0.85)",fontFamily:"Georgia,serif"},}, "Practice")
                 , React.createElement('div', { style: {fontSize:16,color:T.textMuted},}, "Loanwords, sentences & particles"   )
               )
             )
@@ -3087,9 +3273,9 @@ function App() {
           /* ── STEP 4: Speak ── */
           , React.createElement('div', { style: {marginTop:20,opacity:scriptsPassed?1:0.4},}
             , React.createElement('div', { style: {display:"flex",alignItems:"center",gap:10,marginBottom:10},}
-              , React.createElement('div', { style: {background:scriptsPassed?"#e11d48":"#444",borderRadius:"50%",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:700,color:"#fff",flexShrink:0},}, "4")
+              , React.createElement('div', { style: {fontFamily:"monospace",fontSize:9,letterSpacing:2,color:scriptsPassed?"rgba(255,255,255,0.35)":"rgba(255,255,255,0.15)",textTransform:"uppercase"},}, "04 —")
               , React.createElement('div', null
-                , React.createElement('div', { style: {fontSize:19,fontWeight:700,color:T.text},}, "Speak & Chat"  )
+                , React.createElement('div', { style: {fontSize:14,fontWeight:400,color:"rgba(255,255,255,0.85)",fontFamily:"Georgia,serif"},}, "Speak & Chat"  )
                 , React.createElement('div', { style: {fontSize:16,color:T.textMuted},}, "Have a real conversation with an AI tutor"       )
               )
             )
@@ -4049,7 +4235,8 @@ function App() {
             , React.createElement('div', { style: {...S.progressBarFill,width:`${(queueIndex/queue.length)*100}%`,background:activeCategory==="katakana_words"?"#0891b2":LEVEL_COLORS[activeLevel]||"#555"},} )
           )
           , React.createElement('div', { style: S.cardArea,}
-            , React.createElement('div', { key: animKey, className: `flashcard${isFlipping?" flipping":""}`, style: {...S.card, background:"rgba(255,255,255,0.06)", border:currentBorder.color==="prismatic"?"2px solid transparent":currentBorder.style, boxShadow:currentBorder.glow||"none", backgroundImage:currentBorder.color==="prismatic"?"linear-gradient(rgba(255,255,255,0.06),rgba(255,255,255,0.06)),linear-gradient(135deg,#e11d48,#7c3aed,#3b82f6,#22c55e,#f59e0b)":undefined, backgroundOrigin:"border-box", backgroundClip:currentBorder.color==="prismatic"?"padding-box,border-box":undefined}, onClick: !flipped?handleFlip:undefined,}
+            , React.createElement('div', { key: animKey, className: `flashcard${isFlipping?" flipping":""}`, style: {...S.card, background:"rgba(255,255,255,0.06)", ...currentBorder.css, boxShadow:currentBorder.glow||"none", position:"relative"}, onClick: !flipped?handleFlip:undefined,}
+              , BORDER_ART[currentBorder.id] && BORDER_ART[currentBorder.id](currentBorder)
               , React.createElement('div', { style: {...S.cardHint,color:T.textFaint},}, card.card.hint || (activeCategory === "katakana_words" ? "Katakana Word" : `${activeLevel} · ${activeCategory}`))
               , !card.prog.introduced && React.createElement('div', { style: S.newBadge,}, "NEW")
               , React.createElement('div', { style: {...S.cardFront,fontSize:activeCategory==='reading'?20:activeCategory==='grammar'?24:60,lineHeight:1.4,color:T.text},}
@@ -4303,117 +4490,8 @@ function App() {
 // ─────────────────────────────────────────────────────────────
 // STYLES
 // ─────────────────────────────────────────────────────────────
-const S = {
-  root:{minHeight:"100vh",background:"#08080f",color:"#f0ede8",fontFamily:"'Georgia','Times New Roman',serif",display:"flex",flexDirection:"column"},
-  home:{maxWidth:680,margin:"0 auto",padding:"32px 18px 100px",width:"100%",position:"relative",zIndex:1},
-  header:{textAlign:"center",marginBottom:20},
-  logo:{display:"flex",flexDirection:"column",alignItems:"center",gap:4,marginBottom:10},
-  logoJp:{fontSize:52,fontWeight:400,letterSpacing:8,color:"#f0ede8",lineHeight:1},
-  logoEn:{fontSize:16,letterSpacing:6,color:"#8a8070",fontStyle:"italic"},
-  tagline:{color:"#8a8070",fontSize:18,letterSpacing:1,marginBottom:10},
-  gateBanner:{display:"flex",alignItems:"flex-start",gap:12,background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"16px",marginBottom:16},
-  gateIcon:{fontSize:26,marginTop:2},gateTitle:{fontSize:18,color:"#fff",marginBottom:3,fontWeight:600},gateSub:{fontSize:16,color:"rgba(255,255,255,0.4)"},
-  sectionLabel:{fontSize:16,color:"rgba(255,255,255,0.25)",letterSpacing:3,textTransform:"uppercase",fontFamily:"monospace",marginBottom:10},
-  grid2:{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:4},
-  sectionCard:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"22px 18px",width:"100%",display:"flex",flexDirection:"column",alignItems:"flex-start",gap:6,position:"relative",transition:"all 0.25s",textAlign:"left",cursor:"pointer"},
-  sectionIcon:{fontSize:32,lineHeight:1,marginBottom:4},
-  sectionName:{fontSize:18,fontWeight:700,color:"#fff"},
-  sectionCount:{fontSize:16,color:"rgba(255,255,255,0.4)"},
-  duePill:{borderRadius:10,padding:"2px 8px",fontSize:16,color:"#fff",fontFamily:"monospace"},
-  passedBadge:{position:"absolute",bottom:10,right:10,fontSize:16,color:"#22c55e",fontFamily:"monospace"},
-  testBtn:{width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"11px",fontSize:17,fontFamily:"Georgia,serif",cursor:"pointer",letterSpacing:0.5,transition:"all 0.2s",color:"rgba(255,255,255,0.6)"},
-  submenuCard:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"20px 18px",display:"flex",alignItems:"center",gap:16,cursor:"pointer",transition:"all 0.25s",textAlign:"left",width:"100%"},
-  levelCard:{background:"rgba(255,255,255,0.04)",borderRadius:20,padding:"16px",marginBottom:10,border:"1px solid rgba(255,255,255,0.07)"},
-  levelBadge:{fontSize:16,fontWeight:700,color:"#fff",borderRadius:8,padding:"4px 10px",fontFamily:"monospace"},
-  catBtn:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"12px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",transition:"all 0.2s"},
-  settingsBox:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"20px",marginTop:16},
-  settingsTitle:{fontSize:17,color:"rgba(255,255,255,0.5)",letterSpacing:1},
-  limitBtn:{border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"10px 12px",fontSize:17,cursor:"pointer",fontFamily:"monospace",transition:"all 0.15s",background:"rgba(255,255,255,0.04)",color:"rgba(255,255,255,0.6)"},
-  studyWrap:{maxWidth:560,margin:"0 auto",padding:"24px 20px",width:"100%",minHeight:"100vh",display:"flex",flexDirection:"column",position:"relative",zIndex:1},
-  studyHeader:{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14},
-  backBtn:{background:"none",border:"none",color:"rgba(255,255,255,0.4)",cursor:"pointer",fontSize:19,padding:0},
-  sectionPill:{borderRadius:20,padding:"6px 16px",fontSize:17,color:"#fff",letterSpacing:0.5,fontWeight:700},
-  progressLabel:{fontSize:17,color:"rgba(255,255,255,0.4)",fontFamily:"monospace"},
-  progressBarWrap:{height:3,background:"rgba(255,255,255,0.08)",borderRadius:2,marginBottom:28,overflow:"hidden"},
-  progressBarFill:{height:"100%",borderRadius:2,transition:"width 0.4s ease"},
-  cardArea:{flex:1,display:"flex",alignItems:"center",justifyContent:"center"},
-  card:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:28,padding:"44px 32px",width:"100%",minHeight:300,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:14,position:"relative",transition:"transform 0.15s",userSelect:"none"},
-  cardHint:{position:"absolute",top:16,left:20,fontSize:16,color:"rgba(255,255,255,0.2)",letterSpacing:1,fontFamily:"monospace",textTransform:"uppercase"},
-  newBadge:{position:"absolute",top:14,right:16,background:"rgba(34,197,94,0.2)",border:"1px solid rgba(34,197,94,0.4)",borderRadius:8,padding:"3px 8px",fontSize:16,color:"#22c55e",fontFamily:"monospace",fontWeight:700},
-  cardFront:{fontSize:68,lineHeight:1,textAlign:"center",color:"#fff"},
-  cardBack:{display:"flex",flexDirection:"column",alignItems:"center",gap:14,width:"100%"},
-  divider:{width:48,height:1,background:"rgba(255,255,255,0.1)"},
-  cardAnswer:{fontSize:26,color:"rgba(255,255,255,0.7)",textAlign:"center",lineHeight:1.5},
-  tapHint:{fontSize:16,color:"rgba(255,255,255,0.2)",letterSpacing:2,textTransform:"uppercase",fontFamily:"monospace",marginTop:8},
-  scriptMnemonic:{fontSize:17,color:"rgba(255,255,255,0.4)",fontStyle:"italic",textAlign:"center",lineHeight:1.6,padding:"0 8px"},
-  exampleBox:{width:"100%",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"14px",display:"flex",flexDirection:"column",gap:4},
-  exampleLabel:{fontSize:16,color:"#10b981",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:4},
-  toggleBtn:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,padding:"8px",fontSize:17,color:"rgba(255,255,255,0.5)",cursor:"pointer",fontFamily:"Georgia,serif",transition:"all 0.15s"},
-  formalActive:{background:"rgba(59,130,246,0.15)",borderColor:"#3b82f6",color:"#93c5fd"},
-  informalActive:{background:"rgba(249,115,22,0.15)",borderColor:"#f97316",color:"#fed7aa"},
-  ratingRow:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginTop:20,paddingBottom:20},
-  ratingBtn:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:"14px 6px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,transition:"all 0.2s"},
-  ratingLabel:{fontSize:18,fontWeight:700},ratingDesc:{fontSize:16,opacity:0.6,fontFamily:"monospace"},
-  quizCard:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:28,padding:"40px 24px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:20},
-  quizPromptLabel:{fontSize:17,color:"rgba(255,255,255,0.4)",letterSpacing:1,textTransform:"uppercase",fontFamily:"monospace"},
-  quizChar:{fontSize:84,lineHeight:1,color:"#fff"},
-  quizOptions:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,width:"100%"},
-  quizOpt:{border:"1px solid rgba(255,255,255,0.1)",borderRadius:16,padding:"18px",fontSize:26,cursor:"pointer",transition:"all 0.2s",fontFamily:"monospace",background:"rgba(255,255,255,0.04)",color:"#fff"},
-  confirmBtn:{border:"none",borderRadius:14,padding:"16px 44px",fontSize:20,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5,marginTop:4,fontWeight:700},
-  doneWrap:{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:24,minHeight:"100vh"},
-  doneCard:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:28,padding:"48px 28px",maxWidth:420,width:"100%",textAlign:"center"},
-  doneEmoji:{fontSize:64,marginBottom:16},doneTitle:{fontSize:32,fontWeight:700,marginBottom:24,color:"#fff"},
-  scoreBig:{fontSize:64,fontWeight:900,lineHeight:1,marginBottom:8},
-  scorePercent:{fontSize:18,color:"rgba(255,255,255,0.4)",fontFamily:"monospace",marginBottom:20},
-  passMsg:{fontSize:18,color:"rgba(255,255,255,0.6)",lineHeight:1.8,marginBottom:28,padding:"0 4px"},
-  failMsg:{fontSize:18,color:"rgba(255,255,255,0.4)",lineHeight:1.8,marginBottom:28},
-  wrongSummary:{background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:16,padding:"16px",marginBottom:16,textAlign:"left"},
-  wrongSummaryTitle:{fontSize:16,color:"#ef4444",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase",marginBottom:10},
-  wrongChars:{display:"flex",flexWrap:"wrap",gap:8},
-  wrongCharPill:{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:10,padding:"6px 12px",fontSize:24,color:"#fff"},
-  reviewCard:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:28,padding:"32px 22px",width:"100%",display:"flex",flexDirection:"column",alignItems:"center",gap:20},
-  reviewTop:{display:"flex",alignItems:"center",justifyContent:"center",gap:20},
-  reviewChar:{fontSize:76,lineHeight:1,color:"#fff"},reviewArrow:{fontSize:28,color:"rgba(255,255,255,0.2)"},
-  reviewAnswer:{fontSize:30,color:"#22c55e",fontFamily:"monospace",fontWeight:700},
-  reviewDivider:{width:"100%",height:1,background:"rgba(255,255,255,0.08)"},
-  mnemonicSection:{width:"100%",display:"flex",flexDirection:"column",gap:8},
-  mnemonicLabel:{fontSize:16,color:"#a78bfa",fontFamily:"monospace",letterSpacing:1,textTransform:"uppercase"},
-  mnemonicText:{fontSize:18,color:"rgba(255,255,255,0.6)",lineHeight:1.7,fontStyle:"italic"},
-  mnemonicLoading:{fontSize:17,color:"rgba(255,255,255,0.3)",fontFamily:"monospace"},
-  reviewMistake:{width:"100%",background:"rgba(255,255,255,0.03)",borderRadius:12,padding:"12px 14px"},
-  reviewWrong:{fontSize:16,color:"rgba(255,255,255,0.3)",fontFamily:"monospace"},
-  reviewNav:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginTop:16,paddingBottom:20},
-  navBtn:{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,padding:"14px",fontSize:19,color:"rgba(255,255,255,0.5)",cursor:"pointer",fontFamily:"Georgia,serif"},
-  navBtnPrimary:{border:"none",borderRadius:14,padding:"14px",fontSize:19,color:"#fff",cursor:"pointer",fontFamily:"Georgia,serif",fontWeight:700},
-  doneStats:{display:"flex",justifyContent:"space-around",marginBottom:28,gap:16},
-  doneStat:{display:"flex",flexDirection:"column",gap:4},
-  doneStatNum:{fontSize:42,fontWeight:900,color:"#fff"},
-  doneStatLabel:{fontSize:16,color:"rgba(255,255,255,0.4)",letterSpacing:1,textTransform:"uppercase"},
-  doneActions:{display:"flex",flexDirection:"column",gap:12},
-  primaryBtn:{background:"linear-gradient(135deg,#e11d48,#7c3aed)",color:"#fff",border:"none",borderRadius:14,padding:"18px",fontSize:20,cursor:"pointer",fontFamily:"Georgia,serif",letterSpacing:0.5,fontWeight:700,boxShadow:"0 8px 32px rgba(225,29,72,0.4)"},
-  secondaryBtn:{background:"rgba(255,255,255,0.06)",color:"rgba(255,255,255,0.5)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:14,padding:"18px",fontSize:20,cursor:"pointer",fontFamily:"Georgia,serif"},
-};
-
-const CSS = `
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:#08080f; }
-  .section-card:hover { border-color:var(--accent) !important; transform:translateY(-4px); box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 0 1px var(--accent); background:rgba(255,255,255,0.08) !important; }
-  .cat-btn:hover { border-color:var(--accent) !important; transform:translateY(-2px); background:rgba(255,255,255,0.08) !important; }
-  .test-btn:hover { background:rgba(255,255,255,0.08) !important; border-color:rgba(255,255,255,0.2) !important; color:#fff !important; }
-  .flashcard { animation:cardIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
-  .flashcard:active { transform:scale(0.97); }
-  .flipping { transform:rotateY(90deg); opacity:0; transition:transform 0.15s,opacity 0.15s; }
-  .card-back-reveal { animation:fadeUp 0.3s ease; }
-  .rating-reveal { animation:fadeUp 0.35s ease; }
-  .rating-btn:hover { transform:translateY(-3px); background:rgba(255,255,255,0.08) !important; }
-  .loading-dots::after { content:""; animation:dots 1.2s steps(4,end) infinite; }
-  @keyframes dots { 0%,20%{content:"."} 40%{content:".."} 60%{content:"..."} 80%,100%{content:""} }
-  @keyframes cardIn { from{opacity:0;transform:scale(0.92) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes kanjiFloat { 0%{transform:translateY(110vh)} 100%{transform:translateY(-110vh)} }
-  @keyframes xpPop { 0%{opacity:0;transform:translateX(-50%) translateY(20px)} 20%{opacity:1;transform:translateX(-50%) translateY(0)} 70%{opacity:1;transform:translateX(-50%) translateY(-10px)} 100%{opacity:0;transform:translateX(-50%) translateY(-30px)} }
-`;
-ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+try{ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));}
+catch(e){var d=document.getElementById('err');d.style.display='block';d.textContent='RENDER: '+e.message+'\n'+e.stack;}
   </script>
 </body>
 </html>
